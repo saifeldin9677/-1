@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' data: https://fonts.gstatic.com; form-action 'self';">
+    <!-- Lucide icons CSP: script-src covers cdn.jsdelivr.net, img-src for inline SVGs is covered by 'self' -->
+    <title>خريطة Waterman Butterfly متعددة الطبقات</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦋</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-geo-projection@4.0.0/dist/d3-geo-projection.min.js" integrity="sha384-4C75ouycBmNQkYM1g57WhODWh671y+Atne6FZrE/ITHAg412SN8Ai3dPCa+itkz2" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@1.23.0/dist/umd/lucide.min.js" integrity="sha384-ouAVEJVCMsf8Svzn+BwqbaBhxBEA0xgeVBhHnxmWd+Wqyv18yhWCQwGegFD/OHLq" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+        <div class="title-group">
+            <span class="logo-icon"><i data-lucide="butterfly" class="lucide-icon"></i></span>
+            <div><h1>خريطة Waterman Butterfly</h1><div class="header-line"></div></div>
+        </div>
+        <span style="font-size:0.7em;color:var(--text-secondary);">إسقاط ووترمان الفراشي</span>
+    </div>
+
+    <div class="map-container" id="mapContainer" role="application" aria-label="خريطة Waterman Butterfly">
+        <svg id="mapSvg" role="img" aria-label="خريطة العالم"></svg>
+        <canvas id="densityCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;"></canvas>
+        <div class="tooltip" id="tooltip" role="status" aria-live="polite"></div>
+        <div class="legend" id="legend" role="region" aria-label="وسيلة الإيضاح"></div>
+        <div class="info-overlay" id="infoOverlay"></div>
+
+        <div class="coordinates-display" id="coordinatesDisplay">
+            خط الطول: — &nbsp;|&nbsp; خط العرض: — &nbsp;|&nbsp; تكبير: 1.0x &nbsp;|&nbsp; الوضع: دين &nbsp;|&nbsp; الفلتر: الكل
+        </div>
+
+        <div class="country-panel" id="countryPanel" role="dialog" aria-label="معلومات الدولة" aria-hidden="true">
+            <div class="country-panel-header">
+                <button class="export-btn" id="exportBtn" title="تحميل معلومات الدولة" aria-label="تصدير"><i data-lucide="download" class="lucide-icon"></i></button>
+                <div style="flex:1"></div>
+                <button class="close-btn" id="closePanelBtn" title="إغلاق" aria-label="إغلاق"><i data-lucide="x" class="lucide-icon"></i></button>
+            </div>
+            <div id="panelContent"></div>
+        </div>
+
+            <div class="zoom-controls" role="group" aria-label="التحكم بالتكبير">
+            <button class="zoom-btn" id="zoomInBtn" title="تكبير" aria-label="تكبير"><i data-lucide="plus" class="lucide-icon"></i></button>
+            <button class="zoom-btn" id="zoomOutBtn" title="تصغير" aria-label="تصغير"><i data-lucide="minus" class="lucide-icon"></i></button>
+            <button class="zoom-btn" id="zoomResetBtn" title="إعادة تعيين التكبير" aria-label="إعادة تعيين التكبير"><i data-lucide="home" class="lucide-icon"></i></button>
+        </div>
+
+        <button class="menu-toggle" id="menuToggle" title="فتح القائمة" aria-label="فتح القائمة"><i data-lucide="menu" class="lucide-icon"></i></button>
+        <button class="layers-toggle" id="layersToggleBtn" title="فتح نافذة الطبقات" aria-label="فتح الطبقات"><i data-lucide="layers" class="lucide-icon"></i><span class="active-layer-counter" id="layerCounter">0</span></button>
+
+        <div class="controls-bar" id="controlsBar" role="toolbar" aria-label="شريط التحكم">
+            <div class="row" id="modeRow">
+                <span class="control-label" id="sectionToolsLabel"><i data-lucide="settings" class="lucide-icon"></i><span class="btn-text">Tools</span></span>
+                <span class="divider"></span>
+                <button class="btn" id="langToggle" title="تبديل اللغة" aria-label="تبديل اللغة">English</button>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="بحث..." autocomplete="off" title="ابحث عن دولة">
+                    <ul class="suggestions-list" id="suggestionsList"></ul>
+                </div>
+                <button class="btn" id="shareBtn" title="مشاركة الخريطة"><i data-lucide="share-2" class="lucide-icon"></i></button>
+                <button class="btn" id="resetBtn" title="إعادة تعيين كل شيء (الوضع، الفلاتر، التكبير)"><i data-lucide="rotate-ccw" class="lucide-icon"></i><span class="btn-text">إعادة</span></button>
+                <button class="btn" id="shortcutsBtn" title="اختصارات لوحة المفاتيح"><i data-lucide="keyboard" class="lucide-icon"></i><span class="btn-text">?</span></button>
+                <button class="btn" id="pdfExportBtn" title="تصدير الخريطة كملف PDF"><i data-lucide="file-text" class="lucide-icon"></i><span class="btn-text">PDF</span></button>
+                <button class="btn" id="coordsToggle" title="إظهار/إخفاء شريط الإحداثيات"><i data-lucide="map-pin" class="lucide-icon"></i><span class="btn-text">إحداثيات</span></button>
+                <span class="divider"></span>
+                <span class="control-label" id="sectionBaseMapLabel"><i data-lucide="map" class="lucide-icon"></i><span class="btn-text">Base Map</span></span>
+                <div class="control-group" id="modeButtons">
+                    <button class="btn mode-btn active" data-mode="religion" title="ألوان حسب الديانة"><i data-lucide="book-open" class="lucide-icon"></i><span class="btn-text">دين</span></button>
+                    <button class="btn mode-btn" data-mode="terrain" title="ألوان حسب التضاريس"><i data-lucide="mountain" class="lucide-icon"></i><span class="btn-text">تضاريس</span></button>
+                    <button class="btn mode-btn" data-mode="density" title="ألوان حسب الكثافة السكانية"><i data-lucide="users" class="lucide-icon"></i><span class="btn-text">كثافة</span></button>
+                    <button class="btn mode-btn" data-mode="precipitation" title="ألوان حسب معدل الأمطار"><i data-lucide="cloud-rain" class="lucide-icon"></i><span class="btn-text">أمطار</span></button>
+                    <button class="btn mode-btn" data-mode="temperature" title="ألوان حسب درجة الحرارة"><i data-lucide="thermometer" class="lucide-icon"></i><span class="btn-text">حرارة</span></button>
+                    <button class="btn mode-btn" data-mode="gdp" title="ألوان حسب الناتج المحلي الإجمالي"><i data-lucide="dollar-sign" class="lucide-icon"></i><span class="btn-text">ناتج</span></button>
+                    <button class="btn mode-btn" data-mode="hdi" title="ألوان حسب مؤشر التنمية البشرية"><i data-lucide="bar-chart-3" class="lucide-icon"></i><span class="btn-text">تنمية</span></button>
+                    <button class="btn mode-btn" data-mode="normal" title="خريطة عادية"><i data-lucide="globe" class="lucide-icon"></i><span class="btn-text">طبيعي</span></button>
+                </div>
+            </div>
+
+            <div class="row" id="filterRow">
+                <span class="row-label" id="rowFilterLabel"><i data-lucide="crosshair" class="lucide-icon"></i><span class="btn-text">التقسيم:</span></span>
+                <div class="control-group" id="religionButtons">
+                    <button class="btn religion-btn active" data-religion="all" title="إظهار جميع الديانات">الكل</button>
+                    <button class="btn religion-btn" data-religion="muslim" title="تصفية: مسلم">مسلم</button>
+                    <button class="btn religion-btn" data-religion="christian" title="تصفية: مسيحي">مسيحي</button>
+                    <button class="btn religion-btn" data-religion="hindu" title="تصفية: هندوسي">هندوسي</button>
+                    <button class="btn religion-btn" data-religion="buddhist" title="تصفية: بوذي">بوذي</button>
+                    <button class="btn religion-btn" data-religion="jewish" title="تصفية: يهودي">يهودي</button>
+                    <button class="btn religion-btn" data-religion="other" title="تصفية: أخرى">آخر</button>
+                </div>
+            </div>
+
+            <div class="row layers-row" id="layersRow">
+                <span class="control-label" id="sectionDataLayersLabel"><i data-lucide="layers" class="lucide-icon"></i><span class="btn-text">Data Layers</span></span>
+                <span class="row-label" id="rowKeysLabel"><i data-lucide="key" class="lucide-icon"></i><span class="btn-text">المفاتيح:</span></span>
+                <button class="btn" id="labelsToggle" title="إظهار/إخفاء أسماء الدول"><i data-lucide="tag" class="lucide-icon"></i><span class="btn-text">الأسماء</span></button>
+                <button class="btn" id="sectToggle" title="إظهار/إخفاء الطوائف (بدل الديانات)"><i data-lucide="git-fork" class="lucide-icon"></i><span class="btn-text">الطوائف</span></button>
+                <button class="btn" id="routesToggle" title="إظهار/إخفاء الطرق (بحرية، برية، جوية، أنابيب وقنوات ومضائق)"><i data-lucide="route" class="lucide-icon"></i><span class="btn-text">طرق</span></button>
+                <button class="btn" id="riversToggle" title="إظهار/إخفاء الأنهار الكبرى (تعمل في جميع الأوضاع)"><i data-lucide="waves" class="lucide-icon"></i><span class="btn-text">الأنهار</span></button>
+                <button class="btn" id="densitySpotsToggle" title="إظهار/إخفاء بؤر الكثافة السكانية"><i data-lucide="target" class="lucide-icon"></i><span class="btn-text">بؤر</span></button>
+                <button class="btn" id="capitalsToggle" title="إظهار/إخفاء العواصم"><i data-lucide="landmark" class="lucide-icon"></i><span class="btn-text">عواصم</span></button>
+                <button class="btn" id="timezonesToggle" title="إظهار/إخفاء المناطق الزمنية"><i data-lucide="clock" class="lucide-icon"></i><span class="btn-text">مناطق</span></button>
+                <button class="btn" id="majorCitiesToggle" title="إظهار/إخفاء المدن الكبرى"><i data-lucide="building" class="lucide-icon"></i><span class="btn-text">مدن</span></button>
+                <button class="btn" id="naturalResourcesToggle" title="إظهار/إخفاء الموارد الطبيعية"><i data-lucide="gem" class="lucide-icon"></i><span class="btn-text">موارد</span></button>
+                <button class="btn" id="ethnicGroupsToggle" title="إظهار/إخفاء المجموعات العرقية"><i data-lucide="users" class="lucide-icon"></i><span class="btn-text">عرقيات</span></button>
+                <button class="btn" id="oceanCurrentsToggle" title="إظهار/إخفاء التيارات المحيطية"><i data-lucide="waves" class="lucide-icon"></i><span class="btn-text">تيارات</span></button>
+                <button class="btn" id="windsToggle" title="إظهار/إخفاء الرياح"><i data-lucide="wind" class="lucide-icon"></i><span class="btn-text">رياح</span></button>
+                <button class="btn" id="earthquakesToggle" title="إظهار/إخفاء الزلازل"><i data-lucide="triangle-alert" class="lucide-icon"></i><span class="btn-text">زلازل</span></button>
+                <button class="btn" id="volcanoesToggle" title="إظهار/إخفاء البراكين"><i data-lucide="flame" class="lucide-icon"></i><span class="btn-text">براكين</span></button>
+                <button class="btn" id="geopoliticalBlocsToggle" title="إظهار/إخفاء التكتلات الجيوسياسية"><i data-lucide="flag" class="lucide-icon"></i><span class="btn-text">تكتلات</span></button>
+                <select id="blocSelect" class="bloc-select"><option value="all">جميع التكتلات</option></select>
+                <button class="btn" id="desertsForestsToggle" title="إظهار/إخفاء الصحاري والغابات"><i data-lucide="sun" class="lucide-icon"></i><span class="btn-text">صحاري</span></button>
+                <button class="btn" id="borderDisputesToggle" title="إظهار/إخفاء النزاعات الحدودية"><i data-lucide="swords" class="lucide-icon"></i><span class="btn-text">نزاعات</span></button>
+            </div>
+        </div>
+
+        <div class="layers-modal" id="layersModal" role="dialog" aria-modal="true" aria-labelledby="layersModalTitle">
+            <div class="layers-modal-backdrop" id="layersModalBackdrop"></div>
+            <div class="layers-modal-content">
+                <div class="layers-modal-header">
+                    <h3 id="layersModalTitle"><i data-lucide="layers" class="lucide-icon"></i><span class="btn-text">الطبقات</span></h3>
+                    <button class="layers-modal-close" id="layersModalClose" aria-label="إغلاق">&times;</button>
+                </div>
+                <div class="layers-modal-body" id="layersModalBody"></div>
+            </div>
+        </div>
+
+        <!-- Mobile top bar (hidden on desktop) -->
+        <div class="mobile-topbar" id="mobileTopbar">
+            <div class="mobile-topbar-inner">
+                <button class="mobile-topbar-btn" id="mobileLangToggle" title="تبديل اللغة">English</button>
+                <div class="mobile-search-box">
+                    <input type="text" id="mobileSearchInput" placeholder="بحث عن دولة..." autocomplete="off">
+                    <ul class="suggestions-list" id="mobileSuggestionsList"></ul>
+                </div>
+                <button class="mobile-topbar-btn" id="mobileShareBtn" title="مشاركة"><i data-lucide="share-2" class="lucide-icon"></i></button>
+            </div>
+        </div>
+
+        <!-- Mobile bottom navigation (hidden on desktop) -->
+        <div class="mobile-bottom-nav" id="mobileBottomNav">
+            <button class="mobile-nav-btn" id="mobileModeBtn" title="وضع الخريطة"><i data-lucide="palette" class="lucide-icon"></i><span class="mobile-nav-label">الوضع</span></button>
+            <button class="mobile-nav-btn" id="mobileLayersBtn" title="الطبقات"><i data-lucide="layers" class="lucide-icon"></i><span class="mobile-nav-label">الطبقات</span></button>
+            <button class="mobile-nav-btn" id="mobileInfoBtn" title="معلومات"><i data-lucide="info" class="lucide-icon"></i><span class="mobile-nav-label">معلومات</span></button>
+            <button class="mobile-nav-btn" id="mobileResetBtn" title="إعادة تعيين"><i data-lucide="rotate-ccw" class="lucide-icon"></i><span class="mobile-nav-label">إعادة</span></button>
+        </div>
+
+        <!-- Mobile mode sheet -->
+        <div class="mobile-mode-sheet" id="mobileModeSheet" role="dialog" aria-modal="true" aria-label="وضع الخريطة">
+            <div class="mobile-mode-sheet-backdrop" id="mobileModeSheetBackdrop"></div>
+            <div class="mobile-mode-sheet-content">
+                <div class="mobile-mode-sheet-header">
+                    <h3><i data-lucide="palette" class="lucide-icon"></i><span class="btn-text">وضع الخريطة</span></h3>
+                    <button class="mobile-mode-sheet-close" id="mobileModeSheetClose">&times;</button>
+                </div>
+                <div class="mobile-mode-sheet-body" id="mobileModeSheetBody">
+                    <div class="mobile-mode-group" id="mobileModeButtons">
+                        <button class="btn mode-btn active" data-mode="religion"><i data-lucide="book-open" class="lucide-icon"></i><span class="btn-text">دين</span></button>
+                        <button class="btn mode-btn" data-mode="terrain"><i data-lucide="mountain" class="lucide-icon"></i><span class="btn-text">تضاريس</span></button>
+                        <button class="btn mode-btn" data-mode="density"><i data-lucide="users" class="lucide-icon"></i><span class="btn-text">كثافة</span></button>
+                        <button class="btn mode-btn" data-mode="precipitation"><i data-lucide="cloud-rain" class="lucide-icon"></i><span class="btn-text">أمطار</span></button>
+                        <button class="btn mode-btn" data-mode="temperature"><i data-lucide="thermometer" class="lucide-icon"></i><span class="btn-text">حرارة</span></button>
+                        <button class="btn mode-btn" data-mode="gdp"><i data-lucide="dollar-sign" class="lucide-icon"></i><span class="btn-text">ناتج</span></button>
+                        <button class="btn mode-btn" data-mode="hdi"><i data-lucide="bar-chart-3" class="lucide-icon"></i><span class="btn-text">تنمية</span></button>
+                        <button class="btn mode-btn" data-mode="normal"><i data-lucide="globe" class="lucide-icon"></i><span class="btn-text">طبيعي</span></button>
+                    </div>
+                    <div class="mobile-filter-group" id="mobileFilterButtons">
+                        <span class="mobile-filter-label" id="mobileFilterLabel"><i data-lucide="crosshair" class="lucide-icon"></i><span class="btn-text">التقسيم:</span></span>
+                        <button class="btn religion-btn active" data-religion="all">الكل</button>
+                        <button class="btn religion-btn" data-religion="muslim">مسلم</button>
+                        <button class="btn religion-btn" data-religion="christian">مسيحي</button>
+                        <button class="btn religion-btn" data-religion="hindu">هندوسي</button>
+                        <button class="btn religion-btn" data-religion="buddhist">بوذي</button>
+                        <button class="btn religion-btn" data-religion="jewish">يهودي</button>
+                        <button class="btn religion-btn" data-religion="other">آخر</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="copy-notification" id="copyNotification" role="status" aria-live="polite"></div>
+
+        <!-- Keyboard shortcuts overlay -->
+        <div class="shortcuts-overlay" id="shortcutsOverlay" role="dialog" aria-modal="true" aria-label="اختصارات لوحة المفاتيح">
+            <div class="shortcuts-box">
+                <div class="shortcut-row"><span class="shortcut-key">R</span><span class="shortcut-desc">وضع الديانات</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">T</span><span class="shortcut-desc">وضع التضاريس</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">D</span><span class="shortcut-desc">وضع الكثافة</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">P</span><span class="shortcut-desc">وضع الأمطار</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">H</span><span class="shortcut-desc">وضع الحرارة</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">W</span><span class="shortcut-desc">وضع الناتج المحلي</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">I</span><span class="shortcut-desc">وضع التنمية البشرية</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">N</span><span class="shortcut-desc">الوضع الطبيعي</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">L</span><span class="shortcut-desc">أسماء الدول</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">A</span><span class="shortcut-desc">العواصم</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">C</span><span class="shortcut-desc">الممرات البحرية</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">Z</span><span class="shortcut-desc">المناطق الزمنية</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">M</span><span class="shortcut-desc">المدن الكبرى</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">+  /  −</span><span class="shortcut-desc">تكبير / تصغير</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">Esc</span><span class="shortcut-desc">إعادة تعيين الكل</span></div>
+                <div class="shortcut-row"><span class="shortcut-key">Shift</span><span class="shortcut-desc">+ نقر دولة ← مقارنة</span></div>
+                <button class="shortcuts-close" id="shortcutsClose">إغلاق</button>
+            </div>
+        </div>
+
+        <!-- First-run onboarding hint -->
+        <div class="onboarding-hint" id="onboardingHint">
+            <i data-lucide="butterfly" class="lucide-icon"></i>انقر على أي دولة لعرض معلوماتها &nbsp;|&nbsp; استخدم الأزرار أعلى لتغيير الوضع &nbsp;|&nbsp; <strong>Shift+نقر</strong> للمقارنة
+        </div>
+
+    </div>  <!-- closing map-container -->
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
