@@ -701,10 +701,6 @@ body {
 .mobile-nav-btn:active {
     color: var(--text);
 }
-.mobile-nav-label {
-    font-size: 0.45em;
-    font-weight: 500;
-}
 .mobile-mode-sheet {
     position: fixed;
     inset: 0;
@@ -1368,6 +1364,10 @@ body {
 }
 .btn-text {
     display: inline;
+}
+.mobile-nav-btn .btn-text {
+    font-size: 0.45em;
+    font-weight: 500;
 }
 .btn[title]:hover::after {
     content: attr(title);

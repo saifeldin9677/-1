@@ -2074,6 +2074,27 @@
                 searchInput.placeholder = t('searchPlaceholder');
                 var mobileSearchInput = document.getElementById('mobileSearchInput');
                 if (mobileSearchInput) mobileSearchInput.placeholder = t('searchPlaceholder');
+                var mobileShareBtn = document.getElementById('mobileShareBtn');
+                if (mobileShareBtn) mobileShareBtn.title = t('shareBtn');
+                setBtnText(document.getElementById('mobileModeBtn'), t('mobileMode'));
+                setBtnText(document.getElementById('mobileLayersBtn'), t('mobileLayers'));
+                setBtnText(document.getElementById('mobileInfoBtn'), t('mobileInfo'));
+                setBtnText(document.getElementById('mobileResetBtn'), t('resetBtn'));
+                var mobileModeBtn = document.getElementById('mobileModeBtn');
+                if (mobileModeBtn) mobileModeBtn.title = t('mobileMode_title');
+                var mobileLayersBtn = document.getElementById('mobileLayersBtn');
+                if (mobileLayersBtn) mobileLayersBtn.title = t('mobileLayers_title');
+                var mobileInfoBtn = document.getElementById('mobileInfoBtn');
+                if (mobileInfoBtn) mobileInfoBtn.title = t('mobileInfo_title');
+                var mobileResetBtn = document.getElementById('mobileResetBtn');
+                if (mobileResetBtn) mobileResetBtn.title = t('mobileReset_title');
+                setBtnText(document.getElementById('mobileModeSheetTitle'), t('mobileModeSheetTitle'));
+                document.querySelectorAll('#mobileModeButtons .mode-btn').forEach(function(b) {
+                    setBtnText(b, t('mode_' + b.dataset.mode));
+                });
+                document.querySelectorAll('#mobileFilterButtons .religion-btn').forEach(function(b) {
+                    b.textContent = t('religion_' + b.dataset.religion);
+                });
                 exportBtn.title = t('exportLabel');
                 updateInfoOverlay();
                 if (allCountryFeatures.length) {
