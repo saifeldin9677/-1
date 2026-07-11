@@ -61,7 +61,16 @@
             <div class="row" id="modeRow">
                 <span class="control-label" id="sectionToolsLabel"><i data-lucide="settings" class="lucide-icon"></i><span class="btn-text">Tools</span></span>
                 <span class="divider"></span>
-                <button class="btn" id="langToggle" title="تبديل اللغة" aria-label="تبديل اللغة">English</button>
+                <div class="lang-dropdown">
+                    <button class="btn" id="langToggle" title="تبديل اللغة" aria-label="تبديل اللغة"><i data-lucide="globe" class="lucide-icon"></i><span id="langToggleText">English</span><i data-lucide="chevron-down" class="lucide-icon dropdown-arrow"></i></button>
+                    <div class="lang-dropdown-menu" id="langDropdownMenu">
+                        <button class="lang-option active" data-lang="ar" type="button">العربية</button>
+                        <button class="lang-option" data-lang="en" type="button">English</button>
+                        <button class="lang-option" data-lang="ru" type="button">Русский</button>
+                        <button class="lang-option" data-lang="uz" type="button">O'zbekcha</button>
+                        <button class="lang-option" data-lang="es" type="button">Español</button>
+                    </div>
+                </div>
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="بحث..." autocomplete="off" title="ابحث عن دولة">
                     <ul class="suggestions-list" id="suggestionsList"></ul>
@@ -69,6 +78,7 @@
                 <button class="btn" id="shareBtn" title="مشاركة الخريطة"><i data-lucide="share-2" class="lucide-icon"></i></button>
                 <button class="btn" id="resetBtn" title="إعادة تعيين كل شيء (الوضع، الفلاتر، التكبير)"><i data-lucide="rotate-ccw" class="lucide-icon"></i><span class="btn-text">إعادة</span></button>
                 <button class="btn" id="shortcutsBtn" title="اختصارات لوحة المفاتيح"><i data-lucide="keyboard" class="lucide-icon"></i><span class="btn-text">?</span></button>
+                <button class="btn" id="onboardBtn" title="شرح الخريطة"><i data-lucide="book-open" class="lucide-icon"></i><span class="btn-text">📘</span></button>
                 <button class="btn" id="pdfExportBtn" title="تصدير الخريطة كملف PDF"><i data-lucide="file-text" class="lucide-icon"></i><span class="btn-text">PDF</span></button>
                 <button class="btn" id="coordsToggle" title="إظهار/إخفاء شريط الإحداثيات"><i data-lucide="map-pin" class="lucide-icon"></i><span class="btn-text">إحداثيات</span></button>
                 <span class="divider"></span>
@@ -100,7 +110,6 @@
 
             <div class="row layers-row" id="layersRow">
                 <span class="control-label" id="sectionDataLayersLabel"><i data-lucide="layers" class="lucide-icon"></i><span class="btn-text">Data Layers</span></span>
-                <span class="row-label" id="rowKeysLabel"><i data-lucide="key" class="lucide-icon"></i><span class="btn-text">المفاتيح:</span></span>
                 <button class="btn" id="labelsToggle" title="إظهار/إخفاء أسماء الدول"><i data-lucide="tag" class="lucide-icon"></i><span class="btn-text">الأسماء</span></button>
                 <button class="btn" id="sectToggle" title="إظهار/إخفاء الطوائف (بدل الديانات)"><i data-lucide="git-fork" class="lucide-icon"></i><span class="btn-text">الطوائف</span></button>
                 <button class="btn" id="routesToggle" title="إظهار/إخفاء الطرق (بحرية، برية، جوية، أنابيب وقنوات ومضائق)"><i data-lucide="route" class="lucide-icon"></i><span class="btn-text">طرق</span></button>
@@ -136,7 +145,16 @@
         <!-- Mobile top bar (hidden on desktop) -->
         <div class="mobile-topbar" id="mobileTopbar">
             <div class="mobile-topbar-inner">
-                <button class="mobile-topbar-btn" id="mobileLangToggle" title="تبديل اللغة">English</button>
+                <div class="lang-dropdown mobile-lang-dropdown">
+                    <button class="mobile-topbar-btn" id="mobileLangToggle" title="تبديل اللغة"><i data-lucide="globe" class="lucide-icon"></i><span id="mobileLangToggleText">English</span><i data-lucide="chevron-down" class="lucide-icon dropdown-arrow"></i></button>
+                    <div class="lang-dropdown-menu" id="mobileLangDropdownMenu">
+                        <button class="lang-option active" data-lang="ar" type="button">العربية</button>
+                        <button class="lang-option" data-lang="en" type="button">English</button>
+                        <button class="lang-option" data-lang="ru" type="button">Русский</button>
+                        <button class="lang-option" data-lang="uz" type="button">O'zbekcha</button>
+                        <button class="lang-option" data-lang="es" type="button">Español</button>
+                    </div>
+                </div>
                 <div class="mobile-search-box">
                     <input type="text" id="mobileSearchInput" placeholder="بحث عن دولة..." autocomplete="off">
                     <ul class="suggestions-list" id="mobileSuggestionsList"></ul>
@@ -211,9 +229,55 @@
             </div>
         </div>
 
+        <!-- First-run language selector overlay -->
+        <div class="lang-overlay" id="langOverlay">
+            <div class="lang-overlay-content">
+                <div class="lang-overlay-icon">🦋</div>
+                <h2 class="lang-overlay-title">Waterman Butterfly Map</h2>
+                <p class="lang-overlay-subtitle">اختر لغتك / Choose your language</p>
+                <div class="lang-overlay-buttons">
+                    <button class="lang-overlay-btn" data-lang="ar">
+                        <span class="lang-overlay-flag">🇸🇦</span>
+                        <span class="lang-overlay-name">العربية</span>
+                    </button>
+                    <button class="lang-overlay-btn" data-lang="en">
+                        <span class="lang-overlay-flag">🇬🇧</span>
+                        <span class="lang-overlay-name">English</span>
+                    </button>
+                    <button class="lang-overlay-btn" data-lang="ru">
+                        <span class="lang-overlay-flag">🇷🇺</span>
+                        <span class="lang-overlay-name">Русский</span>
+                    </button>
+                    <button class="lang-overlay-btn" data-lang="uz">
+                        <span class="lang-overlay-flag">🇺🇿</span>
+                        <span class="lang-overlay-name">O'zbekcha</span>
+                    </button>
+                    <button class="lang-overlay-btn" data-lang="es">
+                        <span class="lang-overlay-flag">🇪🇸</span>
+                        <span class="lang-overlay-name">Español</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- First-run onboarding hint -->
         <div class="onboarding-hint" id="onboardingHint">
             <i data-lucide="butterfly" class="lucide-icon"></i>انقر على أي دولة لعرض معلوماتها &nbsp;|&nbsp; استخدم الأزرار أعلى لتغيير الوضع &nbsp;|&nbsp; <strong>Shift+نقر</strong> للمقارنة
+        </div>
+
+        <!-- Interactive onboarding tutorial -->
+        <div class="onboard-overlay" id="onboardOverlay">
+            <div class="onboard-glow" id="onboardGlow"></div>
+            <div class="onboard-card" id="onboardCard">
+                <div class="onboard-card-icon" id="onboardCardIcon"></div>
+                <h4 class="onboard-card-title" id="onboardCardTitle"></h4>
+                <p class="onboard-card-text" id="onboardCardText"></p>
+                <div class="onboard-card-dots" id="onboardCardDots"></div>
+                <div class="onboard-card-actions">
+                    <button class="onboard-btn onboard-skip" id="onboardSkip">تخطي</button>
+                    <button class="onboard-btn onboard-next" id="onboardNext">التالي ←</button>
+                </div>
+            </div>
         </div>
 
     </div>  <!-- closing map-container -->

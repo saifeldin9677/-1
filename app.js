@@ -85,7 +85,7 @@
             let desertsForestsVisible = false;
             let borderDisputesVisible = false;
             let coordsVisible = true;
-            let lang = 'ar';
+            let lang = (function() { var s = localStorage.getItem('mapLang'); return s && ['ar','en','ru','uz','es'].includes(s) ? s : 'ar'; })();
             let allCountryFeatures = [];
             let countryPaths = null;
             let selectedCountry = null;
@@ -134,6 +134,48 @@
                     if (clean.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(clean.toLowerCase()))
                         return v;
                 return enName;
+            }
+
+            function getRussianName(enName) {
+                if (!enName) return '';
+                let clean = getCleanName(enName);
+                if (russianNames[clean]) return russianNames[clean];
+                if (russianNames[enName]) return russianNames[enName];
+                for (let [k, v] of Object.entries(russianNames))
+                    if (clean.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(clean.toLowerCase()))
+                        return v;
+                return enName;
+            }
+
+            function getUzbekName(enName) {
+                if (!enName) return '';
+                let clean = getCleanName(enName);
+                if (uzbekNames[clean]) return uzbekNames[clean];
+                if (uzbekNames[enName]) return uzbekNames[enName];
+                for (let [k, v] of Object.entries(uzbekNames))
+                    if (clean.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(clean.toLowerCase()))
+                        return v;
+                return enName;
+            }
+
+            function getSpanishName(enName) {
+                if (!enName) return '';
+                let clean = getCleanName(enName);
+                if (spanishNames[clean]) return spanishNames[clean];
+                if (spanishNames[enName]) return spanishNames[enName];
+                for (let [k, v] of Object.entries(spanishNames))
+                    if (clean.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(clean.toLowerCase()))
+                        return v;
+                return enName;
+            }
+
+            function getDisplayName(name) {
+                if (!name) return '';
+                if (lang === 'ar') return getArabicName(name);
+                if (lang === 'ru') return getRussianName(name);
+                if (lang === 'uz') return getUzbekName(name);
+                if (lang === 'es') return getSpanishName(name);
+                return name;
             }
 
             function getReligion(name) {
@@ -339,13 +381,14 @@
             function showEthnicGroupDetail(d) {
                 selectedFeature = d;
                 selectedFeatureType = 'ethnicGroup';
-                var displayName = lang==='ar'?d.name:d.name_en;
+                var displayName = lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;
                 var html = '<h3>👥 '+displayName+'</h3>';
-                if (d.population_ar||d.population_en) html += '<p><strong>'+t('populationTitle')+':</strong> '+(lang==='ar'?d.population_ar:d.population_en)+'</p>';
-                if (d.countries_ar||d.countries_en) html += '<p><strong>'+t('featureCountries')+':</strong> '+(lang==='ar'?d.countries_ar:d.countries_en)+'</p>';
-                if (d.language_ar||d.language_en) html += '<p><strong>'+t('languageTitle')+':</strong> '+(lang==='ar'?d.language_ar:d.language_en)+'</p>';
-                if (d.religion_ar||d.religion_en) html += '<p><strong>'+t('tooltipReligion')+':</strong> '+(lang==='ar'?d.religion_ar:d.religion_en)+'</p>';
-                if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:d.description_en)+'</p>';
+                if (d.population_ar||d.population_en) html += '<p><strong>'+t('populationTitle')+':</strong> '+(lang==='ar'?d.population_ar:lang==='ru'?(d.population_ru||d.population_en):lang==='uz'?(d.population_uz||d.population_en):lang==='es'?(d.population_es||d.population_en):d.population_en)+'</p>';
+                if (d.countries_ar||d.countries_en) html += '<p><strong>'+t('featureCountries')+':</strong> '+(lang==='ar'?d.countries_ar:lang==='ru'?(d.countries_ru||d.countries_en):lang==='uz'?(d.countries_uz||d.countries_en):lang==='es'?(d.countries_es||d.countries_en):d.countries_en)+'</p>';
+                if (d.language_ar||d.language_en) html += '<p><strong>'+t('languageTitle')+':</strong> '+(lang==='ar'?d.language_ar:lang==='ru'?(d.language_ru||d.language_en):lang==='uz'?(d.language_uz||d.language_en):lang==='es'?(d.language_es||d.language_en):d.language_en)+'</p>';
+                if (d.religion_ar||d.religion_en) html += '<p><strong>'+t('tooltipReligion')+':</strong> '+(lang==='ar'?d.religion_ar:lang==='ru'?(d.religion_ru||d.religion_en):lang==='uz'?(d.religion_uz||d.religion_en):lang==='es'?(d.religion_es||d.religion_en):d.religion_en)+'</p>';
+                if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:lang==='ru'?(d.description_ru||d.description_en):lang==='uz'?(d.description_uz||d.description_en):lang==='es'?(d.description_es||d.description_en):d.description_en)+'</p>';
+                _lastPanelRenderTime = performance.now();
                 panelContent.innerHTML = html;
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(function(){requestAnimationFrame(function(){countryPanel.classList.add('visible');});});
@@ -354,6 +397,38 @@
 
 
 
+            function translateResourceValue(val) {
+                if (!val || lang === 'ar') return val;
+                var match = val.match(/^([\d,.+]+)\s+(.+)$/);
+                if (!match) return val;
+                var num = match[1], unit = match[2];
+                var u = i18n[lang] || {};
+                var unitMap = {
+                    'مليار برميل': u.unitBillionBarrels,
+                    'تريليون م³': u.unitTrillionM3,
+                    'تريليون م³/سنة': u.unitTrillionM3Year,
+                    'تريليون متر مكعب': u.unitTrillionCubicMeters,
+                    'جيجاواط': u.unitGigawatts,
+                    'طن': u.unitTons,
+                    'طن/سنة': u.unitTonsYear,
+                    'مليون برميل/يوم': u.unitMillionBarrelsDay,
+                    'ملايين برميل/يوم': u.unitMillionBarrelsDayPlural,
+                    'مليون طن': u.unitMillionTons,
+                    'ملايين طن': u.unitMillionTonsPlural,
+                    'مليون طن/سنة': u.unitMillionTonsYear,
+                    'ملايين طن/سنة': u.unitMillionTonsYearPlural,
+                    'مليار طن': u.unitBillionTons,
+                    'مليار طن/سنة': u.unitBillionTonsYear,
+                    'مليار قيراط': u.unitBillionCarats,
+                    'مليار م³/سنة': u.unitBillionM3Year,
+                    'مليار متر مكعب/سنة': u.unitBillionCubicMetersYear,
+                    'مليارات هكتار': u.unitBillionHectares,
+                    'مليون قيراط': u.unitMillionCarats,
+                    'مليون قيراط/سنة': u.unitMillionCaratsYear
+                };
+                var translated = unitMap[unit];
+                return translated ? num + ' ' + translated : val;
+            }
 
             function getContinent(name) {
                 if (!name) return 'Unknown';
@@ -589,13 +664,14 @@
             function showRouteDetail(d) {
                 selectedFeature = d;
                 selectedFeatureType = 'route';
-                var displayName = lang==='ar'?d.name_ar:d.name_en;
+                var displayName = lang==='ar'?d.name_ar:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;
                 var icon = d.type==='land'?'🚛':d.type==='sea'?'🚢':d.type==='air'?'✈️':d.type==='pipeline'?'🛢️':d.type==='canal'?'🚰':'🌊';
                 var html = '<h3>'+icon+' '+displayName+'</h3>';
                 if (d.length_km) html += '<p><strong>'+t('featureLength')+':</strong> '+d.length_km+' '+t('featureKm')+'</p>';
-                if (d.countries_ar||d.countries_en) html += '<p><strong>'+t('featureCountries')+':</strong> '+(lang==='ar'?d.countries_ar:d.countries_en)+'</p>';
+                if (d.countries_ar||d.countries_en) html += '<p><strong>'+t('featureCountries')+':</strong> '+(lang==='ar'?d.countries_ar:lang==='ru'?(d.countries_ru||d.countries_en):lang==='uz'?(d.countries_uz||d.countries_en):lang==='es'?(d.countries_es||d.countries_en):d.countries_en)+'</p>';
                 var typeLabel = d.type==='land'?t('landRoute'):d.type==='sea'?t('seaRoute'):d.type==='canal'?t('canal'):d.type==='strait'?t('strait'):d.type==='air'?t('airRoute'):d.type==='pipeline'?t('pipeline'):d.type;
                 html += '<p><strong>'+t('routeType')+':</strong> '+typeLabel+'</p>';
+                _lastPanelRenderTime = performance.now();
                 panelContent.innerHTML = html;
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(function(){requestAnimationFrame(function(){countryPanel.classList.add('visible');});});
@@ -609,7 +685,7 @@
                     var existingNames = new Set(renderList.map(function(c) { return c.name_en; }));
                     var deduped = additionalWaterwaysData.filter(function(w) { return !existingNames.has(w.name_en); });
                     renderList = renderList.concat(deduped.map(function(w){
-                        return { name_ar: w.name, name_en: w.name_en, coords: w.coords, type: w.type==='canal'?'canal':w.type==='strait'?'strait':'sea', length_km: w.length_km, countries_ar: w.countries_ar, countries_en: w.countries_en };
+                        return { name_ar: w.name, name_en: w.name_en, name_ru: w.name_ru || featureRussian.corridors[w.name_en] || w.name_en, name_uz: w.name_uz || featureUzbek.corridors[w.name_en] || w.name_en, name_es: w.name_es || (typeof featureSpanish!=='undefined'&&featureSpanish.corridors&&featureSpanish.corridors[w.name_en]) || w.name_en, coords: w.coords, type: w.type==='canal'?'canal':w.type==='strait'?'strait':'sea', length_km: w.length_km, countries_ar: w.countries_ar, countries_en: w.countries_en, countries_ru: w.countries_ru || w.countries_en, countries_uz: w.countries_uz || w.countries_en, countries_es: w.countries_es || w.countries_en };
                     }));
                 }
                 renderList.forEach(function(c) {
@@ -626,7 +702,7 @@
                     var mid = points[Math.floor(points.length/2)];
                     var mxy = projection(mid);
                     if (mxy&&!isNaN(mxy[0])) {
-                        gCorridors.append('text').attr('x',mxy[0]).attr('y',mxy[1]-4).text(function(){return lang==='ar'?c.name_ar:c.name_en;}).attr('fill','#fff').attr('font-size',isMobile?6:8).attr('opacity',0.85).attr('text-anchor','middle').style('pointer-events','none');
+                        gCorridors.append('text').attr('x',mxy[0]).attr('y',mxy[1]-4).text(function(){return lang==='ar'?c.name_ar:lang==='ru'?(c.name_ru||c.name_en):lang==='uz'?(c.name_uz||c.name_en):lang==='es'?(c.name_es||c.name_en):c.name_en;}).attr('fill','#fff').attr('font-size',isMobile?6:8).attr('opacity',0.85).attr('text-anchor','middle').style('pointer-events','none');
                     }
                 });
             }
@@ -905,14 +981,15 @@
             function showResourceDetail(d) {
                 selectedFeature = d;
                 selectedFeatureType = 'resource';
-                var displayName = lang==='ar'?d.name:d.name_en;
+                var displayName = lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;
                 var typeLabel = d.type==='oil'?'🛢️':d.type==='gas'?'🔥':d.type==='coal'?'⛏️':d.type==='metal'?'🔩':d.type==='precious'?'💎':d.type==='nuclear'?'☢️':d.type==='renewable'?'♻️':d.type==='water'?'💧':d.type==='forest'?'🌲':'🗿';
                 var html = '<h3>'+typeLabel+' '+displayName+'</h3>';
-                if (d.countries_ar||d.countries_en) html += '<p><strong>'+t('featureCountries')+':</strong> '+(lang==='ar'?d.countries_ar:d.countries_en)+'</p>';
-                if (d.reserves) html += '<p><strong>'+t('reserves')+':</strong> '+d.reserves+'</p>';
-                if (d.production) html += '<p><strong>'+t('production')+':</strong> '+d.production+'</p>';
-                if (d.capacity) html += '<p><strong>'+t('capacity')+':</strong> '+d.capacity+'</p>';
-                if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:d.description_en)+'</p>';
+                if (d.countries_ar||d.countries_en) html += '<p><strong>'+t('featureCountries')+':</strong> '+(lang==='ar'?d.countries_ar:lang==='ru'?(d.countries_ru||d.countries_en):lang==='uz'?(d.countries_uz||d.countries_en):lang==='es'?(d.countries_es||d.countries_en):d.countries_en)+'</p>';
+                if (d.reserves) html += '<p><strong>'+t('reserves')+':</strong> '+translateResourceValue(d.reserves)+'</p>';
+                if (d.production) html += '<p><strong>'+t('production')+':</strong> '+translateResourceValue(d.production)+'</p>';
+                if (d.capacity) html += '<p><strong>'+t('capacity')+':</strong> '+translateResourceValue(d.capacity)+'</p>';
+                if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:lang==='ru'?(d.description_ru||d.description_en):lang==='uz'?(d.description_uz||d.description_en):lang==='es'?(d.description_es||d.description_en):d.description_en)+'</p>';
+                _lastPanelRenderTime = performance.now();
                 panelContent.innerHTML = html;
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(function(){requestAnimationFrame(function(){countryPanel.classList.add('visible');});});
@@ -937,7 +1014,7 @@
                     if (!xy || isNaN(xy[0])) return;
                     var color = resourceColorMap[d.type] || MAP_COLORS.naturalResources.default;
                     gNaturalResources.append('circle').datum(d).attr('cx',xy[0]).attr('cy',xy[1]).attr('r',r).attr('fill',color).attr('opacity',0.85).attr('stroke','#fff').attr('stroke-width',1.2).style('cursor','pointer');
-                    gNaturalResources.append('text').attr('x',xy[0]+r+3/k).attr('y',xy[1]+2/k).text(function(){return lang==='ar'?d.name:d.name_en;}).attr('fill','#fff').attr('font-size',fontSize+'px').attr('font-weight','bold').style('pointer-events','none');
+                    gNaturalResources.append('text').attr('x',xy[0]+r+3/k).attr('y',xy[1]+2/k).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill','#fff').attr('font-size',fontSize+'px').attr('font-weight','bold').style('pointer-events','none');
                 });
             }
             function drawEthnicGroups() {
@@ -960,26 +1037,27 @@
                     var r = Math.max(4, (isMobile?6:10)/k);
                     var fs = Math.max(3, Math.min(16, (isMobile?9:12)/k));
                     gEthnicGroups.append('circle').datum(d).attr('cx',xy[0]).attr('cy',xy[1]).attr('r',r).attr('fill',color).attr('opacity',0.6).attr('stroke','#fff').attr('stroke-width',1).style('cursor','pointer');
-                    gEthnicGroups.append('text').attr('x',xy[0]+r+3/k).attr('y',xy[1]+2/k).text(function(){return lang==='ar'?d.name:d.name_en;}).attr('fill','#fff').attr('font-size',fs+'px').attr('font-weight','bold').style('pointer-events','none');
+                    gEthnicGroups.append('text').attr('x',xy[0]+r+3/k).attr('y',xy[1]+2/k).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill','#fff').attr('font-size',fs+'px').attr('font-weight','bold').style('pointer-events','none');
                 });
             }
             function showOceanCurrentDetail(d) {
                 selectedFeature = d;
                 selectedFeatureType = 'oceanCurrent';
-                var displayName = lang==='ar'?d.name:d.name_en;
+                var displayName = lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;
                 var html = '<h3>🌊 '+displayName+'</h3>';
                 if (d.type==='warm'||d.type==='cold') {
                     var typeLabel = d.type==='warm'?t('warmCurrent'):t('coldCurrent');
                     html += '<p><strong>'+t('currentType')+':</strong> '+typeLabel+'</p>';
                     if (d.temperature) html += '<p><strong>'+t('temperature')+':</strong> '+d.temperature+'°C</p>';
-                    if (d.speed) html += '<p><strong>'+t('speed')+':</strong> '+d.speed+'</p>';
+                    if (d.speed) html += '<p><strong>'+t('speed')+':</strong> '+d.speed+' '+t('speedUnit')+'</p>';
                 } else if (d.type==='gyre') {
                     html += '<p><strong>'+t('currentType')+':</strong> '+t('gyre')+'</p>';
                 } else if (d.type==='trench') {
                     html += '<p><strong>'+t('currentType')+':</strong> '+t('trenchDepth')+'</p>';
                     if (d.depth) html += '<p><strong>'+t('trenchDepth')+':</strong> '+d.depth.toLocaleString('en')+' '+t('elevationUnit')+'</p>';
                 }
-                if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:d.description_en)+'</p>';
+                if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:lang==='ru'?(d.description_ru||d.description_en):lang==='uz'?(d.description_uz||d.description_en):lang==='es'?(d.description_es||d.description_en):d.description_en)+'</p>';
+                _lastPanelRenderTime = performance.now();
                 panelContent.innerHTML = html;
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(function(){requestAnimationFrame(function(){countryPanel.classList.add('visible');});});
@@ -994,7 +1072,7 @@
                         var s = isMobile?10:16;
                         gOceanCurrents.append('rect').attr('x',xy[0]-s-6).attr('y',xy[1]-s-6).attr('width',(s+6)*2).attr('height',(s+6)*2).attr('fill','transparent').style('cursor','pointer').on('click',function(){showOceanCurrentDetail(d);});
                         gOceanCurrents.append('path').attr('d','M'+(xy[0]-s)+','+(xy[1]-s)+' L'+(xy[0]+s)+','+(xy[1]+s)+' M'+(xy[0]-s)+','+(xy[1]+s)+' L'+(xy[0]+s)+','+(xy[1]-s)).attr('stroke',MAP_COLORS.oceanCurrents.trench).attr('stroke-width',isMobile?3:4).attr('opacity',0.9).style('pointer-events','none');
-                        gOceanCurrents.append('text').attr('x',xy[0]+s+6).attr('y',xy[1]+3).text(function(){return lang==='ar'?d.name:d.name_en;}).attr('fill',MAP_COLORS.oceanCurrents.trench).attr('font-size',isMobile?8:11).attr('font-weight','bold').style('pointer-events','none');
+                        gOceanCurrents.append('text').attr('x',xy[0]+s+6).attr('y',xy[1]+3).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill',MAP_COLORS.oceanCurrents.trench).attr('font-size',isMobile?8:11).attr('font-weight','bold').style('pointer-events','none');
                         return;
                     }
                     if (d.type==='gyre') {
@@ -1006,7 +1084,7 @@
                         var mid = d.coords[Math.floor(d.coords.length/2)];
                         var mxy = projection(mid);
                         if (mxy&&!isNaN(mxy[0])) {
-                            gOceanCurrents.append('text').attr('x',mxy[0]).attr('y',mxy[1]-10).text(function(){return lang==='ar'?d.name:d.name_en;}).attr('fill',color).attr('font-size',isMobile?8:11).attr('font-weight','bold').attr('text-anchor','middle').style('pointer-events','none');
+                            gOceanCurrents.append('text').attr('x',mxy[0]).attr('y',mxy[1]-10).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill',color).attr('font-size',isMobile?8:11).attr('font-weight','bold').attr('text-anchor','middle').style('pointer-events','none');
                         }
                         return;
                     }
@@ -1024,7 +1102,7 @@
                             var mid = d.coords[Math.floor(d.coords.length/2)];
                             var mxy = projection(mid);
                             if (mxy && !isNaN(mxy[0])) {
-                                gOceanCurrents.append('text').attr('x',mxy[0]-10).attr('y',mxy[1]-6).text(function(){return lang==='ar'?d.name:d.name_en;}).attr('fill','#fff').attr('font-size',isMobile?7:10).attr('opacity',0.95).attr('font-weight','bold').style('pointer-events','none');
+                                gOceanCurrents.append('text').attr('x',mxy[0]-10).attr('y',mxy[1]-6).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill','#fff').attr('font-size',isMobile?7:10).attr('opacity',0.95).attr('font-weight','bold').style('pointer-events','none');
                             }
                         }
                     }
@@ -1045,19 +1123,20 @@
                     var mid = d.coords[Math.floor(d.coords.length/2)];
                     var mxy = projection(mid);
                     if (mxy && !isNaN(mxy[0])) {
-                        gWinds.append('text').attr('x',mxy[0]).attr('y',mxy[1]-8).text(function(){return lang==='ar'?d.name:d.name_en;}).attr('fill','#fff').attr('font-size',isMobile?9:13).attr('font-weight','bold').attr('opacity',0.95).style('pointer-events','none').style('text-shadow','0 0 5px rgba(0,0,0,0.7)');
+                        gWinds.append('text').attr('x',mxy[0]).attr('y',mxy[1]-8).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill','#fff').attr('font-size',isMobile?9:13).attr('font-weight','bold').attr('opacity',0.95).style('pointer-events','none').style('text-shadow','0 0 5px rgba(0,0,0,0.7)');
                     }
                 });
             }
             function showEarthquakeDetail(d) {
                 selectedFeature = d;
                 selectedFeatureType = 'earthquake';
-                var displayName = lang==='ar'?d.name:d.name_en;
+                var displayName = lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;
                 var html = '<h3>🏚️ '+displayName+'</h3>';
                 if (d.magnitude) html += '<p><strong>'+t('magnitude')+':</strong> '+d.magnitude+'</p>';
                 if (d.year) html += '<p><strong>'+t('year')+':</strong> '+d.year+'</p>';
-                if (d.plate_ar||d.plate_en) html += '<p><strong>'+t('tectonicPlate')+':</strong> '+(lang==='ar'?d.plate_ar:d.plate_en)+'</p>';
-                if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:d.description_en)+'</p>';
+                if (d.plate_ar||d.plate_en) html += '<p><strong>'+t('tectonicPlate')+':</strong> '+(lang==='ar'?d.plate_ar:lang==='ru'?(d.plate_ru||d.plate_en):lang==='uz'?(d.plate_uz||d.plate_en):lang==='es'?(d.plate_es||d.plate_en):d.plate_en)+'</p>';
+                if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:lang==='ru'?(d.description_ru||d.description_en):lang==='uz'?(d.description_uz||d.description_en):lang==='es'?(d.description_es||d.description_en):d.description_en)+'</p>';
+                _lastPanelRenderTime = performance.now();
                 panelContent.innerHTML = html;
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(function(){requestAnimationFrame(function(){countryPanel.classList.add('visible');});});
@@ -1065,9 +1144,10 @@
             function showTectonicPlateDetail(d) {
                 selectedFeature = d;
                 selectedFeatureType = 'tectonicPlate';
-                var displayName = lang==='ar'?d.name:d.name_en;
+                var displayName = lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;
                 var html = '<h3>🗿 '+displayName+'</h3>';
                 html += '<p>'+t('tectonicPlates')+'</p>';
+                _lastPanelRenderTime = performance.now();
                 panelContent.innerHTML = html;
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(function(){requestAnimationFrame(function(){countryPanel.classList.add('visible');});});
@@ -1083,7 +1163,7 @@
                         var mid = p.coords[Math.floor(p.coords.length/2)];
                         var mxy = projection(mid);
                         if (mxy&&!isNaN(mxy[0])) {
-                            gEarthquakes.append('text').attr('x',mxy[0]).attr('y',mxy[1]).text(function(){return lang==='ar'?p.name:p.name_en;}).attr('fill','#fff').attr('font-size',isMobile?8:11).attr('opacity',0.7).attr('text-anchor','middle').style('pointer-events','none');
+                            gEarthquakes.append('text').attr('x',mxy[0]).attr('y',mxy[1]).text(function(){return lang==='ar'?p.name:lang==='ru'?(p.name_ru||p.name_en):lang==='uz'?(p.name_uz||p.name_en):lang==='es'?(p.name_es||p.name_en):p.name_en;}).attr('fill','#fff').attr('font-size',isMobile?8:11).attr('opacity',0.7).attr('text-anchor','middle').style('pointer-events','none');
                         }
                     }
                 });
@@ -1101,12 +1181,13 @@
             function showVolcanoDetail(d) {
                 selectedFeature = d;
                 selectedFeatureType = 'volcano';
-                var displayName = lang==='ar'?d.name:d.name_en;
+                var displayName = lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;
                 var html = '<h3>🌋 '+displayName+'</h3>';
                 if (d.elevation) html += '<p><strong>'+t('tooltipElevation')+':</strong> '+d.elevation.toLocaleString('en')+' '+t('elevationUnit')+'</p>';
-                if (d.type) html += '<p><strong>'+t('volcanoType')+':</strong> '+(lang==='ar'?d.type_ar||d.type:d.type_en||d.type)+'</p>';
+                if (d.type) html += '<p><strong>'+t('volcanoType')+':</strong> '+(lang==='ar'?d.type_ar||d.type:lang==='ru'?(d.type_ru||d.type_en||d.type):lang==='uz'?(d.type_uz||d.type_en||d.type):lang==='es'?(d.type_es||d.type_en||d.type):d.type_en||d.type)+'</p>';
                 if (d.lastEruption) html += '<p><strong>'+t('lastEruption')+':</strong> '+d.lastEruption+'</p>';
-                if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:d.description_en)+'</p>';
+                if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:lang==='ru'?(d.description_ru||d.description_en):lang==='uz'?(d.description_uz||d.description_en):lang==='es'?(d.description_es||d.description_en):d.description_en)+'</p>';
+                _lastPanelRenderTime = performance.now();
                 panelContent.innerHTML = html;
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(function(){requestAnimationFrame(function(){countryPanel.classList.add('visible');});});
@@ -1122,7 +1203,7 @@
                     var group = gVolcanoes.append('g').style('cursor','pointer').on('click',function(){showVolcanoDetail(d);});
                     group.append('path').attr('d','M'+px+','+(py-s)+' L'+(px-s*0.7)+','+(py+s*0.5)+' L'+(px+s*0.7)+','+(py+s*0.5)+' Z').attr('fill',MAP_COLORS.volcanoes.fill).attr('stroke',MAP_COLORS.volcanoes.stroke).attr('stroke-width',1).attr('opacity',0.9);
                     group.append('circle').attr('cx',px).attr('cy',py-s*0.2).attr('r',isMobile?3:4).attr('fill',MAP_COLORS.volcanoes.glow).attr('opacity',0.8);
-                    group.append('text').attr('x',px+s+3).attr('y',py+2).text(function(){return lang==='ar'?d.name:d.name_en;}).attr('fill',MAP_COLORS.volcanoes.fill).attr('font-size',isMobile?9:12).attr('font-weight','bold').style('pointer-events','none');
+                    group.append('text').attr('x',px+s+3).attr('y',py+2).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill',MAP_COLORS.volcanoes.fill).attr('font-size',isMobile?9:12).attr('font-weight','bold').style('pointer-events','none');
                 });
             }
             function drawGeopoliticalBlocs() {
@@ -1143,7 +1224,7 @@
                                     gGeopoliticalBlocs.append('path').attr('d',pathData).attr('fill',blocColor).attr('opacity',0.3).attr('stroke',blocColor).attr('stroke-width',1.5).attr('vector-effect','non-scaling-stroke').style('pointer-events','none');
                                     var centroid = d3.geoPath().projection(projection).centroid(f);
                                     if (centroid && !isNaN(centroid[0])) {
-                                        gGeopoliticalBlocs.append('text').attr('x',centroid[0]).attr('y',centroid[1]).text(function(){return lang==='ar'?getArabicName(name):name;}).attr('fill','#fff').attr('font-size',fs).attr('font-weight','bold').attr('text-anchor','middle').attr('pointer-events','none').attr('opacity',0.9);
+                                        gGeopoliticalBlocs.append('text').attr('x',centroid[0]).attr('y',centroid[1]).text(function(){return getDisplayName(name);}).attr('fill','#fff').attr('font-size',fs).attr('font-weight','bold').attr('text-anchor','middle').attr('pointer-events','none').attr('opacity',0.9);
                                     }
                                 }
                             }
@@ -1154,13 +1235,14 @@
             function showDesertForestDetail(d) {
                 selectedFeature = d;
                 selectedFeatureType = 'desertForest';
-                var displayName = lang==='ar'?d.name:d.name_en;
+                var displayName = lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;
                 var typeIcon = d.type==='desert'?'🏜️':'🌲';
                 var html = '<h3>'+typeIcon+' '+displayName+'</h3>';
                 if (d.area_km2) html += '<p><strong>'+t('areaTitle')+':</strong> '+d.area_km2.toLocaleString('en')+' '+t('km2')+'</p>';
-                if (d.countries_ar||d.countries_en) html += '<p><strong>'+t('featureCountries')+':</strong> '+(lang==='ar'?d.countries_ar:d.countries_en)+'</p>';
-                if (d.biome_ar||d.biome_en) html += '<p><strong>'+t('biome')+':</strong> '+(lang==='ar'?d.biome_ar:d.biome_en)+'</p>';
-                if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:d.description_en)+'</p>';
+                if (d.countries_ar||d.countries_en) html += '<p><strong>'+t('featureCountries')+':</strong> '+(lang==='ar'?d.countries_ar:lang==='ru'?(d.countries_ru||d.countries_en):lang==='uz'?(d.countries_uz||d.countries_en):lang==='es'?(d.countries_es||d.countries_en):d.countries_en)+'</p>';
+                if (d.biome_ar||d.biome_en) html += '<p><strong>'+t('biome')+':</strong> '+(lang==='ar'?d.biome_ar:lang==='ru'?(d.biome_ru||d.biome_en):lang==='uz'?(d.biome_uz||d.biome_en):lang==='es'?(d.biome_es||d.biome_en):d.biome_en)+'</p>';
+                if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:lang==='ru'?(d.description_ru||d.description_en):lang==='uz'?(d.description_uz||d.description_en):lang==='es'?(d.description_es||d.description_en):d.description_en)+'</p>';
+                _lastPanelRenderTime = performance.now();
                 panelContent.innerHTML = html;
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(function(){requestAnimationFrame(function(){countryPanel.classList.add('visible');});});
@@ -1182,7 +1264,7 @@
                         var mid = d.coords[Math.floor(d.coords.length/2)];
                         var mxy = projection(mid);
                         if (mxy && !isNaN(mxy[0])) {
-                            var labelText = lang === 'ar' ? d.name : d.name_en;
+                            var labelText = lang === 'ar' ? d.name : lang === 'ru' ? (d.name_ru || d.name_en) : lang === 'uz' ?(d.name_uz || d.name_en): lang === 'es' ?(d.name_es || d.name_en) : d.name_en;
                             var fontSize = Math.max(3, Math.min(15, (isMobile ? 9 : 12) / k));
                             gDesertsForests.append('text').attr('x',mxy[0]).attr('y',mxy[1]).text(labelText).attr('fill','#fff').attr('font-size',fontSize).attr('font-weight','bold').attr('text-anchor','middle').attr('opacity',0.95).style('pointer-events','none');
                             gDesertsForests.append('circle').datum(d).attr('cx',mxy[0]).attr('cy',mxy[1]).attr('r',isMobile?20:30).attr('fill','transparent').style('cursor','pointer').on('click',function(e,dd){showDesertForestDetail(dd);});
@@ -1201,11 +1283,11 @@
                     var rBase = isMobile ? 7 : 11;
                     var r = rBase / k;
                     var x = p[0], y = p[1];
-                    gBorderDisputes.append('circle').attr('cx',x).attr('cy',y).attr('r',Math.max(2, r*2.2)).attr('fill',color).attr('opacity',0.12).attr('vector-effect','non-scaling-stroke');
-                    gBorderDisputes.append('circle').attr('cx',x).attr('cy',y).attr('r',Math.max(1.5, r*1.4)).attr('fill',color).attr('opacity',0.2).attr('vector-effect','non-scaling-stroke');
+                    gBorderDisputes.append('circle').attr('cx',x).attr('cy',y).attr('r',Math.max(2, r*2.2)).attr('fill',color).attr('opacity',0.12).attr('vector-effect','non-scaling-stroke').style('pointer-events','none');
+                    gBorderDisputes.append('circle').attr('cx',x).attr('cy',y).attr('r',Math.max(1.5, r*1.4)).attr('fill',color).attr('opacity',0.2).attr('vector-effect','non-scaling-stroke').style('pointer-events','none');
                     gBorderDisputes.append('circle').datum(d).attr('cx',x).attr('cy',y).attr('r',Math.max(1, r)).attr('fill',color).attr('stroke','#fff').attr('stroke-width',(isMobile?1:1.5)).attr('opacity',0.9).attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(e,dd){showBorderDisputeDetail(dd);});
                     gBorderDisputes.append('circle').attr('cx',x).attr('cy',y).attr('r',Math.max(3, r*3)).attr('fill','transparent').attr('stroke',color).attr('stroke-width',(isMobile?0.8:1.2)).attr('opacity',0.25).attr('vector-effect','non-scaling-stroke').style('pointer-events','none');
-                    var labelText = lang === 'ar' ? d.name_ar : d.name_en;
+                    var labelText = lang === 'ar' ? d.name_ar : lang === 'ru' ? (d.name_ru || d.name_en) : lang === 'uz' ?(d.name_uz || d.name_en): lang === 'es' ?(d.name_es || d.name_en) : d.name_en;
                     var fs = Math.max(3, Math.min(14, (isMobile ? 7 : 10) / k));
                     gBorderDisputes.append('text').attr('x',x).attr('y',y-r-3/k).text(labelText).attr('fill',color).attr('font-size',fs).attr('font-weight','bold').attr('text-anchor','middle').style('pointer-events','none');
                 });
@@ -1219,11 +1301,12 @@
                 var content = document.getElementById('panelContent');
                 if (!content) return;
                 var typeIcon = d.type === 'active' ? '⚔️' : d.type === 'ceasefire' ? '☮️' : '🌊';
-                var typeLabel = d.type === 'active' ? (lang==='ar'?'نزاع نشط':'Active Conflict') : d.type === 'ceasefire' ? (lang==='ar'?'وقف إطلاق نار':'Ceasefire') : (lang==='ar'?'نزاع بحري':'Maritime Dispute');
-                var html = '<h3>'+(lang==='ar'?d.name_ar:d.name_en)+'</h3>';
+                var typeLabel = d.type === 'active' ? (lang==='ar'?'نزاع نشط':lang==='ru'?'Активный конфликт':lang==='uz'?'Faol nizo':lang==='es'?'Conflicto activo':'Active Conflict') : d.type === 'ceasefire' ? (lang==='ar'?'وقف إطلاق نار':lang==='ru'?'Перемирие':lang==='uz'?'O\'t ochishni to\'xtatish':lang==='es'?'Alto el fuego':'Ceasefire') : (lang==='ar'?'نزاع بحري':lang==='ru'?'Морской спор':lang==='uz'?'Dengiz nizosi':lang==='es'?'Disputa marítima':'Maritime Dispute');
+                var html = '<h3>'+(lang==='ar'?d.name_ar:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en)+'</h3>';
                 html += '<div style="margin-bottom:8px"><span style="font-size:1.4em">'+typeIcon+'</span> <strong style="color:'+(d.type==='active'?MAP_COLORS.borderDisputes.active:d.type==='ceasefire'?MAP_COLORS.borderDisputes.ceasefire:MAP_COLORS.borderDisputes.maritime)+'">'+typeLabel+'</strong></div>';
-                html += '<p><strong>'+t('featureCountries')+':</strong> '+(lang==='ar'?d.countries_ar:d.countries_en)+'</p>';
-                html += '<p><strong>'+(lang==='ar'?'الأسباب':'Causes')+':</strong> '+(lang==='ar'?d.causes_ar:d.causes_en)+'</p>';
+                html += '<p><strong>'+t('featureCountries')+':</strong> '+(lang==='ar'?d.countries_ar:lang==='ru'?(d.countries_ru||d.countries_en):lang==='uz'?(d.countries_uz||d.countries_en):lang==='es'?(d.countries_es||d.countries_en):d.countries_en)+'</p>';
+                html += '<p><strong>'+(lang==='ar'?'الأسباب':lang==='ru'?'Причины':lang==='uz'?'Sabablar':lang==='es'?'Causas':'Causes')+':</strong> '+(lang==='ar'?d.causes_ar:lang==='ru'?(d.causes_ru||d.causes_en):lang==='uz'?(d.causes_uz||d.causes_en):lang==='es'?(d.causes_es||d.causes_en):d.causes_en)+'</p>';
+                _lastPanelRenderTime = performance.now();
                 content.innerHTML = html;
                 var panel = document.getElementById('countryPanel');
                 if (panel) { panel.style.display = 'block';
@@ -1335,11 +1418,12 @@
             function showWindDetail(d) {
                 selectedFeature = d;
                 selectedFeatureType = 'wind';
-                var displayName = lang==='ar'?d.name:d.name_en;
-                var typeLabels = {trade: lang==='ar'?'تجارية':'Trade Winds', westerly: lang==='ar'?'غربية':'Westerlies', polar: lang==='ar'?'قطبية':'Polar Easterlies', monsoon: lang==='ar'?'موسمية':'Monsoon', seasonal: lang==='ar'?'موسمية':'Seasonal'};
+                var displayName = lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;
+                var typeLabels = {trade: lang==='ar'?'تجارية':lang==='ru'?'Пассаты':lang==='uz'?'Passatlar':lang==='es'?'Vientos alisios':'Trade Winds', westerly: lang==='ar'?'غربية':lang==='ru'?'Западные':lang==='uz'?'G\'arbiy':lang==='es'?'Vientos del oeste':'Westerlies', polar: lang==='ar'?'قطبية':lang==='ru'?'Полярные':lang==='uz'?'Qutbiy':lang==='es'?'Vientos polares':'Polar Easterlies', monsoon: lang==='ar'?'موسمية':lang==='ru'?'Муссоны':lang==='uz'?'Mussonlar':lang==='es'?'Monzones':'Monsoon', seasonal: lang==='ar'?'موسمية':lang==='ru'?'Сезонные':lang==='uz'?'Mevsimiy':lang==='es'?'Estacional':'Seasonal'};
                 var html = '<h3>💨 '+displayName+'</h3>';
                 html += '<p><strong>'+t('windType')+':</strong> '+(typeLabels[d.type]||d.type)+'</p>';
-                if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:d.description_en)+'</p>';
+                if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:lang==='ru'?(d.description_ru||d.description_en):lang==='uz'?(d.description_uz||d.description_en):lang==='es'?(d.description_es||d.description_en):d.description_en)+'</p>';
+                _lastPanelRenderTime = performance.now();
                 panelContent.innerHTML = html;
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(function(){requestAnimationFrame(function(){countryPanel.classList.add('visible');});});
@@ -1358,25 +1442,25 @@
                 if (type === 'wind') { showWindDetail(data); return; }
 
                 const isMountain = (type === 'mountain');
-                const displayName = data.name;
+                const displayName = lang === 'ar' ? data.name : lang === 'ru' ? (data.name_ru || data.name_en || data.name) : lang === 'uz' ?(data.name_uz || data.name_en || data.name): lang === 'es' ?(data.name_es || data.name_en || data.name) : (data.name_en || data.name);
                 let html = `<h3>${isMountain ? t('featureMountainTitle') : t('featureRiverTitle')}: ${displayName}</h3>`;
                 if (data.length) {
                     html += `<p><strong>${t('featureLength')}:</strong> ${data.length.toLocaleString('en')} ${t('featureKm')}</p>`;
                 }
                 if (isMountain) {
                     if (data.highestPeak) {
-                        const peakName = lang === 'ar' ? data.highestPeak : (data.highestPeak_en || data.highestPeak);
+                        const peakName = lang === 'ar' ? data.highestPeak : lang === 'ru' ? (data.highestPeak_ru || data.highestPeak_en || data.highestPeak) : lang === 'uz' ?(data.highestPeak_uz || data.highestPeak_en || data.highestPeak): lang === 'es' ?(data.highestPeak_es || data.highestPeak_en || data.highestPeak) : (data.highestPeak_en || data.highestPeak);
                         html += `<p><strong>${t('featureHighestPeak')}:</strong> ${peakName}`;
                         if (data.highestElevation) html += ` (${data.highestElevation.toLocaleString('en')} ${t('elevationUnit')})`;
                         html += `</p>`;
                     }
                 } else {
                     if (data.source_ar || data.source_en) {
-                        const src = lang === 'ar' ? data.source_ar : data.source_en;
+                        const src = lang === 'ar' ? data.source_ar : lang === 'ru' ? (data.source_ru || data.source_en) : lang === 'uz' ?(data.source_uz || data.source_en): lang === 'es' ?(data.source_es || data.source_en) : data.source_en;
                         html += `<p><strong>${t('featureSource')}:</strong> ${src}</p>`;
                     }
                     if (data.mouth_ar || data.mouth_en) {
-                        const mth = lang === 'ar' ? data.mouth_ar : data.mouth_en;
+                        const mth = lang === 'ar' ? data.mouth_ar : lang === 'ru' ? (data.mouth_ru || data.mouth_en) : lang === 'uz' ?(data.mouth_uz || data.mouth_en): lang === 'es' ?(data.mouth_es || data.mouth_en) : data.mouth_en;
                         html += `<p><strong>${t('featureMouth')}:</strong> ${mth}</p>`;
                     }
                     if (data.discharge) {
@@ -1387,13 +1471,14 @@
                     }
                 }
                 if (data.countries_ar || data.countries_en) {
-                    const cnt = lang === 'ar' ? data.countries_ar : data.countries_en;
+                    const cnt = lang === 'ar' ? data.countries_ar : lang === 'ru' ? (data.countries_ru || data.countries_en) : lang === 'uz' ?(data.countries_uz || data.countries_en): lang === 'es' ?(data.countries_es || data.countries_en) : data.countries_en;
                     html += `<p><strong>${t('featureCountries')}:</strong> ${cnt}</p>`;
                 }
                 if (data.description_ar || data.description_en) {
-                    const desc = lang === 'ar' ? data.description_ar : data.description_en;
+                    const desc = lang === 'ar' ? data.description_ar : lang === 'ru' ? (data.description_ru || data.description_en) : lang === 'uz' ?(data.description_uz || data.description_en): lang === 'es' ?(data.description_es || data.description_en) : data.description_en;
                     html += `<p><strong>${t('featureDescription')}:</strong> ${desc}</p>`;
                 }
+                _lastPanelRenderTime = performance.now();
                 panelContent.innerHTML = html;
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(() => {
@@ -1429,7 +1514,7 @@
                 if (colorMode === 'density' && densitySpotsMode) {
                     hasAny = true;
                     const spots = isMobile ? densitySpots.slice(0, 40) : densitySpots;
-                    const fontSize = Math.max(9, Math.round((isMobile ? 10 : 14) / k));
+                    const fontSize = Math.max(11, Math.round((isMobile ? 13 : 18) / k));
                     densityCtx.font = 'bold ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Noto Sans Arabic", Tahoma, sans-serif';
                     densityCtx.textBaseline = 'middle';
                     spots.forEach(s => {
@@ -1461,12 +1546,13 @@
                         densityCtx.lineWidth = 1.2;
                         densityCtx.stroke();
                         densityCtx.globalAlpha = 1;
+                        var label = lang === 'ar' ? s.name : lang === 'ru' ? (densitySpotRussian[s.name] || densitySpotEnglish[s.name] || s.name) : lang === 'uz' ?(densitySpotUzbek[s.name] || densitySpotEnglish[s.name] || s.name): lang === 'es' ?(densitySpotSpanish[s.name] || densitySpotEnglish[s.name] || s.name) : (densitySpotEnglish[s.name] || s.name);
                         densityCtx.lineWidth = 3;
                         densityCtx.strokeStyle = MAP_COLORS.ui.textStroke;
                         densityCtx.lineJoin = 'round';
-                        densityCtx.strokeText(s.name, sx + r1 + 3 / k, sy);
+                        densityCtx.strokeText(label, sx + r1 + 3 / k, sy);
                         densityCtx.fillStyle = MAP_COLORS.ui.white;
-                        densityCtx.fillText(s.name, sx + r1 + 3 / k, sy);
+                        densityCtx.fillText(label, sx + r1 + 3 / k, sy);
                     });
                 }
 
@@ -1475,7 +1561,7 @@
                     hasAny = true;
                     const dotSize = Math.max(3.5, (isMobile ? 4 : 5.5) / k);
                     const haloSize = Math.max(5, (isMobile ? 7 : 10) / k);
-                    const fontSize = Math.max(8, Math.round((isMobile ? 9 : 11) / k));
+                    const fontSize = Math.max(11, Math.round((isMobile ? 12 : 15) / k));
                     densityCtx.font = 'bold ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Noto Sans Arabic", Tahoma, sans-serif';
                     densityCtx.textBaseline = 'middle';
                     Object.entries(countryInfo).forEach(([name, info]) => {
@@ -1499,7 +1585,7 @@
                         densityCtx.strokeStyle = MAP_COLORS.capitals.stroke;
                         densityCtx.lineWidth = 1;
                         densityCtx.stroke();
-                        const label = lang === 'ar' ? info.capital_ar : info.capital_en;
+                        const label = lang === 'ar' ? info.capital_ar : lang === 'ru' ? (info.capital_ru || info.capital_en) : lang === 'uz' ?(info.capital_uz || info.capital_en): lang === 'es' ?(info.capital_es || info.capital_en) : info.capital_en;
                         densityCtx.globalAlpha = 1;
                         densityCtx.lineWidth = 3;
                         densityCtx.strokeStyle = MAP_COLORS.ui.textStroke;
@@ -1515,7 +1601,7 @@
                     hasAny = true;
                     const citySize = Math.max(4.5, (isMobile ? 7 : 10) / k);
                     const cityCatColors = MAP_COLORS.cities;
-                    const fontSize = Math.max(9, Math.round((isMobile ? 10 : 13) / k));
+                    const fontSize = Math.max(11, Math.round((isMobile ? 13 : 17) / k));
                     densityCtx.font = 'bold ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Noto Sans Arabic", Tahoma, sans-serif';
                     densityCtx.textBaseline = 'middle';
                     majorCitiesData.forEach(city => {
@@ -1534,7 +1620,7 @@
                         densityCtx.strokeStyle = MAP_COLORS.ui.white;
                         densityCtx.lineWidth = 1.2;
                         densityCtx.stroke();
-                        const label = lang === 'ar' ? city.name : city.name;
+                        const label = lang === 'ar' ? city.name : lang === 'ru' ? (city.name_ru || city.name_en || city.name) : lang === 'uz' ?(city.name_uz || city.name_en || city.name): lang === 'es' ?(city.name_es || city.name_en || city.name) : (city.name_en || city.name);
                         densityCtx.globalAlpha = 1;
                         densityCtx.lineWidth = 3;
                         densityCtx.strokeStyle = MAP_COLORS.ui.textStroke;
@@ -1556,8 +1642,8 @@
 
             function getLabelFontSize() {
                 const zoom = currentTransform.k || 1;
-                const minScreenPx = isMobile ? 10 : 13;
-                const maxScreenPx = isMobile ? 15 : 20;
+                const minScreenPx = isMobile ? 12 : 16;
+                const maxScreenPx = isMobile ? 18 : 24;
                 const screenPx = Math.max(minScreenPx, Math.min(maxScreenPx, minScreenPx * Math.pow(zoom, 0.45)));
                 return screenPx / zoom;
             }
@@ -1575,7 +1661,7 @@
                 const featuresToLabel = isMobile ? features.filter(d => d3.geoArea(d) > 0.005) : features;
                 featuresToLabel.forEach(d => {
                     const name = d.properties?.name || '';
-                    const displayName = lang === 'ar' ? getArabicName(name) : name;
+                    const displayName = getDisplayName(name);
                     const area = d3.geoArea(d);
                     if (threshold >= 0 && area < threshold) return;
 
@@ -1634,7 +1720,7 @@
                     } else {
                         el.style('opacity', 1);
                     }
-                    const newDisplay = lang === 'ar' ? getArabicName(data.name) : data.name;
+                    const newDisplay = getDisplayName(data.name);
                     if (el.text() !== newDisplay) el.text(newDisplay);
                 });
             }
@@ -1759,19 +1845,19 @@
                     const stops = [getDensityColor(1),getDensityColor(20),getDensityColor(80),getDensityColor(250),getDensityColor(700)].join(',');
                     html += `<div class="legend-gradient-labels"><span>&lt;1</span><span>&gt;500</span></div>`;
                     html += `<div class="legend-gradient-bar" style="background:linear-gradient(to right,${stops})"></div>`;
-                    html += `<div style="font-size:0.8em;color:var(--text-secondary);margin-top:2px">نسمة/كم²</div>`;
+                    html += `<div style="font-size:0.8em;color:var(--text-secondary);margin-top:2px">${lang==='ar'?'نسمة/كم²':lang==='ru'?'чел/км²':lang==='uz'?'kishimi/km²':lang==='es'?'hab/km²':'people/km²'}</div>`;
                 } else if (colorMode === 'precipitation') {
                     html += `<div style="font-weight:700;margin-bottom:4px">${t('precipitationLegend')}</div>`;
                     const stops = [getPrecipitationColor(30),getPrecipitationColor(200),getPrecipitationColor(700),getPrecipitationColor(1800),getPrecipitationColor(3200)].join(',');
                     html += `<div class="legend-gradient-labels"><span>&lt;100</span><span>&gt;3000</span></div>`;
                     html += `<div class="legend-gradient-bar" style="background:linear-gradient(to right,${stops})"></div>`;
-                    html += `<div style="font-size:0.8em;color:var(--text-secondary);margin-top:2px">مم/سنة</div>`;
+                    html += `<div style="font-size:0.8em;color:var(--text-secondary);margin-top:2px">${lang==='ar'?'مم/سنة':lang==='ru'?'мм/год':lang==='uz'?'mm/yil':lang==='es'?'mm/año':'mm/year'}</div>`;
                 } else if (colorMode === 'temperature') {
                     html += `<div style="font-weight:700;margin-bottom:4px">${t('temperatureLegend')}</div>`;
                     const stops = [getTempColor(-15),getTempColor(-3),getTempColor(8),getTempColor(18),getTempColor(28),getTempColor(35)].join(',');
                     html += `<div class="legend-gradient-labels"><span>&lt;0°</span><span>&gt;30°</span></div>`;
                     html += `<div class="legend-gradient-bar" style="background:linear-gradient(to right,${stops})"></div>`;
-                    html += `<div style="font-size:0.8em;color:var(--text-secondary);margin-top:2px">درجة مئوية</div>`;
+                    html += `<div style="font-size:0.8em;color:var(--text-secondary);margin-top:2px">${lang==='ar'?'درجة مئوية':lang==='ru'?'°C':lang==='uz'?'°C':lang==='es'?'°C':'°C'}</div>`;
                 } else if (colorMode === 'gdp') {
                     html += `<div style="font-weight:700;margin-bottom:4px">${t('gdpLegend')}</div>`;
                     const stops = MAP_COLORS.gdp.slice(1).join(',');
@@ -1788,8 +1874,7 @@
                 } else {
                     html += `<div style="font-weight:700;margin-bottom:4px">${t('religionLegend')}</div>`;
                     Object.entries(sectMode ? denominationColors : religionColors).forEach(([k, v]) => {
-                        const label = sectMode ? ((lang === 'ar' && denominationArabic[k]) ? denominationArabic[
-                            k] : k) : ((lang === 'ar' && religionArabic[k]) ? religionArabic[k] : k);
+                        const label = sectMode ? (lang === 'ar' ? (denominationArabic[k] || k) : lang === 'ru' ? (denominationRussian[k] || k) : lang === 'uz' ?(denominationUzbek[k] || k): lang === 'es' ?(denominationSpanish[k] || k) : k) : (lang === 'ar' ? (religionArabic[k] || k) : lang === 'ru' ? (religionRussian[k] || k) : lang === 'uz' ?(religionUzbek[k] || k): lang === 'es' ?(religionSpanish[k] || k) : k);
                         html +=
                             `<div class="legend-item"><span class="legend-color" style="background:${v}"></span>${label}</div>`;
                     });
@@ -1829,62 +1914,62 @@
                 }
                 if (ethnicGroupsVisible) {
                     html += `<div style="font-weight:700;margin-bottom:4px">${t('ethnicGroupsLegend')}</div>`;
-                    html += `<div style="font-size:0.8em;color:var(--text-secondary)">${lang==='ar'?'كل نقطة بلون مختلف تمثل مجموعة عرقية مستقلة — انقر لعرض التفاصيل':'Each colored dot represents a distinct ethnic/cultural group — click for details'}</div>`;
+                    html += `<div style="font-size:0.8em;color:var(--text-secondary)">${lang==='ar'?'كل نقطة بلون مختلف تمثل مجموعة عرقية مستقلة — انقر لعرض التفاصيل':lang==='ru'?'Каждая цветная точка представляет отдельную этническую/культурную группу — нажмите для подробностей':lang==='uz'?'Har bir rangli nuqota mustaqil etnik/guruhni ifodalaydi — bosib tafsilotlarni ko\'ring':lang==='es'?'Cada punto de color representa un grupo étnico/cultural distinto — haga clic para ver detalles':'Each colored dot represents a distinct ethnic/cultural group — click for details'}</div>`;
                 }
                 if (oceanCurrentsVisible) {
                     html += `<div style="font-weight:700;margin-bottom:4px">${t('oceanCurrentsLegend')}</div>`;
                     var currentLegendItems = [
-                        { c: MAP_COLORS.oceanCurrents.warm, l: lang==='ar'?'تيار دافئ':'Warm current' },
-                        { c: MAP_COLORS.oceanCurrents.cold, l: lang==='ar'?'تيار بارد':'Cold current' },
-                        { c: MAP_COLORS.oceanCurrents.gyre, l: lang==='ar'?'دوامة محيطية':'Ocean gyre' },
-                        { c: MAP_COLORS.oceanCurrents.trench, l: lang==='ar'?'خندق محيطي':'Ocean trench' }
+                        { c: MAP_COLORS.oceanCurrents.warm, l: lang==='ar'?'تيار دافئ':lang==='ru'?'Тёплое течение':lang==='uz'?'Iliq oqim':lang==='es'?'Corriente cálida':'Warm current' },
+                        { c: MAP_COLORS.oceanCurrents.cold, l: lang==='ar'?'تيار بارد':lang==='ru'?'Холодное течение':lang==='uz'?'Sovuq oqim':lang==='es'?'Corriente fría':'Cold current' },
+                        { c: MAP_COLORS.oceanCurrents.gyre, l: lang==='ar'?'دوامة محيطية':lang==='ru'?'Океанский круговорот':lang==='uz'?'Okean aylanmasi':lang==='es'?'Giro oceánico':'Ocean gyre' },
+                        { c: MAP_COLORS.oceanCurrents.trench, l: lang==='ar'?'خندق محيطي':lang==='ru'?'Океанский жёлоб':lang==='uz'?'Okean chuqurligi':lang==='es'?'Fosa oceánica':'Ocean trench' }
                     ];
                     currentLegendItems.forEach(function(it){ html += `<div class="legend-item"><span class="legend-color" style="background:${it.c}"></span>${it.l}</div>`; });
                 }
                 if (windsVisible) {
                     html += `<div style="font-weight:700;margin-bottom:4px">${t('windsLegend')}</div>`;
                     var windLegendItems = [
-                        { c: MAP_COLORS.winds.trade, l: lang==='ar'?'رياح تجارية':'Trade winds' },
-                        { c: MAP_COLORS.winds.westerly, l: lang==='ar'?'رياح غربية':'Westerlies' },
-                        { c: MAP_COLORS.winds.polar, l: lang==='ar'?'رياح قطبية':'Polar winds' },
-                        { c: MAP_COLORS.winds.monsoon, l: lang==='ar'?'رياح موسمية':'Monsoon winds' }
+                        { c: MAP_COLORS.winds.trade, l: lang==='ar'?'رياح تجارية':lang==='ru'?'Пассаты':lang==='uz'?'Passatlar':lang==='es'?'Vientos alisios':'Trade winds' },
+                        { c: MAP_COLORS.winds.westerly, l: lang==='ar'?'رياح غربية':lang==='ru'?'Западные':lang==='uz'?'G\'arbiy shamollar':lang==='es'?'Vientos del oeste':'Westerlies' },
+                        { c: MAP_COLORS.winds.polar, l: lang==='ar'?'رياح قطبية':lang==='ru'?'Полярные':lang==='uz'?'Qutbiy shamollar':lang==='es'?'Vientos polares':'Polar winds' },
+                        { c: MAP_COLORS.winds.monsoon, l: lang==='ar'?'رياح موسمية':lang==='ru'?'Муссоны':lang==='uz'?'Mussonlar':lang==='es'?'Monzones':'Monsoon winds' }
                     ];
                     windLegendItems.forEach(function(it){ html += `<div class="legend-item"><span class="legend-color" style="background:${it.c}"></span>${it.l}</div>`; });
                 }
                 if (earthquakesVisible) {
                     html += `<div style="font-weight:700;margin-bottom:4px">${t('earthquakesLegend')}</div>`;
                     var quakeLegendItems = [
-                        { c: MAP_COLORS.earthquakes.major9, l: lang==='ar'?'≥ 9.0 درجة':'Magnitude ≥ 9.0' },
-                        { c: MAP_COLORS.earthquakes.major8, l: lang==='ar'?'8.0 – 8.9':'8.0 – 8.9' },
-                        { c: MAP_COLORS.earthquakes.major7, l: lang==='ar'?'7.0 – 7.9':'7.0 – 7.9' },
-                        { c: MAP_COLORS.earthquakes.major6, l: lang==='ar'?'6.0 – 6.9':'6.0 – 6.9' },
-                        { c: MAP_COLORS.earthquakes.below6, l: lang==='ar'?'أقل من 6.0':'Below 6.0' }
+                        { c: MAP_COLORS.earthquakes.major9, l: lang==='ar'?'≥ 9.0 درجة':lang==='ru'?'Магнитуда ≥ 9.0':lang==='uz'?'Magnituda ≥ 9.0':lang==='es'?'Magnitud ≥ 9.0':'Magnitude ≥ 9.0' },
+                        { c: MAP_COLORS.earthquakes.major8, l: lang==='ar'?'8.0 – 8.9':lang==='ru'?'8.0 – 8.9':lang==='uz'?'8.0 – 8.9':lang==='es'?'8.0 – 8.9':'8.0 – 8.9' },
+                        { c: MAP_COLORS.earthquakes.major7, l: lang==='ar'?'7.0 – 7.9':lang==='ru'?'7.0 – 7.9':lang==='uz'?'7.0 – 7.9':lang==='es'?'7.0 – 7.9':'7.0 – 7.9' },
+                        { c: MAP_COLORS.earthquakes.major6, l: lang==='ar'?'6.0 – 6.9':lang==='ru'?'6.0 – 6.9':lang==='uz'?'6.0 – 6.9':lang==='es'?'6.0 – 6.9':'6.0 – 6.9' },
+                        { c: MAP_COLORS.earthquakes.below6, l: lang==='ar'?'أقل من 6.0':lang==='ru'?'Ниже 6.0':lang==='uz'?'6.0 dan past':lang==='es'?'Menor a 6.0':'Below 6.0' }
                     ];
                     quakeLegendItems.forEach(function(it){ html += `<div class="legend-item"><span class="legend-color" style="background:${it.c}"></span>${it.l}</div>`; });
                 }
                 if (volcanoesVisible) {
                     html += `<div style="font-weight:700;margin-bottom:4px">${t('volcanoesLegend')}</div>`;
-                    html += `<div style="font-size:0.8em;color:var(--text-secondary)">${lang==='ar'?'▲ يمثل كل رمز مثلثي بركاناً — انقر لعرض التفاصيل':'▲ Each triangle marker is a volcano — click for details'}</div>`;
+                    html += `<div style="font-size:0.8em;color:var(--text-secondary)">${lang==='ar'?'▲ يمثل كل رمز مثلثي بركاناً — انقر لعرض التفاصيل':lang==='ru'?'▲ Каждый треугольник — вулкан — нажмите для подробностей':lang==='uz'?'▲ Har bir uchburchak — vulkan — bosib tafsilotlarni ko\'ring':lang==='es'?'▲ Cada triángulo es un volcán — haga clic para ver detalles':'▲ Each triangle marker is a volcano — click for details'}</div>`;
                 }
                 if (geopoliticalBlocsVisible) {
                     html += `<div style="font-weight:700;margin-bottom:4px">${t('geopoliticalBlocsLegend')}</div>`;
                     if (selectedBloc !== 'all') {
                         var selBloc = geopoliticalBlocsData.find(function(b){return b.name_en===selectedBloc||b.name===selectedBloc;});
-                        if (selBloc) html += `<div style="font-size:0.85em;color:${selBloc.color};margin-top:2px">◉ ${lang==='ar'?selBloc.name:selBloc.name_en}</div>`;
+                        if (selBloc) html += `<div style="font-size:0.85em;color:${selBloc.color};margin-top:2px">◉ ${lang==='ar'?selBloc.name:lang==='ru'?(selBloc.name_ru||selBloc.name_en):lang==='uz'?(selBloc.name_uz||selBloc.name_en):lang==='es'?(selBloc.name_es||selBloc.name_en):selBloc.name_en}</div>`;
                     } else {
-                        html += `<div style="font-size:0.8em;color:var(--text-secondary)">${lang==='ar'?'اختر تكتلاً من القائمة المنسدلة لتظليل أعضائه على الخريطة':'Pick a bloc from the dropdown to highlight its members on the map'}</div>`;
+                        html += `<div style="font-size:0.8em;color:var(--text-secondary)">${lang==='ar'?'اختر تكتلاً من القائمة المنسدلة لتظليل أعضائه على الخريطة':lang==='ru'?'Выберите блок из списка, чтобы подсветить его членов на карте':lang==='uz'?'A\'zolarini ajratish uchun ro\'yxatdan blokni tanlang':lang==='es'?'Seleccione un bloque del menú para resaltar sus miembros en el mapa':'Pick a bloc from the dropdown to highlight its members on the map'}</div>`;
                     }
                 }
                 if (desertsForestsVisible) {
                     html += `<div style="font-weight:700;margin-bottom:4px">${t('desertsForestsLegend')}</div>`;
-                    html += `<div class="legend-item"><span class="legend-color" style="background:${MAP_COLORS.desertsForests.desert}"></span>${lang==='ar'?'صحراء':'Desert'}</div>`;
-                    html += `<div class="legend-item"><span class="legend-color" style="background:${MAP_COLORS.desertsForests.forest}"></span>${lang==='ar'?'غابة':'Forest'}</div>`;
+                    html += `<div class="legend-item"><span class="legend-color" style="background:${MAP_COLORS.desertsForests.desert}"></span>${lang==='ar'?'صحراء':lang==='ru'?'Пустыня':lang==='uz'?'Cho\'l':lang==='es'?'Desierto':'Desert'}</div>`;
+                    html += `<div class="legend-item"><span class="legend-color" style="background:${MAP_COLORS.desertsForests.forest}"></span>${lang==='ar'?'غابة':lang==='ru'?'Лес':lang==='uz'?'O\'rmon':lang==='es'?'Bosque':'Forest'}</div>`;
                 }
                 if (borderDisputesVisible) {
                     html += `<div style="font-weight:700;margin-bottom:4px">${t('borderDisputesLegend')}</div>`;
-                    html += `<div class="legend-item"><span class="legend-color" style="background:${MAP_COLORS.borderDisputes.active}"></span>${lang==='ar'?'نزاع نشط':'Active conflict'}</div>`;
-                    html += `<div class="legend-item"><span class="legend-color" style="background:${MAP_COLORS.borderDisputes.ceasefire}"></span>${lang==='ar'?'وقف إطلاق نار':'Ceasefire'}</div>`;
-                    html += `<div class="legend-item"><span class="legend-color" style="background:${MAP_COLORS.borderDisputes.maritime}"></span>${lang==='ar'?'نزاع بحري':'Maritime dispute'}</div>`;
+                    html += `<div class="legend-item"><span class="legend-color" style="background:${MAP_COLORS.borderDisputes.active}"></span>${lang==='ar'?'نزاع نشط':lang==='ru'?'Активный конфликт':lang==='uz'?'Faol nizo':lang==='es'?'Conflicto activo':'Active conflict'}</div>`;
+                    html += `<div class="legend-item"><span class="legend-color" style="background:${MAP_COLORS.borderDisputes.ceasefire}"></span>${lang==='ar'?'وقف إطلاق نار':lang==='ru'?'Перемирие':lang==='uz'?'O\'t ochishni to\'xtatish':lang==='es'?'Alto el fuego':'Ceasefire'}</div>`;
+                    html += `<div class="legend-item"><span class="legend-color" style="background:${MAP_COLORS.borderDisputes.maritime}"></span>${lang==='ar'?'نزاع بحري':lang==='ru'?'Морской спор':lang==='uz'?'Dengiz nizosi':lang==='es'?'Disputa marítima':'Maritime dispute'}</div>`;
                 }
                 if (colorMode === 'terrain' || riversVisible) html += `<div style="margin-top:4px;font-size:0.85em;color:var(--text-secondary)">${t('featureClickHint')}</div>`;
                 legendEl.innerHTML = html;
@@ -1976,6 +2061,7 @@
 
             function setLanguage(l) {
                 lang = l;
+                try { localStorage.setItem('mapLang', l); } catch(e) {}
                 applyLanguage();
             }
 
@@ -1985,7 +2071,7 @@
                 else { el.textContent = text; }
             }
             function applyLanguage() {
-                document.documentElement.setAttribute('lang', lang === 'ar' ? 'ar' : 'en');
+                document.documentElement.setAttribute('lang', lang === 'ar' ? 'ar' : lang === 'ru' ? 'ru' : lang === 'uz' ? 'uz' : lang === 'es' ? 'es' : 'en');
                 document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
                 var rowLangLabel = document.getElementById('rowLangLabel');
                 if (rowLangLabel) rowLangLabel.textContent = t('rowLangLabel');
@@ -1993,8 +2079,6 @@
                 if (rowModeLabel) rowModeLabel.textContent = t('rowModeLabel');
                 setBtnText(document.getElementById('rowFilterLabel'), t('rowFilterLabel'));
                 setBtnText(document.getElementById('mobileFilterLabel'), t('rowFilterLabel'));
-                var rowKeysLabel = document.getElementById('rowKeysLabel');
-                if (rowKeysLabel) setBtnText(rowKeysLabel, t('rowKeysLabel'));
                 setBtnText(document.getElementById('sectionToolsLabel'), t('sectionTools'));
                 setBtnText(document.getElementById('sectionBaseMapLabel'), t('sectionBaseMap'));
                 setBtnText(document.getElementById('sectionDataLayersLabel'), t('sectionDataLayers'));
@@ -2003,9 +2087,13 @@
                 setBtnText(layersTitle, t('layersModalTitle'));
 
                 setBtnText(labelsToggle, t('labelsToggle'));
-                langToggle.textContent = lang === 'ar' ? 'English' : 'العربية';
-                var mobileLangBtn = document.getElementById('mobileLangToggle');
-                if (mobileLangBtn) mobileLangBtn.textContent = lang === 'ar' ? 'English' : 'العربية';
+                var langToggleText = document.getElementById('langToggleText');
+                if (langToggleText) langToggleText.textContent = t('langButton');
+                var mobileLangToggleText = document.getElementById('mobileLangToggleText');
+                if (mobileLangToggleText) mobileLangToggleText.textContent = t('langButton');
+                document.querySelectorAll('.lang-option').forEach(function(opt) {
+                    opt.classList.toggle('active', opt.dataset.lang === lang);
+                });
                 setBtnText(sectToggle, t('sectToggle'));
                 setBtnText(corridorsToggle, t('corridorsToggle'));
                 setBtnText(riversToggle, t('riversToggle'));
@@ -2027,7 +2115,7 @@
                 geopoliticalBlocsData.forEach(function(b) {
                     var opt = document.createElement('option');
                     opt.value = b.name_en;
-                    opt.textContent = (lang === 'ar' ? b.name : b.name_en) + ' (' + (lang === 'ar' ? b.members_ar : b.members_en) + ')';
+opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name_en) : lang === 'uz' ?(b.name_uz || b.name_en): lang === 'es' ?(b.name_es || b.name_en) : b.name_en) + ' (' + (lang === 'ar' ? b.members_ar : lang === 'ru' ? (b.members_ru || b.members_en) : lang === 'uz' ?(b.members_uz || b.members_en): lang === 'es' ?(b.members_es || b.members_en) : b.members_en) + ')';
                     blocSelect.appendChild(opt);
                 });
                 blocSelect.options[0].textContent = t('blocAll');
@@ -2060,6 +2148,8 @@
                 searchInput.title = t('searchInput_title');
                 document.getElementById('shortcutsBtn').title = t('shortcutsBtn_title');
                 document.getElementById('pdfExportBtn').title = t('pdfExportBtn_title');
+                var onboardBtnEl = document.getElementById('onboardBtn');
+                if (onboardBtnEl) { onboardBtnEl.title = t('onboardMapGuide'); }
                 modeButtons.forEach(b => {
                     setBtnText(b, t(`mode_${b.dataset.mode}`));
                     b.title = t(`mode_${b.dataset.mode}_tip`) || b.textContent;
@@ -2131,8 +2221,8 @@
                     suggestionsList.innerHTML = '';
                     if (!val) { suggestionsList.style.display = 'none'; return; }
                     const matches = countryNamesList.filter(n => {
-                        const ar = getArabicName(n).toLowerCase();
-                        return n.toLowerCase().includes(val) || ar.includes(val);
+                        const localized = getDisplayName(n).toLowerCase();
+                        return n.toLowerCase().includes(val) || localized.includes(val);
                     }).slice(0, isMobile ? 6 : 8);
                     if (matches.length) {
                         matches.forEach(m => {
@@ -2142,7 +2232,7 @@
                             span.className = 'flag-icon';
                             span.textContent = flag;
                             li.appendChild(span);
-                            li.appendChild(document.createTextNode(' ' + (lang === 'ar' ? getArabicName(m) : m)));
+                            li.appendChild(document.createTextNode(' ' + getDisplayName(m)));
 
                             // دالة موحّدة للتنفيذ
                             const doSelect = (e) => {
@@ -2371,7 +2461,7 @@
                 const feature = allCountryFeatures.find(f => f.properties?.name === name);
                 if (!feature) {
                     for (let f of allCountryFeatures) {
-                        if (getArabicName(f.properties?.name) === name) {
+                        if (getDisplayName(f.properties?.name) === name) {
                             flyToCountry(f.properties?.name);
                             return;
                         }
@@ -2476,14 +2566,13 @@
                     }
                 }
 
-                const displayName = lang === 'ar' ? getArabicName(name) : name;
+                const displayName = getDisplayName(name);
 
                 let population = info ? info.population_2026 : null;
                 let area = info ? info.area : null;
                 let density = getDensity(name);
-                let capital = info ? (lang === 'ar' ? info.capital_ar : info.capital_en) : (lang === 'ar' ? 'غير محدد' :
-                    'N/A');
-                let language = info ? (lang === 'ar' ? info.lang_ar : info.lang_en) : (lang === 'ar' ? 'غير محدد' : 'N/A');
+                let capital = info ? (lang === 'ar' ? info.capital_ar : lang === 'ru' ? (info.capital_ru || info.capital_en) : lang === 'uz' ?(info.capital_uz || info.capital_en): lang === 'es' ?(info.capital_es || info.capital_en) : info.capital_en) : (lang === 'ar' ? 'غير محدد' : lang === 'ru' ? 'Н/Д' : lang === 'uz' ?'Mavjud emas': lang === 'es' ?'N/D' : 'N/A');
+                let language = info ? (lang === 'ar' ? info.lang_ar : lang === 'ru' ? (info.lang_ru || info.lang_en) : lang === 'uz' ?(info.lang_uz || info.lang_en): lang === 'es' ?(info.lang_es || info.lang_en) : info.lang_en) : (lang === 'ar' ? 'غير محدد' : lang === 'ru' ? 'Н/Д' : lang === 'uz' ?'Mavjud emas': lang === 'es' ?'N/D' : 'N/A');
 
                 let localTimeStr = t('unknown');
                 if (info && info.capital_coords) {
@@ -2547,8 +2636,8 @@
 
                 const continent = getContinent(name);
                 const government = getGovernment(name);
-                const continentLabel = lang === 'ar' ? (continentArabic[continent] || continent) : continent;
-                const govLabel = lang === 'ar' ? (governmentArabic[government] || government) : government;
+                const continentLabel = lang === 'ar' ? (continentArabic[continent] || continent) : lang === 'ru' ? (continentRussian[continent] || continent) : lang === 'uz' ?(continentUzbek[continent] || continent): lang === 'es' ?(continentSpanish[continent] || continent) : continent;
+                const govLabel = lang === 'ar' ? (governmentArabic[government] || government) : lang === 'ru' ? (governmentRussian[government] || government) : lang === 'uz' ?(governmentUzbek[government] || government): lang === 'es' ?(governmentSpanish[government] || government) : government;
 
                 const flagEmoji = getCountryFlag(name);
                 let html = `<h3>${flagEmoji} ${displayName}</h3>`;
@@ -2564,7 +2653,7 @@
                 html += `<p><strong>${t('languageTitle')}:</strong> ${language}</p>`;
                 html += `<p><strong>🕒 ${t('localTime')}:</strong> ${localTimeStr}</p>`;
                 const gdpVal = getGDP(name);
-                if (gdpVal !== null) html += `<p><strong>💰 ${t('tooltipGDP')}:</strong> $${gdpVal.toLocaleString()}</p>`;
+                if (gdpVal !== null) html += `<p><strong>💰 ${t('tooltipGDP')}:</strong> $${gdpVal.toLocaleString('en-US')}</p>`;
                 const hdiVal = getHDI(name);
                 if (hdiVal !== null) html += `<p><strong>📊 ${t('tooltipHDI')}:</strong> ${hdiVal.toFixed(3)}</p>`;
                 const tzLabel = timezoneOffsets[name] || timezoneOffsets[cleanName];
@@ -2619,8 +2708,8 @@
                     compareInput.addEventListener('input', function() {
                         const val = this.value.trim().toLowerCase();
                         const matches = countryNamesList.filter(n => {
-                            const ar = getArabicName(n).toLowerCase();
-                            return (n.toLowerCase().includes(val) || ar.includes(val)) && n !== name;
+                            const localized = getDisplayName(n).toLowerCase();
+                            return (n.toLowerCase().includes(val) || localized.includes(val)) && n !== name;
                         }).slice(0, isMobile ? 4 : 6);
                         const old = container.querySelectorAll('.suggest-item');
                         old.forEach(el => el.remove());
@@ -2634,7 +2723,7 @@
                             const span3 = document.createElement('span');
                             span3.textContent = flag;
                             div.appendChild(span3);
-                            div.appendChild(document.createTextNode(' ' + (lang === 'ar' ? getArabicName(m) : m)));
+                            div.appendChild(document.createTextNode(' ' + getDisplayName(m)));
                             container.appendChild(div);
                         });
                     });
@@ -2645,8 +2734,8 @@
                 _lastPanelRenderTime = performance.now();
                 const name1 = d1.properties?.name || '';
                 const name2 = d2.properties?.name || '';
-                const displayName1 = lang === 'ar' ? getArabicName(name1) : name1;
-                const displayName2 = lang === 'ar' ? getArabicName(name2) : name2;
+                const displayName1 = getDisplayName(name1);
+                const displayName2 = getDisplayName(name2);
                 const info1 = countryInfo[name1] || countryInfo[getCleanName(name1)];
                 const info2 = countryInfo[name2] || countryInfo[getCleanName(name2)];
                 const area1 = info1 ? info1.area : null;
@@ -2657,8 +2746,8 @@
                 const pop2 = info2 ? info2.population_2026 : null;
                 const rel1 = getReligion(name1);
                 const rel2 = getReligion(name2);
-                const relLabel1 = (lang === 'ar' && religionArabic[rel1]) ? religionArabic[rel1] : rel1;
-                const relLabel2 = (lang === 'ar' && religionArabic[rel2]) ? religionArabic[rel2] : rel2;
+                const relLabel1 = lang === 'ar' ? (religionArabic[rel1] || rel1) : lang === 'ru' ? (religionRussian[rel1] || rel1) : lang === 'uz' ?(religionUzbek[rel1] || rel1): lang === 'es' ?(religionSpanish[rel1] || rel1) : rel1;
+                const relLabel2 = lang === 'ar' ? (religionArabic[rel2] || rel2) : lang === 'ru' ? (religionRussian[rel2] || rel2) : lang === 'uz' ?(religionUzbek[rel2] || rel2): lang === 'es' ?(religionSpanish[rel2] || rel2) : rel2;
 
                 const maxArea = Math.max(area1 || 1, area2 || 1);
                 const maxPop = Math.max(pop1 || 1, pop2 || 1);
@@ -2693,8 +2782,8 @@
                 const gdp1 = getGDP(name1);
                 const gdp2 = getGDP(name2);
                 html += '<tr><td style="padding:4px;">💰 ' + e(t('tooltipGDP')) + '</td>' +
-                    '<td style="padding:4px;">' + (gdp1 !== null ? '$' + e(gdp1.toLocaleString()) : '?') + '</td>' +
-                    '<td style="padding:4px;">' + (gdp2 !== null ? '$' + e(gdp2.toLocaleString()) : '?') + '</td></tr>';
+                    '<td style="padding:4px;">' + (gdp1 !== null ? '$' + e(gdp1.toLocaleString('en-US')) : '?') + '</td>' +
+                    '<td style="padding:4px;">' + (gdp2 !== null ? '$' + e(gdp2.toLocaleString('en-US')) : '?') + '</td></tr>';
                 const hdi1 = getHDI(name1);
                 const hdi2 = getHDI(name2);
                 html += '<tr><td style="padding:4px;">📊 ' + e(t('tooltipHDI')) + '</td>' +
@@ -2787,7 +2876,6 @@
                 }).on('end', function() {
                     updateOverlayPositions();
                     updateLabels();
-                    if (borderDisputesVisible) drawBorderDisputes();
                     drawPointLayersCanvas();
                 });
                 svg.call(zoomBehavior);
@@ -2891,16 +2979,15 @@
 
                 countryPaths.on('mouseenter', function(e, d) {
                     const name = d.properties?.name || '';
-                    let displayName = lang === 'ar' ? getArabicName(name) : name;
+                    let displayName = getDisplayName(name);
                     const rel = getReligion(name);
                     const denom = sectMode ? getDenomination(name) : null;
                     let html = `<div class="country-name"><strong>${displayName}</strong></div>`;
                     if (colorMode === 'religion' && sectMode && denom) {
-                        const denomLabel = (lang === 'ar' && denominationArabic[denom]) ? denominationArabic[
-                            denom] : (lang === 'ar' && religionArabic[rel]) ? religionArabic[rel] : denom;
+                        const denomLabel = lang === 'ar' ? (denominationArabic[denom] || religionArabic[rel] || denom) : lang === 'ru' ? (denominationRussian[denom] || religionRussian[rel] || denom) : lang === 'uz' ?(denominationUzbek[denom] || religionUzbek[rel] || denom): lang === 'es' ?(denominationSpanish[denom] || religionSpanish[rel] || denom) : denom;
                         html += `<div>${t('tooltipDenom')}: ${denomLabel}</div>`;
                     } else if (colorMode === 'religion') {
-                        const relLabel = (lang === 'ar' && religionArabic[rel]) ? religionArabic[rel] : rel;
+                        const relLabel = lang === 'ar' ? (religionArabic[rel] || rel) : lang === 'ru' ? (religionRussian[rel] || rel) : lang === 'uz' ?(religionUzbek[rel] || rel): lang === 'es' ?(religionSpanish[rel] || rel) : rel;
                         html += `<div>${t('tooltipReligion')}: ${relLabel}</div>`;
                     }
                     if (colorMode === 'terrain') {
@@ -2926,7 +3013,7 @@
                     if (colorMode === 'gdp') {
                         const gdp = getGDP(name);
                         html +=
-                            `<div>${t('tooltipGDP')}: ${gdp !== null ? '$' + gdp.toLocaleString() : t('unknown')}</div>`;
+                            `<div>${t('tooltipGDP')}: ${gdp !== null ? '$' + gdp.toLocaleString('en-US') : t('unknown')}</div>`;
                     }
                     if (colorMode === 'hdi') {
                         const hdi = getHDI(name);
@@ -2988,9 +3075,9 @@
                     clearTimeout(_peekTimer);
                     _peekTimer = setTimeout(() => {
                         const name = d.properties?.name || '';
-                        const displayName = lang === 'ar' ? getArabicName(name) : name;
+                        const displayName = getDisplayName(name);
                         const rel = getReligion(name);
-                        const relLabel = (lang === 'ar' && religionArabic[rel]) ? religionArabic[rel] : rel;
+                        const relLabel = lang === 'ar' ? (religionArabic[rel] || rel) : lang === 'ru' ? (religionRussian[rel] || rel) : lang === 'uz' ?(religionUzbek[rel] || rel): lang === 'es' ?(religionSpanish[rel] || rel) : rel;
                         let html = `<div><strong>${displayName}</strong></div>`;
                         if (colorMode === 'religion') html += `<div>${t('tooltipReligion')}: ${relLabel}</div>`;
                         tooltip.textContent = '';
@@ -3065,7 +3152,7 @@
 
             const VALID_MODES = ['religion', 'terrain', 'density', 'precipitation', 'temperature', 'gdp', 'hdi', 'normal'];
             const VALID_FILTERS = ['all', 'muslim', 'christian', 'hindu', 'buddhist', 'jewish', 'other'];
-            const VALID_LANGS = ['ar', 'en'];
+            const VALID_LANGS = ['ar', 'en', 'ru', 'uz', 'es'];
 
             function loadFromHash() {
                 try {
@@ -3203,6 +3290,16 @@
                 });
             }
 
+            // Onboard replay button
+            var onboardBtn = document.getElementById('onboardBtn');
+            if (onboardBtn) {
+                onboardBtn.addEventListener('click', function() {
+                    if (typeof window.startOnboarding === 'function') {
+                        window.startOnboarding();
+                    }
+                });
+            }
+
             function setupKeyboard() {
                 document.addEventListener('keydown', function(e) {
                     if (e.target.tagName === 'INPUT') return;
@@ -3271,6 +3368,205 @@
             async function init() {
                 isMobile = window.innerWidth < 768;
 
+                // Patch name_ru onto features from lookup maps
+                if (typeof featureRussian !== 'undefined') {
+                    corridorsData.forEach(function(d) { d.name_ru = d.name_ru || featureRussian.corridors[d.name_en]; });
+                    mountainRanges.forEach(function(d) { d.name_ru = d.name_ru || featureRussian.mountains[d.name_en]; });
+                    rivers.forEach(function(d) { d.name_ru = d.name_ru || featureRussian.rivers[d.name_en]; });
+                    naturalResourcesData.forEach(function(d) { d.name_ru = d.name_ru || featureRussian.resources[d.name_en]; });
+                    ethnicGroupsData.forEach(function(d) { d.name_ru = d.name_ru || featureRussian.ethnicGroups[d.name_en]; });
+                    oceanCurrentsData.forEach(function(d) { d.name_ru = d.name_ru || featureRussian.currents[d.name_en]; });
+                    windsData.forEach(function(d) { d.name_ru = d.name_ru || featureRussian.winds[d.name_en]; });
+                    earthquakesData.forEach(function(d) { d.name_ru = d.name_ru || featureRussian.earthquakes[d.name_en]; });
+                    volcanoesData.forEach(function(d) { d.name_ru = d.name_ru || featureRussian.volcanoes[d.name_en]; });
+                    tectonicPlatesData.forEach(function(d) { d.name_ru = d.name_ru || featureRussian.plates[d.name_en]; });
+                    desertsForestsData.forEach(function(d) { d.name_ru = d.name_ru || featureRussian.deserts[d.name_en]; });
+                    borderDisputesData.forEach(function(d) { d.name_ru = d.name_ru || featureRussian.disputes[d.name_en]; });
+                }
+                if (typeof featureUzbek !== 'undefined') {
+                    corridorsData.forEach(function(d) { d.name_uz = d.name_uz || featureUzbek.corridors[d.name_en]; });
+                    mountainRanges.forEach(function(d) { d.name_uz = d.name_uz || featureUzbek.mountains[d.name_en]; });
+                    rivers.forEach(function(d) { d.name_uz = d.name_uz || featureUzbek.rivers[d.name_en]; });
+                    naturalResourcesData.forEach(function(d) { d.name_uz = d.name_uz || featureUzbek.resources[d.name_en]; });
+                    ethnicGroupsData.forEach(function(d) { d.name_uz = d.name_uz || featureUzbek.ethnicGroups[d.name_en]; });
+                    oceanCurrentsData.forEach(function(d) { d.name_uz = d.name_uz || featureUzbek.currents[d.name_en]; });
+                    windsData.forEach(function(d) { d.name_uz = d.name_uz || featureUzbek.winds[d.name_en]; });
+                    earthquakesData.forEach(function(d) { d.name_uz = d.name_uz || featureUzbek.earthquakes[d.name_en]; });
+                    volcanoesData.forEach(function(d) { d.name_uz = d.name_uz || featureUzbek.volcanoes[d.name_en]; });
+                    tectonicPlatesData.forEach(function(d) { d.name_uz = d.name_uz || featureUzbek.plates[d.name_en]; });
+                    desertsForestsData.forEach(function(d) { d.name_uz = d.name_uz || featureUzbek.deserts[d.name_en]; });
+                    borderDisputesData.forEach(function(d) { d.name_uz = d.name_uz || featureUzbek.disputes[d.name_en]; });
+                    if (featureUzbek.earthquakePlates) {
+                        earthquakesData.forEach(function(d) { d.plate_uz = d.plate_uz || featureUzbek.earthquakePlates[d.plate_en]; });
+                    }
+                    if (featureUzbek.volcanoTypes) {
+                        volcanoesData.forEach(function(d) { d.type_uz = d.type_uz || featureUzbek.volcanoTypes[d.type_en]; });
+                    }
+                    if (featureUzbek.countries) {
+                        var cMap = featureUzbek.countries;
+                        var translateCountries = function(str) {
+                            if (!str) return str;
+                            return str.split(',').map(function(s) { return (cMap[s.trim()] || s.trim()); }).join(', ');
+                        };
+                        earthquakesData.forEach(function(d) { d.description_uz = d.description_uz || d.description_en; });
+                        volcanoesData.forEach(function(d) { d.description_uz = d.description_uz || d.description_en; });
+                        naturalResourcesData.forEach(function(d) { d.countries_uz = d.countries_uz || translateCountries(d.countries_en); d.description_uz = d.description_uz || d.description_en; });
+                        ethnicGroupsData.forEach(function(d) {
+                            d.countries_uz = d.countries_uz || translateCountries(d.countries_en);
+                            d.description_uz = d.description_uz || d.description_en;
+                        });
+                        mountainRanges.forEach(function(d) { d.countries_uz = d.countries_uz || translateCountries(d.countries_en); d.description_uz = d.description_uz || d.description_en; });
+                        rivers.forEach(function(d) { d.countries_uz = d.countries_uz || translateCountries(d.countries_en); d.description_uz = d.description_uz || d.description_en; });
+                        desertsForestsData.forEach(function(d) { d.countries_uz = d.countries_uz || translateCountries(d.countries_en); d.description_uz = d.description_uz || d.description_en; });
+                        additionalWaterwaysData.forEach(function(d) { d.countries_uz = d.countries_uz || translateCountries(d.countries_en); });
+                    }
+                    if (featureUzbek.biomes) {
+                        desertsForestsData.forEach(function(d) { d.biome_uz = d.biome_uz || featureUzbek.biomes[d.biome_en]; d.description_uz = d.description_uz || d.description_en; });
+                    }
+                    if (featureUzbek.ethnicPopulation) {
+                        ethnicGroupsData.forEach(function(d) { d.population_uz = d.population_uz || featureUzbek.ethnicPopulation[d.population_en]; });
+                    }
+                    if (featureUzbek.ethnicLanguages) {
+                        ethnicGroupsData.forEach(function(d) { d.language_uz = d.language_uz || featureUzbek.ethnicLanguages[d.language_en]; });
+                    }
+                    if (featureUzbek.ethnicReligions) {
+                        ethnicGroupsData.forEach(function(d) { d.religion_uz = d.religion_uz || featureUzbek.ethnicReligions[d.religion_en]; });
+                    }
+                    if (featureUzbek.riverSources) {
+                        rivers.forEach(function(d) { d.source_uz = d.source_uz || featureUzbek.riverSources[d.source_en]; });
+                    }
+                    if (featureUzbek.riverMouths) {
+                        rivers.forEach(function(d) { d.mouth_uz = d.mouth_uz || featureUzbek.riverMouths[d.mouth_en]; });
+                    }
+                    if (featureUzbek.mountainPeaks) {
+                        mountainRanges.forEach(function(d) { d.highestPeak_uz = d.highestPeak_uz || featureUzbek.mountainPeaks[d.highestPeak_en]; });
+                    }
+                    if (featureUzbek.disputeCauses) {
+                        borderDisputesData.forEach(function(d) { d.causes_uz = d.causes_uz || d.causes_en; });
+                    }
+                    if (featureUzbek.oceanCurrentDescriptions) {
+                        oceanCurrentsData.forEach(function(d) { d.description_uz = d.description_uz || featureUzbek.oceanCurrentDescriptions[d.description_en] || d.description_en; });
+                    }
+                    if (featureUzbek.resourceDescriptions) {
+                        naturalResourcesData.forEach(function(d) { d.description_uz = d.description_uz || featureUzbek.resourceDescriptions[d.description_en] || d.description_en; });
+                    }
+                    oceanCurrentsData.forEach(function(d) { d.description_uz = d.description_uz || d.description_en; });
+                    windsData.forEach(function(d) { d.description_uz = d.description_uz || d.description_en; });
+                    borderDisputesData.forEach(function(d) { d.causes_uz = d.causes_uz || d.causes_en; });
+                }
+                if (typeof featureSpanish !== 'undefined') {
+                    corridorsData.forEach(function(d) { d.name_es = d.name_es || featureSpanish.corridors[d.name_en]; });
+                    mountainRanges.forEach(function(d) { d.name_es = d.name_es || featureSpanish.mountains[d.name_en]; });
+                    rivers.forEach(function(d) { d.name_es = d.name_es || featureSpanish.rivers[d.name_en]; });
+                    naturalResourcesData.forEach(function(d) { d.name_es = d.name_es || featureSpanish.resources[d.name_en]; });
+                    ethnicGroupsData.forEach(function(d) { d.name_es = d.name_es || featureSpanish.ethnicGroups[d.name_en]; });
+                    oceanCurrentsData.forEach(function(d) { d.name_es = d.name_es || featureSpanish.currents[d.name_en]; });
+                    windsData.forEach(function(d) { d.name_es = d.name_es || featureSpanish.winds[d.name_en]; });
+                    earthquakesData.forEach(function(d) { d.name_es = d.name_es || featureSpanish.earthquakes[d.name_en]; });
+                    volcanoesData.forEach(function(d) { d.name_es = d.name_es || featureSpanish.volcanoes[d.name_en]; });
+                    tectonicPlatesData.forEach(function(d) { d.name_es = d.name_es || featureSpanish.plates[d.name_en]; });
+                    desertsForestsData.forEach(function(d) { d.name_es = d.name_es || featureSpanish.deserts[d.name_en]; });
+                    borderDisputesData.forEach(function(d) { d.name_es = d.name_es || featureSpanish.disputes[d.name_en]; });
+                    if (featureSpanish.earthquakePlates) {
+                        earthquakesData.forEach(function(d) { d.plate_es = d.plate_es || featureSpanish.earthquakePlates[d.plate_en]; });
+                    }
+                    if (featureSpanish.volcanoTypes) {
+                        volcanoesData.forEach(function(d) { d.type_es = d.type_es || featureSpanish.volcanoTypes[d.type_en]; });
+                    }
+                    if (featureSpanish.countries) {
+                        var cMapEs = featureSpanish.countries;
+                        var translateCountriesEs = function(str) {
+                            if (!str) return str;
+                            return str.split(',').map(function(s) { return (cMapEs[s.trim()] || s.trim()); }).join(', ');
+                        };
+                        if (featureSpanish.earthquakeDescriptions) {
+                            earthquakesData.forEach(function(d) { d.description_es = d.description_es || featureSpanish.earthquakeDescriptions[d.description_en] || d.description_en; });
+                        }
+                        if (featureSpanish.volcanoDescriptions) {
+                            volcanoesData.forEach(function(d) { d.description_es = d.description_es || featureSpanish.volcanoDescriptions[d.description_en] || d.description_en; });
+                        }
+                        if (featureSpanish.desertForestDescriptions) {
+                            desertsForestsData.forEach(function(d) { d.description_es = d.description_es || featureSpanish.desertForestDescriptions[d.description_en] || d.description_en; });
+                        }
+                        naturalResourcesData.forEach(function(d) { d.countries_es = d.countries_es || translateCountriesEs(d.countries_en); d.description_es = d.description_es || d.description_en; });
+                        ethnicGroupsData.forEach(function(d) {
+                            d.countries_es = d.countries_es || translateCountriesEs(d.countries_en);
+                            d.description_es = d.description_es || d.description_en;
+                        });
+                        mountainRanges.forEach(function(d) { d.countries_es = d.countries_es || translateCountriesEs(d.countries_en); d.description_es = d.description_es || d.description_en; });
+                        rivers.forEach(function(d) { d.countries_es = d.countries_es || translateCountriesEs(d.countries_en); d.description_es = d.description_es || d.description_en; });
+                        desertsForestsData.forEach(function(d) { d.countries_es = d.countries_es || translateCountriesEs(d.countries_en); d.description_es = d.description_es || d.description_en; });
+                        borderDisputesData.forEach(function(d) { d.countries_es = d.countries_es || translateCountriesEs(d.countries_en); });
+                        additionalWaterwaysData.forEach(function(d) { d.countries_es = d.countries_es || translateCountriesEs(d.countries_en); });
+                    }
+                    if (featureSpanish.biomes) {
+                        desertsForestsData.forEach(function(d) { d.biome_es = d.biome_es || featureSpanish.biomes[d.biome_en]; });
+                    }
+                    if (featureSpanish.ethnicPopulation) {
+                        ethnicGroupsData.forEach(function(d) { d.population_es = d.population_es || featureSpanish.ethnicPopulation[d.population_en]; });
+                    }
+                    if (featureSpanish.ethnicLanguages) {
+                        ethnicGroupsData.forEach(function(d) { d.language_es = d.language_es || featureSpanish.ethnicLanguages[d.language_en]; });
+                    }
+                    if (featureSpanish.ethnicReligions) {
+                        ethnicGroupsData.forEach(function(d) { d.religion_es = d.religion_es || featureSpanish.ethnicReligions[d.religion_en]; });
+                    }
+                    if (featureSpanish.riverSources) {
+                        rivers.forEach(function(d) { d.source_es = d.source_es || featureSpanish.riverSources[d.source_en]; });
+                    }
+                    if (featureSpanish.riverMouths) {
+                        rivers.forEach(function(d) { d.mouth_es = d.mouth_es || featureSpanish.riverMouths[d.mouth_en]; });
+                    }
+                    if (featureSpanish.mountainPeaks) {
+                        mountainRanges.forEach(function(d) { d.highestPeak_es = d.highestPeak_es || featureSpanish.mountainPeaks[d.highestPeak_en]; });
+                    }
+                    if (featureSpanish.causeTranslations) {
+                        borderDisputesData.forEach(function(d) { d.causes_es = d.causes_es || featureSpanish.causeTranslations[d.causes_en] || d.causes_en; });
+                    }
+                    if (featureSpanish.oceanCurrentDescriptions) {
+                        oceanCurrentsData.forEach(function(d) { d.description_es = d.description_es || featureSpanish.oceanCurrentDescriptions[d.description_en] || d.description_en; });
+                    }
+                    if (featureSpanish.resourceDescriptions) {
+                        naturalResourcesData.forEach(function(d) { d.description_es = d.description_es || featureSpanish.resourceDescriptions[d.description_en] || d.description_en; });
+                    }
+                    oceanCurrentsData.forEach(function(d) { d.description_es = d.description_es || d.description_en; });
+                    windsData.forEach(function(d) { d.description_es = d.description_es || d.description_en; });
+                }
+                if (typeof densitySpotEnglish !== 'undefined') {
+                    densitySpots.forEach(function(d) { d.name_en = densitySpotEnglish[d.name]; d.name_ru = densitySpotRussian[d.name]; d.name_uz = densitySpotUzbek[d.name]; d.name_es = densitySpotSpanish[d.name]; });
+                    majorCitiesData.forEach(function(d) { d.name_en = d.name_en || densitySpotEnglish[d.name]; d.name_ru = d.name_ru || densitySpotRussian[d.name]; d.name_uz = d.name_uz || densitySpotUzbek[d.name]; d.name_es = d.name_es || densitySpotSpanish[d.name]; });
+                }
+                if (typeof capitalsRussian !== 'undefined') {
+                    Object.keys(countryInfo).forEach(function(c) {
+                        var info = countryInfo[c];
+                        info.capital_ru = info.capital_ru || capitalsRussian[info.capital_en];
+                        info.lang_ru = info.lang_ru || langsRussian[info.lang_en];
+                    });
+                }
+                if (typeof capitalsUzbek !== 'undefined') {
+                    Object.keys(countryInfo).forEach(function(c) {
+                        var info = countryInfo[c];
+                        info.capital_uz = info.capital_uz || capitalsUzbek[info.capital_en];
+                        info.lang_uz = info.lang_uz || langsUzbek[info.lang_en];
+                    });
+                }
+                if (typeof capitalsSpanish !== 'undefined') {
+                    Object.keys(countryInfo).forEach(function(c) {
+                        var info = countryInfo[c];
+                        info.capital_es = info.capital_es || capitalsSpanish[info.capital_en];
+                        info.lang_es = info.lang_es || langsSpanish[info.lang_en];
+                    });
+                }
+                if (typeof featureRussian !== 'undefined' && featureRussian.blocs) {
+                    geopoliticalBlocsData.forEach(function(b) { b.name_ru = b.name_ru || featureRussian.blocs[b.name_en]; b.members_ru = b.members_ru || b.members_en; });
+                }
+                if (typeof featureUzbek !== 'undefined' && featureUzbek.blocs) {
+                    geopoliticalBlocsData.forEach(function(b) { b.name_uz = b.name_uz || featureUzbek.blocs[b.name_en]; b.members_uz = b.members_uz || b.members_en; });
+                }
+                if (typeof featureSpanish !== 'undefined' && featureSpanish.blocs) {
+                    geopoliticalBlocsData.forEach(function(b) { b.name_es = b.name_es || featureSpanish.blocs[b.name_en]; b.members_es = b.members_es || b.members_en; });
+                }
+
                 if (typeof lucide !== 'undefined' && lucide.createIcons) {
                     lucide.createIcons();
                     document.querySelectorAll('svg').forEach(function(el) {
@@ -3302,7 +3598,7 @@
                 const spinStyle = document.createElement('style');
                 spinStyle.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
                 const loadText = document.createElement('span');
-                loadText.textContent = 'جاري تحميل الخريطة...';
+                loadText.textContent = lang === 'ar' ? 'جاري تحميل الخريطة...' : lang === 'ru' ? 'Загрузка карты...' : lang === 'uz' ?'Xarita yuklanmoqda...': lang === 'es' ?'Cargando mapa...' : 'Loading map...';
                 loadingMsg.appendChild(spinner);
                 loadingMsg.appendChild(loadText);
                 loadingMsg.appendChild(spinStyle);
@@ -3321,9 +3617,15 @@
                     const errorText = document.createElement('div');
                     errorText.textContent = lang === 'ar'
                         ? 'تعذّر تحميل بيانات الخريطة. يرجى التحقق من الاتصال بالإنترنت والمحاولة مرة أخرى.'
+                        : lang === 'ru'
+                        ? 'Не удалось загрузить данные карты. Проверьте интернет-соединение и попробуйте снова.'
+                        : lang === 'uz'
+                        ? 'Xarita ma\'lumotlarini yuklab bo\'lmadi. Internet ulanishini tekshiring va qaytadan urinib ko\'ring.'
+                        : lang === 'es'
+                        ? 'No se pudieron cargar los datos del mapa. Verifique su conexión a internet e inténtelo de nuevo.'
                         : 'Could not load map data. Please check your internet connection and try again.';
                     const retryBtn = document.createElement('button');
-                    retryBtn.textContent = lang === 'ar' ? '↺ إعادة المحاولة' : '↺ Retry';
+                    retryBtn.textContent = lang === 'ar' ? '↺ إعادة المحاولة' : lang === 'ru' ? '↺ Повторить' : lang === 'uz' ?'↺ Qayta urinish': lang === 'es' ?'↺ Reintentar' : '↺ Retry';
                     retryBtn.style.cssText = 'padding:8px 20px;border-radius:20px;border:1px solid rgba(255,255,255,0.3);background:#2a3a58;color:#9dd0ff;cursor:pointer;font-size:1em;font-family:inherit;';
                     retryBtn.addEventListener('click', function() { location.reload(); });
                     errorBox.appendChild(errorIcon);
@@ -3366,6 +3668,162 @@
                 } else {
                     onboardingHint.style.display = 'none';
                 }
+
+                // ── Interactive Onboarding Tutorial ──
+                (function() {
+                    var overlay = document.getElementById('onboardOverlay');
+                    var glow = document.getElementById('onboardGlow');
+                    var card = document.getElementById('onboardCard');
+                    var cardIcon = document.getElementById('onboardCardIcon');
+                    var cardTitle = document.getElementById('onboardCardTitle');
+                    var cardText = document.getElementById('onboardCardText');
+                    var cardDots = document.getElementById('onboardCardDots');
+                    var skipBtn = document.getElementById('onboardSkip');
+                    var nextBtn = document.getElementById('onboardNext');
+                    if (!overlay || !glow || !card) return;
+
+                    var steps = [
+                        { getEl: function() { return document.querySelector('.search-box'); }, icon: '🔍', titleKey: 'onboardStep1Title', textKey: 'onboardStep1Text' },
+                        { getEl: function() { return document.querySelector('#modeButtons'); }, icon: '🎨', titleKey: 'onboardStep2Title', textKey: 'onboardStep2Text' },
+                        { getEl: function() { return document.querySelector('#filterRow'); }, icon: '🎯', titleKey: 'onboardStep3Title', textKey: 'onboardStep3Text' },
+                        { getEl: function() {
+                            var lr = document.querySelector('#layersRow');
+                            if (lr && lr.offsetHeight > 0 && getComputedStyle(lr).display !== 'none') return lr;
+                            return document.querySelector('#layersToggleBtn');
+                        }, icon: '🗂️', titleKey: 'onboardStep4Title', textKey: 'onboardStep4Text' },
+                        { getEl: function() {
+                            var lg = document.querySelector('#legend');
+                            if (lg && lg.innerHTML.trim().length > 5) return lg;
+                            return document.querySelector('#mapSvg');
+                        }, icon: '📋', titleKey: 'onboardStep5Title', textKey: 'onboardStep5Text' },
+                        { getEl: function() { return document.querySelector('.zoom-controls'); }, icon: '🔍', titleKey: 'onboardStep6Title', textKey: 'onboardStep6Text' },
+                        { getEl: function() {
+                            var cp = document.querySelector('.country-panel');
+                            if (cp && getComputedStyle(cp).display !== 'none') return cp;
+                            return document.querySelector('#mapSvg');
+                        }, icon: '🌍', titleKey: 'onboardStep7Title', textKey: 'onboardStep7Text' }
+                    ];
+                    var currentStep = 0;
+                    var isOpen = false;
+
+                    function positionGlow(el) {
+                        if (!el) return;
+                        var r = el.getBoundingClientRect();
+                        var pad = 8;
+                        glow.style.left = (r.left - pad) + 'px';
+                        glow.style.top = (r.top - pad) + 'px';
+                        glow.style.width = (r.width + pad * 2) + 'px';
+                        glow.style.height = (r.height + pad * 2) + 'px';
+                    }
+
+                    function positionCard(el) {
+                        if (!el) return;
+                        var r = el.getBoundingClientRect();
+                        var cw = card.offsetWidth || 300;
+                        var ch = card.offsetHeight || 200;
+                        var vw = window.innerWidth;
+                        var vh = window.innerHeight;
+                        var left, top;
+                        // Try below first
+                        top = r.bottom + 14;
+                        left = r.left + r.width / 2 - cw / 2;
+                        // If below goes off screen, try above
+                        if (top + ch > vh - 10) {
+                            top = r.top - ch - 14;
+                        }
+                        // If above goes off screen, put at center
+                        if (top < 10) {
+                            top = vh / 2 - ch / 2;
+                            left = vw / 2 - cw / 2;
+                        }
+                        // Clamp horizontal
+                        if (left < 10) left = 10;
+                        if (left + cw > vw - 10) left = vw - cw - 10;
+                        card.style.left = left + 'px';
+                        card.style.top = top + 'px';
+                    }
+
+                    function renderStep() {
+                        var step = steps[currentStep];
+                        var el = step.getEl ? step.getEl() : null;
+                        if (!el) { nextStep(); return; }
+                        positionGlow(el);
+                        positionCard(el);
+                        cardIcon.textContent = step.icon;
+                        cardTitle.textContent = t(step.titleKey);
+                        cardText.textContent = t(step.textKey);
+                        // Dots
+                        cardDots.innerHTML = '';
+                        steps.forEach(function(_, i) {
+                            var dot = document.createElement('span');
+                            dot.className = 'onboard-dot' + (i === currentStep ? ' active' : '');
+                            cardDots.appendChild(dot);
+                        });
+                        // Button labels
+                        skipBtn.textContent = t('onboardSkip');
+                        if (currentStep === steps.length - 1) {
+                            nextBtn.textContent = t('onboardFinish');
+                        } else {
+                            nextBtn.textContent = t('onboardNext');
+                        }
+                        // RTL arrow adjustment
+                        if (lang === 'ar') {
+                            nextBtn.textContent = nextBtn.textContent.replace('←', '→');
+                        } else {
+                            nextBtn.textContent = nextBtn.textContent.replace('→', '→');
+                        }
+                    }
+
+                    function nextStep() {
+                        currentStep++;
+                        if (currentStep >= steps.length) { closeTutorial(); return; }
+                        card.style.animation = 'none';
+                        card.offsetHeight;
+                        card.style.animation = 'onboardCardIn 0.35s ease both';
+                        renderStep();
+                    }
+
+                    function closeTutorial() {
+                        overlay.classList.remove('active');
+                        isOpen = false;
+                        glow.style.width = '0';
+                        glow.style.height = '0';
+                        glow.style.opacity = '0';
+                        try { localStorage.setItem('onboardDone', '1'); } catch(e) {}
+                    }
+
+                    function openTutorial() {
+                        currentStep = 0;
+                        overlay.classList.add('active');
+                        isOpen = true;
+                        glow.style.opacity = '1';
+                        renderStep();
+                    }
+
+                    skipBtn.addEventListener('click', closeTutorial);
+                    nextBtn.addEventListener('click', nextStep);
+                    overlay.addEventListener('click', function(e) {
+                        if (e.target === overlay) closeTutorial();
+                    });
+
+                    // Expose for replay button
+                    window.startOnboarding = openTutorial;
+
+                    // Auto-show on first visit
+                    var alreadyDone = false;
+                    try { alreadyDone = localStorage.getItem('onboardDone') === '1'; } catch(e) {}
+                    if (!alreadyDone) {
+                        setTimeout(openTutorial, 800);
+                    }
+
+                    // Reposition on resize
+                    window.addEventListener('resize', function() {
+                        if (isOpen && steps[currentStep]) {
+                            var el = steps[currentStep].getEl ? steps[currentStep].getEl() : null;
+                            if (el) { positionGlow(el); positionCard(el); }
+                        }
+                    });
+                })();
 
                 // Swipe-down to close country panel on mobile
                 let panelTouchStartY = 0;
@@ -3528,7 +3986,7 @@
             geopoliticalBlocsData.forEach(function(b) {
                 var opt = document.createElement('option');
                 opt.value = b.name_en;
-                opt.textContent = (lang === 'ar' ? b.name : b.name_en) + ' (' + (lang === 'ar' ? b.members_ar : b.members_en) + ')';
+                opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name_en) : lang === 'uz' ?(b.name_uz || b.name_en): lang === 'es' ?(b.name_es || b.name_en) : b.name_en) + ' (' + (lang === 'ar' ? b.members_ar : lang === 'ru' ? (b.members_ru || b.members_en) : lang === 'uz' ?(b.members_uz || b.members_en): lang === 'es' ?(b.members_es || b.members_en) : b.members_en) + ')';
                 blocSelect.appendChild(opt);
             });
             blocSelect.addEventListener('change', function() {
@@ -3539,7 +3997,26 @@
                 updateHash();
             });
 
-            langToggle.addEventListener('click', () => setLanguage(lang === 'ar' ? 'en' : 'ar'));
+            function toggleLangDropdown(btn, menu) {
+                var isVisible = menu.classList.contains('visible');
+                document.querySelectorAll('.lang-dropdown-menu.visible').forEach(function(m) { m.classList.remove('visible'); });
+                if (!isVisible) menu.classList.toggle('visible');
+            }
+            langToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleLangDropdown(langToggle, document.getElementById('langDropdownMenu'));
+            });
+            document.querySelectorAll('.lang-option').forEach(function(opt) {
+                opt.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var code = this.dataset.lang;
+                    if (code !== lang) setLanguage(code);
+                    document.querySelectorAll('.lang-dropdown-menu.visible').forEach(function(m) { m.classList.remove('visible'); });
+                });
+            });
+            document.addEventListener('click', function() {
+                document.querySelectorAll('.lang-dropdown-menu.visible').forEach(function(m) { m.classList.remove('visible'); });
+            });
 
             religionButtons.forEach(b => b.addEventListener('click', () => {
                 currentReligionFilter = b.dataset.religion;
@@ -3571,7 +4048,12 @@
             var mobileModeBtns = document.querySelectorAll('#mobileModeButtons .mode-btn');
             var mobileFilterBtns = document.querySelectorAll('#mobileFilterButtons .religion-btn');
 
-            if (mobileLangBtn) mobileLangBtn.addEventListener('click', function() { langToggle.click(); });
+            if (mobileLangBtn) mobileLangBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                document.querySelectorAll('.lang-dropdown-menu.visible').forEach(function(m) { m.classList.remove('visible'); });
+                var mm = document.getElementById('mobileLangDropdownMenu');
+                if (mm) mm.classList.toggle('visible');
+            });
             if (mobileSearchInput) mobileSearchInput.addEventListener('input', function() {
                 var val = this.value.trim().toLowerCase();
                 var ms = document.getElementById('mobileSuggestionsList');
@@ -3579,7 +4061,7 @@
                 ms.innerHTML = '';
                 if (!val) { ms.style.display = 'none'; return; }
                 var matches = countryNamesList.filter(function(n) {
-                    return n.toLowerCase().includes(val) || getArabicName(n).toLowerCase().includes(val);
+                    return n.toLowerCase().includes(val) || getDisplayName(n).toLowerCase().includes(val);
                 }).slice(0, 6);
                 if (matches.length) {
                     matches.forEach(function(m) {
@@ -3589,7 +4071,7 @@
                         span2.className = 'flag-icon';
                         span2.textContent = flag;
                         li.appendChild(span2);
-                        li.appendChild(document.createTextNode(' ' + (lang === 'ar' ? getArabicName(m) : m)));
+                        li.appendChild(document.createTextNode(' ' + getDisplayName(m)));
                         li.addEventListener('touchend', function(e) {
                             e.preventDefault();
                             e.stopPropagation();
@@ -3650,7 +4132,7 @@
                     btnRow.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;';
                     var allOffBtn = document.createElement('button');
                     allOffBtn.className = 'btn';
-                    allOffBtn.textContent = lang === 'ar' ? '🔴 إيقاف الكل' : '🔴 All Off';
+                    allOffBtn.textContent = lang === 'ar' ? '🔴 إيقاف الكل' : lang === 'ru' ? '🔴 Выкл. всё' : lang === 'uz' ?'🔴 Hammasi o\'chirish': lang === 'es' ?'🔴 Desactivar todo' : '🔴 All Off';
                     allOffBtn.addEventListener('click', function() {
                         document.querySelectorAll('.layers-row .btn.toggle-on').forEach(function(b) { b.click(); });
                         updateActiveLayerCount();
@@ -3659,7 +4141,7 @@
                     btnRow.appendChild(allOffBtn);
                     var resetLayersBtn = document.createElement('button');
                     resetLayersBtn.className = 'btn';
-                    resetLayersBtn.textContent = lang === 'ar' ? '↺ إعادة الطبقات' : '↺ Reset Layers';
+                    resetLayersBtn.textContent = lang === 'ar' ? '↺ إعادة الطبقات' : lang === 'ru' ? '↺ Сброс слоёв' : lang === 'uz' ?'↺ Qatlamlarni tiklash': lang === 'es' ?'↺ Restablecer capas' : '↺ Reset Layers';
                     resetLayersBtn.addEventListener('click', function() {
                         if (corridorsVisible) toggleCorridors();
                         if (riversVisible) toggleRivers();
@@ -3686,12 +4168,12 @@
                     btnRow.appendChild(resetLayersBtn);
                     body.appendChild(btnRow);
                     var categories = [
-                        { labelAr: 'عام', labelEn: 'General', ids: ['labelsToggle','sectToggle','coordsToggle'] },
-                        { labelAr: 'سكان', labelEn: 'Population', ids: ['capitalsToggle','majorCitiesToggle','timezonesToggle','densitySpotsToggle'] },
-                        { labelAr: 'نقل', labelEn: 'Transport', ids: ['routesToggle','riversToggle'] },
-                        { labelAr: 'سياسة', labelEn: 'Politics', ids: ['geopoliticalBlocsToggle','blocSelect','borderDisputesToggle'] },
-                        { labelAr: 'بيئة', labelEn: 'Environment', ids: ['naturalResourcesToggle','ethnicGroupsToggle','desertsForestsToggle'] },
-                        { labelAr: 'مناخ وجيولوجيا', labelEn: 'Climate & Geology', ids: ['oceanCurrentsToggle','windsToggle','earthquakesToggle','volcanoesToggle'] },
+                        { labelAr: 'عام', labelEn: 'General', labelRu: 'Общие', labelUz: 'Umumiy', labelEs: 'General', ids: ['labelsToggle','sectToggle','coordsToggle'] },
+                        { labelAr: 'سكان', labelEn: 'Population', labelRu: 'Население', labelUz: 'Aholi', labelEs: 'Población', ids: ['capitalsToggle','majorCitiesToggle','timezonesToggle','densitySpotsToggle'] },
+                        { labelAr: 'نقل', labelEn: 'Transport', labelRu: 'Транспорт', labelUz: 'Transport', labelEs: 'Transporte', ids: ['routesToggle','riversToggle'] },
+                        { labelAr: 'سياسة', labelEn: 'Politics', labelRu: 'Политика', labelUz: 'Siyosat', labelEs: 'Política', ids: ['geopoliticalBlocsToggle','blocSelect','borderDisputesToggle'] },
+                        { labelAr: 'بيئة', labelEn: 'Environment', labelRu: 'Окружение', labelUz: 'Atrof-muhit', labelEs: 'Medio ambiente', ids: ['naturalResourcesToggle','ethnicGroupsToggle','desertsForestsToggle'] },
+                        { labelAr: 'مناخ وجيولوجيا', labelEn: 'Climate & Geology', labelRu: 'Климат и геология', labelUz: 'Iqlim va geologiya', labelEs: 'Clima y geología', ids: ['oceanCurrentsToggle','windsToggle','earthquakesToggle','volcanoesToggle'] },
                     ];
                     body.innerHTML = '';
                     var temp = document.createDocumentFragment();
@@ -3699,7 +4181,7 @@
                         var catDiv = document.createElement('div');
                         catDiv.className = 'layers-category';
                         var h4 = document.createElement('h4');
-                        h4.textContent = cat.labelAr + ' / ' + cat.labelEn;
+                        h4.textContent = lang === 'uz' ? (cat.labelUz || cat.labelEn) : lang === 'es' ? (cat.labelEs || cat.labelEn) : cat.labelAr + ' / ' + cat.labelEn + ' / ' + (cat.labelRu || cat.labelEn);
                         catDiv.appendChild(h4);
                         var itemsDiv = document.createElement('div');
                         itemsDiv.className = 'layers-items';
@@ -3745,6 +4227,9 @@
                 if (e.key === 'Escape' && layersModal && layersModal.classList.contains('visible')) {
                     closeLayersModal();
                 }
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.lang-dropdown-menu.visible').forEach(function(m) { m.classList.remove('visible'); });
+                }
             });
 
             closePanelBtn.addEventListener('click', () => {
@@ -3754,13 +4239,13 @@
                 if (!selectedCountry) return;
                 const name = selectedCountry.properties?.name || '';
                 const info = countryInfo[name] || countryInfo[getCleanName(name)];
-                let text = `Country: ${name}\n`;
+                let text = `${t('continent')}: ${getDisplayName(name)}\n`;
                 if (info) {
-                    text += `Capital: ${info.capital_en}\n`;
-                    text += `Area: ${info.area} km²\n`;
-                    text += `Population (2026 est.): ${info.population_2026} million\n`;
-                    text += `Language: ${info.lang_en}\n`;
-                    text += `Density: ${getDensity(name)} people/km²\n`;
+                    text += `${t('capital')}: ${lang==='ar'?(info.capital_ar||info.capital_en):lang==='ru'?(info.capital_ru||info.capital_en):lang==='uz'?(info.capital_uz||info.capital_en):lang==='es'?(info.capital_es||info.capital_en):info.capital_en}\n`;
+                    text += `${t('areaTitle')}: ${info.area} ${t('km2')}\n`;
+                    text += `${t('populationTitle')}: ${info.population_2026} ${t('million')}\n`;
+                    text += `${t('languageTitle')}: ${lang==='ar'?(info.lang_ar||info.lang_en):lang==='ru'?(info.lang_ru||info.lang_en):lang==='uz'?(info.lang_uz||info.lang_en):lang==='es'?(info.lang_es||info.lang_en):info.lang_en}\n`;
+                    text += `${t('densityTitle')}: ${getDensity(name)} ${t('densityUnit')}\n`;
                 }
                 const blob = new Blob([text], { type: 'text/plain' });
                 const url = URL.createObjectURL(blob);
@@ -3784,5 +4269,26 @@
                 });
             }
 
-            init();
+            // ── Language overlay ──
+            (function() {
+                var overlay = document.getElementById('langOverlay');
+                if (!overlay) { init(); return; }
+                var savedLang = null;
+                try { savedLang = localStorage.getItem('mapLang'); } catch(e) {}
+                if (savedLang && ['ar','en','ru','uz','es'].includes(savedLang)) {
+                    overlay.remove();
+                    init();
+                    return;
+                }
+                overlay.querySelectorAll('.lang-overlay-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var code = this.dataset.lang;
+                        lang = code;
+                        try { localStorage.setItem('mapLang', code); } catch(e) {}
+                        overlay.classList.add('hidden');
+                        setTimeout(function() { overlay.remove(); }, 500);
+                        init();
+                    });
+                });
+            })();
         })();
