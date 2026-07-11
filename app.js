@@ -2173,8 +2173,10 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 if (mobileModeBtn) mobileModeBtn.title = t('mobileMode_title');
                 var mobileLayersBtn = document.getElementById('mobileLayersBtn');
                 if (mobileLayersBtn) mobileLayersBtn.title = t('mobileLayers_title');
-                var mobileResetBtn2 = document.getElementById('mobileResetBtn2');
+            var mobileResetBtn2 = document.getElementById('mobileResetBtn2');
+            var mobileCoordsBtn = document.getElementById('mobileCoordsBtn');
                 if (mobileResetBtn2) mobileResetBtn2.title = t('mobileReset_title');
+                if (mobileCoordsBtn) mobileCoordsBtn.title = t('coordsToggle');
                 var mOb = document.getElementById('mobileOnboardBtn');
                 if (mOb) mOb.title = t('onboardMapGuide');
                 var mSc = document.getElementById('mobileShortcutsBtn');
@@ -2198,6 +2200,8 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 if (mShText) mShText.textContent = t('shareBtn');
                 var mReText = document.querySelector('#mobileResetBtn2 .btn-text');
                 if (mReText) mReText.textContent = t('resetBtn');
+                var mCoText = document.querySelector('#mobileCoordsBtn .btn-text');
+                if (mCoText) mCoText.textContent = t('coordsToggle').replace(/^.{1,2}\s*/, '');
                 exportBtn.title = t('exportLabel');
                 updateInfoOverlay();
                 if (allCountryFeatures.length) {
@@ -3706,7 +3710,20 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         }, icon: '🌐', titleKey: 'onboardStep2Title', textKey: 'onboardStep2Text' },
                         { getEl: function() {
                             var mb = window.innerWidth <= 768;
-                            return document.querySelector(mb ? '#mobileToolsBtn' : '#toolsGroup');
+                            if (mb) return document.querySelector('#mobileToolsBtn');
+                            var first = document.querySelector('#shareBtn');
+                            var last = document.querySelector('#coordsToggle');
+                            if (!first || !last) return null;
+                            var r1 = first.getBoundingClientRect();
+                            var r2 = last.getBoundingClientRect();
+                            var t = document.getElementById('onboardToolZone');
+                            if (!t) { t = document.createElement('div'); t.id = 'onboardToolZone'; t.style.cssText = 'position:fixed;pointer-events:none;z-index:-1;'; document.body.appendChild(t); }
+                            var l = Math.min(r1.left, r2.left);
+                            var tp = Math.min(r1.top, r2.top);
+                            var w = Math.max(r1.right, r2.right) - l;
+                            var h = Math.max(r1.bottom, r2.bottom) - tp;
+                            t.style.left = l + 'px'; t.style.top = tp + 'px'; t.style.width = w + 'px'; t.style.height = h + 'px';
+                            return t;
                         }, icon: '🔧', titleKey: 'onboardStep3Title', textKey: 'onboardStep3Text' },
                         { getEl: function() {
                             var mb = window.innerWidth <= 768;
@@ -4149,6 +4166,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
             if (mobileModeBtn) mobileModeBtn.addEventListener('click', function() { modeSheet.classList.add('visible'); });
             if (mobileLayersBtn) mobileLayersBtn.addEventListener('click', function() { openLayersModal(); });
             if (mobileResetBtn2) mobileResetBtn2.addEventListener('click', function() { closeMobileToolsMenu(); resetAll(); });
+            if (mobileCoordsBtn) mobileCoordsBtn.addEventListener('click', function() { closeMobileToolsMenu(); toggleCoords(); });
             if (mobileToolsBtn) mobileToolsBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 closeMobileToolsMenu();
@@ -4238,7 +4256,8 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         var catDiv = document.createElement('div');
                         catDiv.className = 'layers-category';
                         var h4 = document.createElement('h4');
-                        h4.textContent = lang === 'uz' ? (cat.labelUz || cat.labelEn) : lang === 'es' ? (cat.labelEs || cat.labelEn) : cat.labelAr + ' / ' + cat.labelEn + ' / ' + (cat.labelRu || cat.labelEn);
+                        var langKey = 'label' + lang.charAt(0).toUpperCase() + lang.slice(1);
+                        h4.textContent = cat[langKey] || cat.labelEn;
                         catDiv.appendChild(h4);
                         var itemsDiv = document.createElement('div');
                         itemsDiv.className = 'layers-items';
