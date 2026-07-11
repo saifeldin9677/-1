@@ -3704,30 +3704,38 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         }, icon: '🔍', titleKey: 'onboardStep1Title', textKey: 'onboardStep1Text' },
                         { getEl: function() {
                             var mb = window.innerWidth <= 768;
+                            return document.querySelector(mb ? '#mobileLangToggle' : '#langToggle');
+                        }, icon: '🌐', titleKey: 'onboardStep2Title', textKey: 'onboardStep2Text' },
+                        { getEl: function() {
+                            var mb = window.innerWidth <= 768;
+                            return document.querySelector(mb ? '#mobileToolsBtn' : '#controlsBar');
+                        }, icon: '🔧', titleKey: 'onboardStep3Title', textKey: 'onboardStep3Text' },
+                        { getEl: function() {
+                            var mb = window.innerWidth <= 768;
                             return document.querySelector(mb ? '#mobileModeBtn' : '#modeButtons');
-                        }, icon: '🎨', titleKey: 'onboardStep2Title', textKey: 'onboardStep2Text' },
+                        }, icon: '🎨', titleKey: 'onboardStep4Title', textKey: 'onboardStep4Text' },
                         { getEl: function() {
                             var mb = window.innerWidth <= 768;
                             return document.querySelector(mb ? '#mobileModeBtn' : '#filterRow');
-                        }, icon: '🎯', titleKey: 'onboardStep3Title', textKey: 'onboardStep3Text' },
+                        }, icon: '🎯', titleKey: 'onboardStep5Title', textKey: 'onboardStep5Text' },
                         { getEl: function() {
                             var mb = window.innerWidth <= 768;
                             if (mb) return document.querySelector('#mobileLayersBtn');
                             var lr = document.querySelector('#layersRow');
                             if (lr && lr.offsetHeight > 0 && getComputedStyle(lr).display !== 'none') return lr;
                             return document.querySelector('#layersToggleBtn');
-                        }, icon: '🗂️', titleKey: 'onboardStep4Title', textKey: 'onboardStep4Text' },
+                        }, icon: '🗂️', titleKey: 'onboardStep6Title', textKey: 'onboardStep6Text' },
                         { getEl: function() {
                             var lg = document.querySelector('#legend');
                             if (lg && lg.innerHTML.trim().length > 5) return lg;
                             return document.querySelector('#mapSvg');
-                        }, icon: '📋', titleKey: 'onboardStep5Title', textKey: 'onboardStep5Text' },
-                        { getEl: function() { return document.querySelector('.zoom-controls'); }, icon: '🔍', titleKey: 'onboardStep6Title', textKey: 'onboardStep6Text' },
+                        }, icon: '📋', titleKey: 'onboardStep7Title', textKey: 'onboardStep7Text' },
+                        { getEl: function() { return document.querySelector('.zoom-controls'); }, icon: '🔍', titleKey: 'onboardStep8Title', textKey: 'onboardStep8Text' },
                         { getEl: function() {
                             var cp = document.querySelector('.country-panel');
                             if (cp && getComputedStyle(cp).display !== 'none') return cp;
                             return document.querySelector('#mapSvg');
-                        }, icon: '🌍', titleKey: 'onboardStep7Title', textKey: 'onboardStep7Text' }
+                        }, icon: '🌍', titleKey: 'onboardStep9Title', textKey: 'onboardStep9Text' }
                     ];
                     var currentStep = 0;
                     var isOpen = false;
