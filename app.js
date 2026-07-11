@@ -2066,6 +2066,7 @@
             }
 
             function setBtnText(el, text) {
+                if (!el) return;
                 var span = el.querySelector('.btn-text');
                 if (span) { span.textContent = text; }
                 else { el.textContent = text; }
@@ -2123,31 +2124,31 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 blocSelect.value = currentVal;
                 setBtnText(document.getElementById('desertsForestsToggle'), t('desertsForests'));
                 setBtnText(document.getElementById('borderDisputesToggle'), t('borderDisputes'));
-                labelsToggle.title = t('labelsToggle_title');
-                sectToggle.title = t('sectToggle_title');
-                corridorsToggle.title = t('routesToggle_title');
-                riversToggle.title = t('riversToggle_title');
-                densitySpotsToggle.title = t('densitySpotsToggle_title');
-                capitalsToggle.title = t('capitalsToggle_title');
-                timezonesToggle.title = t('timezonesToggle_title');
-                majorCitiesToggle.title = t('majorCitiesToggle_title');
-                coordsToggle.title = t('coordsToggle_title');
-                document.getElementById('naturalResourcesToggle').title = t('naturalResourcesToggle_title');
-                document.getElementById('ethnicGroupsToggle').title = t('ethnicGroupsToggle_title');
-                document.getElementById('oceanCurrentsToggle').title = t('oceanCurrentsToggle_title');
-                document.getElementById('windsToggle').title = t('windsToggle_title');
-                document.getElementById('earthquakesToggle').title = t('earthquakesToggle_title');
-                document.getElementById('volcanoesToggle').title = t('volcanoesToggle_title');
-                document.getElementById('geopoliticalBlocsToggle').title = t('geopoliticalBlocsToggle_title');
-                document.getElementById('desertsForestsToggle').title = t('desertsForestsToggle_title');
-                document.getElementById('borderDisputesToggle').title = t('borderDisputesToggle_title');
-                shareBtn.title = t('shareBtn');
-                resetBtn.title = t('resetBtn_title');
+                if (labelsToggle) labelsToggle.title = t('labelsToggle_title');
+                if (sectToggle) sectToggle.title = t('sectToggle_title');
+                if (corridorsToggle) corridorsToggle.title = t('routesToggle_title');
+                if (riversToggle) riversToggle.title = t('riversToggle_title');
+                if (densitySpotsToggle) densitySpotsToggle.title = t('densitySpotsToggle_title');
+                if (capitalsToggle) capitalsToggle.title = t('capitalsToggle_title');
+                if (timezonesToggle) timezonesToggle.title = t('timezonesToggle_title');
+                if (majorCitiesToggle) majorCitiesToggle.title = t('majorCitiesToggle_title');
+                if (coordsToggle) coordsToggle.title = t('coordsToggle_title');
+                var _nr = document.getElementById('naturalResourcesToggle'); if (_nr) _nr.title = t('naturalResourcesToggle_title');
+                var _eg = document.getElementById('ethnicGroupsToggle'); if (_eg) _eg.title = t('ethnicGroupsToggle_title');
+                var _oc = document.getElementById('oceanCurrentsToggle'); if (_oc) _oc.title = t('oceanCurrentsToggle_title');
+                var _wd = document.getElementById('windsToggle'); if (_wd) _wd.title = t('windsToggle_title');
+                var _eq = document.getElementById('earthquakesToggle'); if (_eq) _eq.title = t('earthquakesToggle_title');
+                var _vc = document.getElementById('volcanoesToggle'); if (_vc) _vc.title = t('volcanoesToggle_title');
+                var _gb = document.getElementById('geopoliticalBlocsToggle'); if (_gb) _gb.title = t('geopoliticalBlocsToggle_title');
+                var _df = document.getElementById('desertsForestsToggle'); if (_df) _df.title = t('desertsForestsToggle_title');
+                var _bd = document.getElementById('borderDisputesToggle'); if (_bd) _bd.title = t('borderDisputesToggle_title');
+                if (shareBtn) shareBtn.title = t('shareBtn');
+                if (resetBtn) resetBtn.title = t('resetBtn_title');
                 setBtnText(resetBtn, t('resetBtn'));
-                langToggle.title = t('langToggle_title');
-                searchInput.title = t('searchInput_title');
-                document.getElementById('shortcutsBtn').title = t('shortcutsBtn_title');
-                document.getElementById('pdfExportBtn').title = t('pdfExportBtn_title');
+                if (langToggle) langToggle.title = t('langToggle_title');
+                if (searchInput) searchInput.title = t('searchInput_title');
+                var _sc = document.getElementById('shortcutsBtn'); if (_sc) _sc.title = t('shortcutsBtn_title');
+                var _pdf = document.getElementById('pdfExportBtn'); if (_pdf) _pdf.title = t('pdfExportBtn_title');
                 var onboardBtnEl = document.getElementById('onboardBtn');
                 if (onboardBtnEl) { onboardBtnEl.title = t('onboardMapGuide'); }
                 modeButtons.forEach(b => {
