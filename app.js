@@ -3650,9 +3650,9 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 loadingMsg.remove();
 
                 renderCountries(features);
-                applyLanguage();
-                loadFromHash();
-                updateHash();
+                try { applyLanguage(); } catch(e) { console.error('applyLanguage error:', e); }
+                try { loadFromHash(); } catch(e) {}
+                try { updateHash(); } catch(e) {}
 
                 mapContainer.addEventListener('mousemove', updateCoordinatesDisplay);
 
