@@ -3778,9 +3778,17 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     function renderStep() {
                         var step = steps[currentStep];
                         var el = step.getEl ? step.getEl() : null;
-                        if (!el) { nextStep(); return; }
-                        positionGlow(el);
-                        positionCard(el);
+                        if (el) {
+                            glow.style.display = '';
+                            card.style.transform = '';
+                            positionGlow(el);
+                            positionCard(el);
+                        } else {
+                            glow.style.display = 'none';
+                            card.style.left = '50%';
+                            card.style.top = '50%';
+                            card.style.transform = 'translate(-50%,-50%)';
+                        }
                         cardIcon.textContent = step.icon;
                         cardTitle.textContent = t(step.titleKey);
                         cardText.textContent = t(step.textKey);
@@ -4329,6 +4337,8 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     init();
                     return;
                 }
+                // Language overlay is showing → fresh start → clear onboard flag
+                try { localStorage.removeItem('onboardDone'); } catch(e) {}
                 overlay.querySelectorAll('.lang-overlay-btn').forEach(function(btn) {
                     btn.addEventListener('click', function() {
                         var code = this.dataset.lang;
