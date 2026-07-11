@@ -4334,8 +4334,9 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         var code = this.dataset.lang;
                         lang = code;
                         try { localStorage.setItem('mapLang', code); } catch(e) {}
+                        overlay.style.cssText = 'display:none !important;visibility:hidden;pointer-events:none;opacity:0;z-index:-1;';
                         overlay.classList.add('hidden');
-                        setTimeout(function() { overlay.remove(); }, 500);
+                        overlay.remove();
                         init();
                     });
                 });
