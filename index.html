@@ -159,7 +159,16 @@
                     <input type="text" id="mobileSearchInput" placeholder="بحث عن دولة..." autocomplete="off">
                     <ul class="suggestions-list" id="mobileSuggestionsList"></ul>
                 </div>
-                <button class="mobile-topbar-btn" id="mobileShareBtn" title="مشاركة"><i data-lucide="share-2" class="lucide-icon"></i></button>
+                <div class="mobile-tools-dropdown">
+                    <button class="mobile-topbar-btn" id="mobileToolsBtn" title="أدوات"><i data-lucide="wrench" class="lucide-icon"></i></button>
+                    <div class="mobile-tools-menu" id="mobileToolsMenu">
+                        <button class="mobile-tools-item" id="mobileOnboardBtn"><i data-lucide="book-open" class="lucide-icon"></i><span class="btn-text">شرح الخريطة</span></button>
+                        <button class="mobile-tools-item" id="mobileShortcutsBtn"><i data-lucide="keyboard" class="lucide-icon"></i><span class="btn-text">اختصارات</span></button>
+                        <button class="mobile-tools-item" id="mobilePdfBtn"><i data-lucide="file-text" class="lucide-icon"></i><span class="btn-text">PDF</span></button>
+                        <button class="mobile-tools-item" id="mobileShareBtn"><i data-lucide="share-2" class="lucide-icon"></i><span class="btn-text">مشاركة</span></button>
+                        <button class="mobile-tools-item" id="mobileResetBtn2"><i data-lucide="rotate-ccw" class="lucide-icon"></i><span class="btn-text">إعادة تعيين</span></button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -168,7 +177,6 @@
             <button class="mobile-nav-btn" id="mobileModeBtn" title="وضع الخريطة"><i data-lucide="palette" class="lucide-icon"></i><span class="btn-text">الوضع</span></button>
             <button class="mobile-nav-btn" id="mobileLayersBtn" title="الطبقات"><i data-lucide="layers" class="lucide-icon"></i><span class="btn-text">الطبقات</span></button>
             <button class="mobile-nav-btn" id="mobileInfoBtn" title="معلومات"><i data-lucide="info" class="lucide-icon"></i><span class="btn-text">معلومات</span></button>
-            <button class="mobile-nav-btn" id="mobileResetBtn" title="إعادة تعيين"><i data-lucide="rotate-ccw" class="lucide-icon"></i><span class="btn-text">إعادة</span></button>
         </div>
 
         <!-- Mobile mode sheet -->

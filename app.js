@@ -2169,15 +2169,20 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 setBtnText(document.getElementById('mobileModeBtn'), t('mobileMode'));
                 setBtnText(document.getElementById('mobileLayersBtn'), t('mobileLayers'));
                 setBtnText(document.getElementById('mobileInfoBtn'), t('mobileInfo'));
-                setBtnText(document.getElementById('mobileResetBtn'), t('resetBtn'));
                 var mobileModeBtn = document.getElementById('mobileModeBtn');
                 if (mobileModeBtn) mobileModeBtn.title = t('mobileMode_title');
                 var mobileLayersBtn = document.getElementById('mobileLayersBtn');
                 if (mobileLayersBtn) mobileLayersBtn.title = t('mobileLayers_title');
                 var mobileInfoBtn = document.getElementById('mobileInfoBtn');
                 if (mobileInfoBtn) mobileInfoBtn.title = t('mobileInfo_title');
-                var mobileResetBtn = document.getElementById('mobileResetBtn');
-                if (mobileResetBtn) mobileResetBtn.title = t('mobileReset_title');
+                var mobileResetBtn2 = document.getElementById('mobileResetBtn2');
+                if (mobileResetBtn2) mobileResetBtn2.title = t('mobileReset_title');
+                var mOb = document.getElementById('mobileOnboardBtn');
+                if (mOb) mOb.title = t('onboardMapGuide');
+                var mSc = document.getElementById('mobileShortcutsBtn');
+                if (mSc) mSc.title = t('shortcutsLabel');
+                var mPdf = document.getElementById('mobilePdfBtn');
+                if (mPdf) mPdf.title = t('pdfExport');
                 setBtnText(document.getElementById('mobileModeSheetTitle'), t('mobileModeSheetTitle'));
                 document.querySelectorAll('#mobileModeButtons .mode-btn').forEach(function(b) {
                     setBtnText(b, t('mode_' + b.dataset.mode));
@@ -2185,6 +2190,16 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 document.querySelectorAll('#mobileFilterButtons .religion-btn').forEach(function(b) {
                     b.textContent = t('religion_' + b.dataset.religion);
                 });
+                var mObText = document.querySelector('#mobileOnboardBtn .btn-text');
+                if (mObText) mObText.textContent = t('onboardMapGuide');
+                var mScText = document.querySelector('#mobileShortcutsBtn .btn-text');
+                if (mScText) mScText.textContent = t('shortcutsLabel');
+                var mPdfText = document.querySelector('#mobilePdfBtn .btn-text');
+                if (mPdfText) mPdfText.textContent = 'PDF';
+                var mShText = document.querySelector('#mobileShareBtn .btn-text');
+                if (mShText) mShText.textContent = t('shareBtn');
+                var mReText = document.querySelector('#mobileResetBtn2 .btn-text');
+                if (mReText) mReText.textContent = t('resetBtn');
                 exportBtn.title = t('exportLabel');
                 updateInfoOverlay();
                 if (allCountryFeatures.length) {
@@ -3683,10 +3698,21 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     if (!overlay || !glow || !card) return;
 
                     var steps = [
-                        { getEl: function() { return document.querySelector('.search-box'); }, icon: '🔍', titleKey: 'onboardStep1Title', textKey: 'onboardStep1Text' },
-                        { getEl: function() { return document.querySelector('#modeButtons'); }, icon: '🎨', titleKey: 'onboardStep2Title', textKey: 'onboardStep2Text' },
-                        { getEl: function() { return document.querySelector('#filterRow'); }, icon: '🎯', titleKey: 'onboardStep3Title', textKey: 'onboardStep3Text' },
                         { getEl: function() {
+                            var mb = window.innerWidth <= 768;
+                            return document.querySelector(mb ? '#mobileSearchInput' : '.search-box');
+                        }, icon: '🔍', titleKey: 'onboardStep1Title', textKey: 'onboardStep1Text' },
+                        { getEl: function() {
+                            var mb = window.innerWidth <= 768;
+                            return document.querySelector(mb ? '#mobileModeBtn' : '#modeButtons');
+                        }, icon: '🎨', titleKey: 'onboardStep2Title', textKey: 'onboardStep2Text' },
+                        { getEl: function() {
+                            var mb = window.innerWidth <= 768;
+                            return document.querySelector(mb ? '#mobileModeBtn' : '#filterRow');
+                        }, icon: '🎯', titleKey: 'onboardStep3Title', textKey: 'onboardStep3Text' },
+                        { getEl: function() {
+                            var mb = window.innerWidth <= 768;
+                            if (mb) return document.querySelector('#mobileLayersBtn');
                             var lr = document.querySelector('#layersRow');
                             if (lr && lr.offsetHeight > 0 && getComputedStyle(lr).display !== 'none') return lr;
                             return document.querySelector('#layersToggleBtn');
@@ -4041,7 +4067,12 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
             var mobileModeBtn = document.getElementById('mobileModeBtn');
             var mobileLayersBtn = document.getElementById('mobileLayersBtn');
             var mobileInfoBtn = document.getElementById('mobileInfoBtn');
-            var mobileResetBtn = document.getElementById('mobileResetBtn');
+            var mobileResetBtn2 = document.getElementById('mobileResetBtn2');
+            var mobileToolsBtn = document.getElementById('mobileToolsBtn');
+            var mobileToolsMenu = document.getElementById('mobileToolsMenu');
+            var mobileOnboardBtn = document.getElementById('mobileOnboardBtn');
+            var mobileShortcutsBtn = document.getElementById('mobileShortcutsBtn');
+            var mobilePdfBtn = document.getElementById('mobilePdfBtn');
             var modeSheet = document.getElementById('mobileModeSheet');
             var modeSheetBackdrop = document.getElementById('mobileModeSheetBackdrop');
             var modeSheetClose = document.getElementById('mobileModeSheetClose');
@@ -4105,7 +4136,21 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
             if (mobileModeBtn) mobileModeBtn.addEventListener('click', function() { modeSheet.classList.add('visible'); });
             if (mobileLayersBtn) mobileLayersBtn.addEventListener('click', function() { openLayersModal(); });
             if (mobileInfoBtn) mobileInfoBtn.addEventListener('click', function() { shortcutsOverlay.classList.add('visible'); });
-            if (mobileResetBtn) mobileResetBtn.addEventListener('click', resetAll);
+            if (mobileResetBtn2) mobileResetBtn2.addEventListener('click', function() { closeMobileToolsMenu(); resetAll(); });
+            if (mobileToolsBtn) mobileToolsBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                closeMobileToolsMenu();
+                if (mobileToolsMenu) mobileToolsMenu.classList.toggle('open');
+            });
+            if (mobileOnboardBtn) mobileOnboardBtn.addEventListener('click', function() { closeMobileToolsMenu(); window.startOnboarding(); });
+            if (mobileShortcutsBtn) mobileShortcutsBtn.addEventListener('click', function() { closeMobileToolsMenu(); shortcutsOverlay.classList.add('visible'); });
+            if (mobilePdfBtn) mobilePdfBtn.addEventListener('click', function() { closeMobileToolsMenu(); exportMapPDF(); });
+            function closeMobileToolsMenu() { if (mobileToolsMenu) mobileToolsMenu.classList.remove('open'); }
+            document.addEventListener('click', function(e) {
+                if (mobileToolsMenu && mobileToolsMenu.classList.contains('open') && !mobileToolsMenu.contains(e.target) && e.target !== mobileToolsBtn && !mobileToolsBtn.contains(e.target)) {
+                    closeMobileToolsMenu();
+                }
+            });
             if (modeSheetBackdrop) modeSheetBackdrop.addEventListener('click', function() { modeSheet.classList.remove('visible'); });
             if (modeSheetClose) modeSheetClose.addEventListener('click', function() { modeSheet.classList.remove('visible'); });
             mobileModeBtns.forEach(function(b) {
