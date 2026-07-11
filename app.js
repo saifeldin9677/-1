@@ -3706,7 +3706,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         }, icon: '🌐', titleKey: 'onboardStep2Title', textKey: 'onboardStep2Text' },
                         { getEl: function() {
                             var mb = window.innerWidth <= 768;
-                            return document.querySelector(mb ? '#mobileToolsBtn' : '#controlsBar');
+                            return document.querySelector(mb ? '#mobileToolsBtn' : '#toolsGroup');
                         }, icon: '🔧', titleKey: 'onboardStep3Title', textKey: 'onboardStep3Text' },
                         { getEl: function() {
                             var mb = window.innerWidth <= 768;

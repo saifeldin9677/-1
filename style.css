@@ -497,6 +497,12 @@ body {
     gap: 4px;
     justify-content: center;
 }
+.tools-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+}
 .controls-bar .row-label {
     font-size: 0.6em;
     color: var(--text-secondary);

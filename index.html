@@ -75,12 +75,14 @@
                     <input type="text" id="searchInput" placeholder="بحث..." autocomplete="off" title="ابحث عن دولة">
                     <ul class="suggestions-list" id="suggestionsList"></ul>
                 </div>
-                <button class="btn" id="shareBtn" title="مشاركة الخريطة"><i data-lucide="share-2" class="lucide-icon"></i></button>
-                <button class="btn" id="resetBtn" title="إعادة تعيين كل شيء (الوضع، الفلاتر، التكبير)"><i data-lucide="rotate-ccw" class="lucide-icon"></i><span class="btn-text">إعادة</span></button>
-                <button class="btn" id="shortcutsBtn" title="اختصارات لوحة المفاتيح"><i data-lucide="keyboard" class="lucide-icon"></i><span class="btn-text">?</span></button>
-                <button class="btn" id="onboardBtn" title="شرح الخريطة"><i data-lucide="book-open" class="lucide-icon"></i><span class="btn-text">📘</span></button>
-                <button class="btn" id="pdfExportBtn" title="تصدير الخريطة كملف PDF"><i data-lucide="file-text" class="lucide-icon"></i><span class="btn-text">PDF</span></button>
-                <button class="btn" id="coordsToggle" title="إظهار/إخفاء شريط الإحداثيات"><i data-lucide="map-pin" class="lucide-icon"></i><span class="btn-text">إحداثيات</span></button>
+                <div class="tools-group" id="toolsGroup">
+                    <button class="btn" id="shareBtn" title="مشاركة الخريطة"><i data-lucide="share-2" class="lucide-icon"></i></button>
+                    <button class="btn" id="resetBtn" title="إعادة تعيين كل شيء (الوضع، الفلاتر، التكبير)"><i data-lucide="rotate-ccw" class="lucide-icon"></i><span class="btn-text">إعادة</span></button>
+                    <button class="btn" id="shortcutsBtn" title="اختصارات لوحة المفاتيح"><i data-lucide="keyboard" class="lucide-icon"></i><span class="btn-text">?</span></button>
+                    <button class="btn" id="onboardBtn" title="شرح الخريطة"><i data-lucide="book-open" class="lucide-icon"></i><span class="btn-text">📘</span></button>
+                    <button class="btn" id="pdfExportBtn" title="تصدير الخريطة كملف PDF"><i data-lucide="file-text" class="lucide-icon"></i><span class="btn-text">PDF</span></button>
+                    <button class="btn" id="coordsToggle" title="إظهار/إخفاء شريط الإحداثيات"><i data-lucide="map-pin" class="lucide-icon"></i><span class="btn-text">إحداثيات</span></button>
+                </div>
                 <span class="divider"></span>
                 <span class="control-label" id="sectionBaseMapLabel"><i data-lucide="map" class="lucide-icon"></i><span class="btn-text">Base Map</span></span>
                 <div class="control-group" id="modeButtons">
@@ -244,7 +246,7 @@
                 <p class="lang-overlay-subtitle">اختر لغتك / Choose your language</p>
                 <div class="lang-overlay-buttons">
                     <button class="lang-overlay-btn" data-lang="ar">
-                        <span class="lang-overlay-flag">🇸🇦</span>
+                        <span class="lang-overlay-flag" style="background:#006233;color:#fff;display:inline-flex;align-items:center;justify-content:center;width:1.3em;height:1em;border-radius:2px;font-size:0.8em;line-height:1;">عر</span>
                         <span class="lang-overlay-name">العربية</span>
                     </button>
                     <button class="lang-overlay-btn" data-lang="en">
