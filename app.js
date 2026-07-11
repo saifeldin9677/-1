@@ -2168,13 +2168,10 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 if (mobileShareBtn) mobileShareBtn.title = t('shareBtn');
                 setBtnText(document.getElementById('mobileModeBtn'), t('mobileMode'));
                 setBtnText(document.getElementById('mobileLayersBtn'), t('mobileLayers'));
-                setBtnText(document.getElementById('mobileInfoBtn'), t('mobileInfo'));
                 var mobileModeBtn = document.getElementById('mobileModeBtn');
                 if (mobileModeBtn) mobileModeBtn.title = t('mobileMode_title');
                 var mobileLayersBtn = document.getElementById('mobileLayersBtn');
                 if (mobileLayersBtn) mobileLayersBtn.title = t('mobileLayers_title');
-                var mobileInfoBtn = document.getElementById('mobileInfoBtn');
-                if (mobileInfoBtn) mobileInfoBtn.title = t('mobileInfo_title');
                 var mobileResetBtn2 = document.getElementById('mobileResetBtn2');
                 if (mobileResetBtn2) mobileResetBtn2.title = t('mobileReset_title');
                 var mOb = document.getElementById('mobileOnboardBtn');
@@ -4074,7 +4071,6 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
             var mobileShareBtn = document.getElementById('mobileShareBtn');
             var mobileModeBtn = document.getElementById('mobileModeBtn');
             var mobileLayersBtn = document.getElementById('mobileLayersBtn');
-            var mobileInfoBtn = document.getElementById('mobileInfoBtn');
             var mobileResetBtn2 = document.getElementById('mobileResetBtn2');
             var mobileToolsBtn = document.getElementById('mobileToolsBtn');
             var mobileToolsMenu = document.getElementById('mobileToolsMenu');
@@ -4143,7 +4139,6 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
             if (mobileShareBtn) mobileShareBtn.addEventListener('click', shareMap);
             if (mobileModeBtn) mobileModeBtn.addEventListener('click', function() { modeSheet.classList.add('visible'); });
             if (mobileLayersBtn) mobileLayersBtn.addEventListener('click', function() { openLayersModal(); });
-            if (mobileInfoBtn) mobileInfoBtn.addEventListener('click', function() { shortcutsOverlay.classList.add('visible'); });
             if (mobileResetBtn2) mobileResetBtn2.addEventListener('click', function() { closeMobileToolsMenu(); resetAll(); });
             if (mobileToolsBtn) mobileToolsBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
