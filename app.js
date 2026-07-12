@@ -4151,7 +4151,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         });
                         ms.appendChild(li);
                     });
-                    ms.style.display = '';
+                    ms.style.display = 'block';
                 } else {
                     ms.style.display = 'none';
                 }
