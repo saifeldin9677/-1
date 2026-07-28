@@ -1015,7 +1015,11 @@
                 gTimezones.selectAll('*').remove();
                 if (!timezonesVisible) return;
                 timezoneBoundariesData.forEach(function(tz) {
-                    var geoFeature = { type: 'Feature', geometry: { type: tz.type, coordinates: tz.coordinates }, properties: { zone: tz.zone, label: tz.label, places: tz.places } };
+                    var rings = tz.coordinates;
+                    var lineGeometry = rings.length > 1
+                        ? { type: 'MultiLineString', coordinates: rings }
+                        : { type: 'LineString', coordinates: rings[0] };
+                    var geoFeature = { type: 'Feature', geometry: lineGeometry, properties: { zone: tz.zone, label: tz.label, places: tz.places } };
                     var color = getTimezoneColor(tz.zone);
 
                     // Halo (soft, wide, low-opacity)
@@ -1582,19 +1586,22 @@
                     if (!features || !features.length || !adminBoundariesVisible) return;
                     var strokeColor = MAP_COLORS.adminBoundaries.stroke;
                     var sw = isMobile ? 0.4 : 0.6;
-                    features.forEach(function(f) {
-                        var geoFeature = { type: 'Feature', geometry: { type: f.type, coordinates: f.coordinates }, properties: { name: f.name, admin: f.admin } };
-                        gAdminBoundaries.append('path')
-                            .datum(geoFeature)
-                            .attr('d', pathGen)
-                            .attr('fill', 'none')
-                            .attr('stroke', strokeColor)
-                            .attr('stroke-width', sw)
-                            .attr('stroke-opacity', 0.5)
-                            .attr('stroke-dasharray', '2,2')
-                            .attr('vector-effect', 'non-scaling-stroke')
-                            .style('pointer-events', 'none');
-                    });
+                    var merged = {
+                        type: 'GeometryCollection',
+                        geometries: features.map(function(f) {
+                            return { type: f.type, coordinates: f.coordinates };
+                        })
+                    };
+                    gAdminBoundaries.append('path')
+                        .datum(merged)
+                        .attr('d', pathGen)
+                        .attr('fill', 'none')
+                        .attr('stroke', strokeColor)
+                        .attr('stroke-width', sw)
+                        .attr('stroke-opacity', 0.5)
+                        .attr('stroke-dasharray', '2,2')
+                        .attr('vector-effect', 'non-scaling-stroke')
+                        .style('pointer-events', 'none');
                 });
             }
 
@@ -4118,15 +4125,14 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
             var onboardBtn = document.getElementById('onboardBtn');
             if (onboardBtn) {
                 onboardBtn.addEventListener('click', function() {
-                    if (typeof window.startOnboarding === 'function') {
-                        window.startOnboarding();
-                    }
+                    maybeShowProjectionExplainer(true);
                 });
             }
 
             function setupKeyboard() {
                 document.addEventListener('keydown', function(e) {
                     if (e.target.tagName === 'INPUT') return;
+                    if (quizActive) return;
                     const code = e.code;
                     if (code === 'KeyR') setMode('religion');
                     else if (code === 'KeyT') setMode('terrain');
@@ -5603,7 +5609,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                             var layerLabel = t(QUIZ_LAYERS.find(function(l) { return l.id === q.layerId; }).labelKey);
                             var div = document.createElement('div');
                             div.className = 'quiz-missed-item';
-                            div.innerHTML = '<div>' + q.name + '</div><div class="quiz-missed-layer">' + layerLabel + '</div>';
+                            div.innerHTML = '<div>' + escapeHtml(q.name) + '</div><div class="quiz-missed-layer">' + escapeHtml(layerLabel) + '</div>';
                             quizMissedList.appendChild(div);
                         });
                     } else {
@@ -6616,7 +6622,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         missed.forEach(function(r) {
                             var div = document.createElement('div');
                             div.className = 'quiz-missed-item';
-                            div.innerHTML = '<div>' + (r.promptText || 'Q') + '</div>';
+                            div.innerHTML = '<div>' + escapeHtml(r.promptText || 'Q') + '</div>';
                             quizMissedList.appendChild(div);
                         });
                     } else {
@@ -7382,7 +7388,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 closeMobileToolsMenu();
                 if (mobileToolsMenu) mobileToolsMenu.classList.toggle('open');
             });
-            if (mobileOnboardBtn) mobileOnboardBtn.addEventListener('click', function() { closeMobileToolsMenu(); window.startOnboarding(); });
+            if (mobileOnboardBtn) mobileOnboardBtn.addEventListener('click', function() { closeMobileToolsMenu(); maybeShowProjectionExplainer(true); });
             if (mobileShortcutsBtn) mobileShortcutsBtn.addEventListener('click', function() { closeMobileToolsMenu(); shortcutsOverlay.classList.add('visible'); });
             if (mobilePdfBtn) mobilePdfBtn.addEventListener('click', function() { closeMobileToolsMenu(); exportMapPDF(); });
             function closeMobileToolsMenu() { if (mobileToolsMenu) mobileToolsMenu.classList.remove('open'); }
@@ -7559,11 +7565,13 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
             }
 
             // ── Projection Explainer ──
-            function maybeShowProjectionExplainer() {
+            function maybeShowProjectionExplainer(force) {
                 var projOverlay = document.getElementById('projectionOverlay');
                 var projDone = false;
-                try { projDone = localStorage.getItem('projectionExplainerDone') === '1'; } catch(e) {}
-                if (!projOverlay || projDone) return;
+                if (!force) {
+                    try { projDone = localStorage.getItem('projectionExplainerDone') === '1'; } catch(e) {}
+                }
+                if (!projOverlay || (projDone && !force)) return;
 
                 var projTitle = document.getElementById('projectionTitle');
                 var projBody = document.getElementById('projectionBody');
