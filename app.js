@@ -206,6 +206,9 @@
             let coordsVisible = true;
             let adminBoundariesData = null;
             let adminBoundariesLoading = null;
+            let adminBoundariesMerged = null;
+            let adminBoundariesCentroids = null;
+            let _adminBoundariesRedrawTimeout = null;
             let lang = (function() { var s = localStorage.getItem('mapLang'); return s && ['ar','en','ru','uz','es'].includes(s) ? s : 'ar'; })();
             let allCountryFeatures = [];
             let countryPaths = null;
@@ -1632,6 +1635,34 @@
                 return adminBoundariesLoading;
             }
 
+            function getMergedAdminBoundaries(features) {
+                if (!adminBoundariesMerged) {
+                    adminBoundariesMerged = {
+                        type: 'GeometryCollection',
+                        geometries: features.map(function(f) {
+                            return { type: f.type, coordinates: f.coordinates };
+                        })
+                    };
+                }
+                return adminBoundariesMerged;
+            }
+            function getAdminBoundariesCentroids(features) {
+                if (!adminBoundariesCentroids) {
+                    adminBoundariesCentroids = features.map(function(f) {
+                        return {
+                            name: f.name,
+                            centroid: d3.geoCentroid({ type: 'Feature', geometry: { type: f.type, coordinates: f.coordinates } })
+                        };
+                    });
+                }
+                return adminBoundariesCentroids;
+            }
+            function drawAdminBoundariesDebounced() {
+                clearTimeout(_adminBoundariesRedrawTimeout);
+                _adminBoundariesRedrawTimeout = setTimeout(function() {
+                    drawAdminBoundaries();
+                }, 200);
+            }
             function drawAdminBoundaries() {
                 gAdminBoundaries.selectAll('*').remove();
                 if (!adminBoundariesVisible) return;
@@ -1639,12 +1670,7 @@
                     if (!features || !features.length || !adminBoundariesVisible) return;
                     var strokeColor = MAP_COLORS.adminBoundaries.stroke;
                     var sw = isMobile ? 0.4 : 0.6;
-                    var merged = {
-                        type: 'GeometryCollection',
-                        geometries: features.map(function(f) {
-                            return { type: f.type, coordinates: f.coordinates };
-                        })
-                    };
+                    var merged = getMergedAdminBoundaries(features);
                     gAdminBoundaries.append('path')
                         .datum(merged)
                         .attr('d', pathGen)
@@ -1929,7 +1955,33 @@
                 }
             }
 
-            // ── Country labels ──
+                // ── Admin boundary labels ──
+                if (adminBoundariesVisible && adminBoundariesData && currentTransform.k > 3) {
+                    hasAny = true;
+                    const centroids = getAdminBoundariesCentroids(adminBoundariesData);
+                    const fontSize = Math.max(9, Math.min(13, 10 * Math.pow(k, 0.25)));
+                    if (!_isZooming) {
+                        densityCtx.font = fontSize + 'px -apple-system, BlinkMacSystemFont, "Noto Sans Arabic", Tahoma, sans-serif';
+                        densityCtx.textBaseline = 'middle';
+                        densityCtx.lineWidth = 2.5;
+                        densityCtx.strokeStyle = MAP_COLORS.ui.textStroke;
+                        densityCtx.fillStyle = 'rgba(255,255,255,0.85)';
+                        densityCtx.lineJoin = 'round';
+                        centroids.forEach(function(c) {
+                            if (globeModeActive && !isPointVisibleOnGlobe(c.centroid)) return;
+                            const [x, y] = proj(c.centroid);
+                            if (isNaN(x) || isNaN(y)) return;
+                            const sx = x * k + tx;
+                            const sy = y * k + ty;
+                            const margin = 40;
+                            if (sx < -margin || sx > rect.width + margin || sy < -margin || sy > rect.height + margin) return;
+                            densityCtx.strokeText(c.name, sx, sy);
+                            densityCtx.fillText(c.name, sx, sy);
+                        });
+                    }
+                }
+
+                // ── Country labels ──
             function getAreaThreshold() {
                 const zoom = currentTransform.k;
                 if (zoom > 1.5) return -1;
@@ -2521,7 +2573,7 @@
                     drawGeopoliticalBlocs();
                     drawDesertsForests();
                     drawBorderDisputes();
-                    drawAdminBoundaries();
+                    drawAdminBoundariesDebounced();
                     drawNaturalResources();
                     drawEthnicGroups();
                     drawOceanCurrents();
