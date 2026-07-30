@@ -106,6 +106,10 @@
                     langDropdownMenu.style.right = 'auto';
                 }
             }
+            function setActiveByAttr(buttons, selector) {
+                buttons.forEach(function(b) { b.classList.remove('active'); });
+                document.querySelectorAll(selector).forEach(function(b) { b.classList.add('active'); });
+            }
             const modeButtons = document.querySelectorAll('.mode-btn');
             var religionButtons = [];
             const labelsToggle = document.getElementById('labelsToggle');
@@ -163,6 +167,7 @@
             // ── State variables ──
             let currentReligionFilter = 'all';
             let colorMode = 'normal';
+            let selectedBloc = 'all';
             let showLabels = false;
             let sectMode = false;
             let corridorsVisible = false;
@@ -967,7 +972,7 @@
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(function(){requestAnimationFrame(function(){countryPanel.classList.add('visible');});});
             }
-            function drawRoutes() {
+            function drawRoutes(skipFadeIn) {
                 gCorridors.selectAll('*').remove();
                 if (!corridorsVisible && !additionalWaterwaysVisible) return;
                 var proj = getActiveProjection();
@@ -983,18 +988,22 @@
                 renderList.forEach(function(c) {
                     var color = MAP_COLORS.routes[c.type] || MAP_COLORS.routes.other;
                     var points = c.coords;
-                    gCorridors.append('path').attr('d',smoothedLinePath(points)).attr('fill','none').attr('stroke',color).attr('stroke-width',isMobile?7:10).attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(){showRouteDetail(c);}).attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.35);
-                    gCorridors.append('path').attr('d',smoothedLinePath(points)).attr('fill','none').attr('stroke',color).attr('stroke-width',isMobile?2.5:3).attr('vector-effect','non-scaling-stroke').style('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',1);
+                    var _sel = gCorridors.append('path').datum({type:'LineString', coordinates:points}).attr('d',pathGen).attr('fill','none').attr('stroke',color).attr('stroke-width',isMobile?7:10).attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(){showRouteDetail(c);});
+                    if (skipFadeIn) _sel.attr('opacity',0.35); else _sel.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.35);
+                    _sel = gCorridors.append('path').datum({type:'LineString', coordinates:points}).attr('d',pathGen).attr('fill','none').attr('stroke',color).attr('stroke-width',isMobile?2.5:3).attr('vector-effect','non-scaling-stroke').style('pointer-events','none');
+                    if (skipFadeIn) _sel.attr('opacity',1); else _sel.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',1);
                     var first = points[0], last = points[points.length-1];
                     [first,last].forEach(function(p){
                         var xy = proj(p);
                         if (!xy||isNaN(xy[0])) return;
-                        gCorridors.append('circle').attr('cx',xy[0]).attr('cy',xy[1]).attr('r',isMobile?2.5:3.5).attr('fill',color).attr('stroke','#fff').attr('stroke-width',0.5).attr('vector-effect','non-scaling-stroke').style('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',1);
+                        var _sel2 = gCorridors.append('circle').attr('cx',xy[0]).attr('cy',xy[1]).attr('r',isMobile?2.5:3.5).attr('fill',color).attr('stroke','#fff').attr('stroke-width',0.5).attr('vector-effect','non-scaling-stroke').style('pointer-events','none');
+                        if (skipFadeIn) _sel2.attr('opacity',1); else _sel2.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',1);
                     });
                     var mid = points[Math.floor(points.length/2)];
                     var mxy = proj(mid);
                     if (mxy&&!isNaN(mxy[0])) {
-                        gCorridors.append('text').attr('x',mxy[0]).attr('y',mxy[1]-4).text(function(){return lang==='ar'?c.name_ar:lang==='ru'?(c.name_ru||c.name_en):lang==='uz'?(c.name_uz||c.name_en):lang==='es'?(c.name_es||c.name_en):c.name_en;}).attr('fill','#fff').attr('font-size',isMobile?6:8).attr('text-anchor','middle').style('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.85);
+                        var _sel3 = gCorridors.append('text').attr('x',mxy[0]).attr('y',mxy[1]-4).text(function(){return lang==='ar'?c.name_ar:lang==='ru'?(c.name_ru||c.name_en):lang==='uz'?(c.name_uz||c.name_en):lang==='es'?(c.name_es||c.name_en):c.name_en;}).attr('fill','#fff').attr('font-size',isMobile?6:8).attr('text-anchor','middle').style('pointer-events','none');
+                        if (skipFadeIn) _sel3.attr('opacity',0.85); else _sel3.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.85);
                     }
                 });
             }
@@ -1011,7 +1020,7 @@
             }
 
             // ── Timezone overlay ──
-            function drawTimezones() {
+            function drawTimezones(skipFadeIn) {
                 gTimezones.selectAll('*').remove();
                 if (!timezonesVisible) return;
                 timezoneBoundariesData.forEach(function(tz) {
@@ -1045,12 +1054,19 @@
                         .style('cursor', 'pointer')
                         .on('mouseenter', function(e) {
                             mainPath.attr('stroke-width', isMobile ? 2 : 3);
-                            showTooltip(e, tz.label + ' — ' + tz.places);
+                            tooltip.textContent = tz.label + ' — ' + tz.places;
+                            tooltip.classList.add('visible');
                         })
-                        .on('mousemove', function(e) { moveTooltip(e); })
+                        .on('mousemove', function(e) {
+                            _pendingTooltipEvent = e;
+                            if (!_tooltipRAFPending) {
+                                _tooltipRAFPending = true;
+                                requestAnimationFrame(_flushTooltipPosition);
+                            }
+                        })
                         .on('mouseleave', function() {
                             mainPath.attr('stroke-width', isMobile ? 1.2 : 1.8);
-                            hideTooltip();
+                            tooltip.classList.remove('visible');
                         })
                         .on('click', function() { showFeatureDetail('timezone', tz); });
 
@@ -1070,12 +1086,19 @@
                                 .style('cursor', 'pointer')
                                 .on('mouseenter', function(e) {
                                     mainPath.attr('stroke-width', isMobile ? 2 : 3);
-                                    showTooltip(e, tz.label + ' — ' + tz.places);
+                                    tooltip.textContent = tz.label + ' — ' + tz.places;
+                                    tooltip.classList.add('visible');
                                 })
-                                .on('mousemove', function(e) { moveTooltip(e); })
+                                .on('mousemove', function(e) {
+                                    _pendingTooltipEvent = e;
+                                    if (!_tooltipRAFPending) {
+                                        _tooltipRAFPending = true;
+                                        requestAnimationFrame(_flushTooltipPosition);
+                                    }
+                                })
                                 .on('mouseleave', function() {
                                     mainPath.attr('stroke-width', isMobile ? 1.2 : 1.8);
-                                    hideTooltip();
+                                    tooltip.classList.remove('visible');
                                 })
                                 .on('click', function() { showFeatureDetail('timezone', tz); });
                         }
@@ -1099,7 +1122,8 @@
                             .attr('class', 'terrain-feature')
                             .style('cursor', 'pointer');
                         grp.append('path')
-                            .attr('d', smoothedLinePath(m.coords))
+                            .datum({type:'LineString', coordinates: m.coords})
+                            .attr('d', pathGen)
                             .attr('fill', 'none')
                             .attr('stroke', MAP_COLORS.physical.mountainShadow)
                             .attr('stroke-width', w * (isMobile ? 2.2 : 3.8))
@@ -1108,7 +1132,8 @@
                             .attr('vector-effect', 'non-scaling-stroke')
                             .attr('opacity', 0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity', 0.45);
                         const mainPath = grp.append('path')
-                            .attr('d', smoothedLinePath(m.coords))
+                            .datum({type:'LineString', coordinates: m.coords})
+                            .attr('d', pathGen)
                             .attr('fill', 'none')
                             .attr('stroke', w === 3 ? MAP_COLORS.physical.mountainMajor : w === 2 ? MAP_COLORS.physical.mountainImportant : MAP_COLORS.physical.mountainMinor)
                             .attr('stroke-width', w * (isMobile ? 1.1 : 1.8))
@@ -1146,7 +1171,8 @@
                                 .attr('class', 'terrain-feature')
                                 .style('cursor', 'pointer');
                             grp.append('path')
-                                .attr('d', smoothedLinePath(r.coords))
+                                .datum({type:'LineString', coordinates: r.coords})
+                                .attr('d', pathGen)
                                 .attr('fill', 'none')
                                 .attr('stroke', MAP_COLORS.physical.riverHalo)
                                 .attr('stroke-width', w * (isMobile ? 1.8 : 2.8))
@@ -1155,7 +1181,8 @@
                                 .attr('vector-effect', 'non-scaling-stroke')
                                 .attr('opacity', 0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity', 0.3);
                             const mainPath = grp.append('path')
-                                .attr('d', smoothedLinePath(r.coords))
+                                .datum({type:'LineString', coordinates: r.coords})
+                                .attr('d', pathGen)
                                 .attr('fill', 'none')
                                 .attr('stroke', w === 3 ? MAP_COLORS.physical.riverMajor : w === 2 ? MAP_COLORS.physical.riverImportant : MAP_COLORS.physical.riverMinor)
                                 .attr('stroke-width', w * (isMobile ? 0.9 : 1.4))
@@ -1262,7 +1289,7 @@
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(function(){requestAnimationFrame(function(){countryPanel.classList.add('visible');});});
             }
-            function drawOceanCurrents() {
+            function drawOceanCurrents(skipFadeIn) {
                 gOceanCurrents.selectAll('*').remove();
                 if (!oceanCurrentsVisible) return;
                 var proj = getActiveProjection();
@@ -1272,60 +1299,70 @@
                         if (!xy||isNaN(xy[0])) return;
                         var s = isMobile?10:16;
                         gOceanCurrents.append('rect').attr('x',xy[0]-s-6).attr('y',xy[1]-s-6).attr('width',(s+6)*2).attr('height',(s+6)*2).attr('fill','transparent').style('cursor','pointer').on('click',function(){showOceanCurrentDetail(d);});
-                        gOceanCurrents.append('path').attr('d','M'+(xy[0]-s)+','+(xy[1]-s)+' L'+(xy[0]+s)+','+(xy[1]+s)+' M'+(xy[0]-s)+','+(xy[1]+s)+' L'+(xy[0]+s)+','+(xy[1]-s)).attr('stroke',MAP_COLORS.oceanCurrents.trench).attr('stroke-width',isMobile?3:4).style('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.9);
-                        gOceanCurrents.append('text').attr('x',xy[0]+s+6).attr('y',xy[1]+3).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill',MAP_COLORS.oceanCurrents.trench).attr('font-size',isMobile?8:11).attr('font-weight','bold').style('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',1);
+                        var _sel = gOceanCurrents.append('path').attr('d','M'+(xy[0]-s)+','+(xy[1]-s)+' L'+(xy[0]+s)+','+(xy[1]+s)+' M'+(xy[0]-s)+','+(xy[1]+s)+' L'+(xy[0]+s)+','+(xy[1]-s)).attr('stroke',MAP_COLORS.oceanCurrents.trench).attr('stroke-width',isMobile?3:4).style('pointer-events','none');
+                        if (skipFadeIn) _sel.attr('opacity',0.9); else _sel.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.9);
+                        _sel = gOceanCurrents.append('text').attr('x',xy[0]+s+6).attr('y',xy[1]+3).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill',MAP_COLORS.oceanCurrents.trench).attr('font-size',isMobile?8:11).attr('font-weight','bold').style('pointer-events','none');
+                        if (skipFadeIn) _sel.attr('opacity',1); else _sel.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',1);
                         return;
                     }
                     if (d.type==='gyre') {
                         var color = MAP_COLORS.oceanCurrents.gyre;
-                        var line = gOceanCurrents.append('path').datum({type:'LineString', coordinates:d.coords}).attr('d', pathGen).attr('fill','none').attr('stroke',color).attr('stroke-width',isMobile?2.5:4).attr('stroke-dasharray','4,8').attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(){showOceanCurrentDetail(d);}).attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.6);
+                        var line = gOceanCurrents.append('path').datum({type:'LineString', coordinates:d.coords}).attr('d', pathGen).attr('fill','none').attr('stroke',color).attr('stroke-width',isMobile?2.5:4).attr('stroke-dasharray','4,8').attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(){showOceanCurrentDetail(d);});
+                        if (skipFadeIn) line.attr('opacity',0.6); else line.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.6);
                         var expanded = d.coords.slice();
                         if (expanded.length>1) { expanded.push(d.coords[d.coords.length-2]); expanded.push(d.coords[d.coords.length-1]); }
                         gOceanCurrents.append('path').datum({type:'LineString', coordinates:d.coords}).attr('d', pathGen).attr('fill','none').attr('stroke','transparent').attr('stroke-width',isMobile?16:24).style('cursor','pointer').on('click',function(){showOceanCurrentDetail(d);});
                         var mid = d.coords[Math.floor(d.coords.length/2)];
                         var mxy = proj(mid);
                         if (mxy&&!isNaN(mxy[0])) {
-                            gOceanCurrents.append('text').attr('x',mxy[0]).attr('y',mxy[1]-10).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill',color).attr('font-size',isMobile?8:11).attr('font-weight','bold').attr('text-anchor','middle').style('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',1);
+                            var _sel2 = gOceanCurrents.append('text').attr('x',mxy[0]).attr('y',mxy[1]-10).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill',color).attr('font-size',isMobile?8:11).attr('font-weight','bold').attr('text-anchor','middle').style('pointer-events','none');
+                            if (skipFadeIn) _sel2.attr('opacity',1); else _sel2.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',1);
                         }
                         return;
                     }
                     var color = d.type === 'warm' ? MAP_COLORS.oceanCurrents.warm : MAP_COLORS.oceanCurrents.cold;
                     var arrow = d.type === 'warm' ? '▶' : '◀';
-                    var line = gOceanCurrents.append('path').datum({type:'LineString', coordinates:d.coords}).attr('d', pathGen).attr('fill','none').attr('stroke',color).attr('stroke-width',isMobile?3:5).attr('stroke-dasharray','8,4').attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(){showOceanCurrentDetail(d);}).attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.8);
+                    var line = gOceanCurrents.append('path').datum({type:'LineString', coordinates:d.coords}).attr('d', pathGen).attr('fill','none').attr('stroke',color).attr('stroke-width',isMobile?3:5).attr('stroke-dasharray','8,4').attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(){showOceanCurrentDetail(d);});
+                    if (skipFadeIn) line.attr('opacity',0.8); else line.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.8);
                     gOceanCurrents.append('path').datum({type:'LineString', coordinates:d.coords}).attr('d', pathGen).attr('fill','none').attr('stroke','transparent').attr('stroke-width',isMobile?18:28).style('cursor','pointer').on('click',function(){showOceanCurrentDetail(d);});
                     var last = d.coords[d.coords.length-1];
                     var xy = proj(last);
                     if (xy && !isNaN(xy[0])) {
-                        gOceanCurrents.append('text').attr('x',xy[0]).attr('y',xy[1]).text(arrow).attr('fill',color).attr('font-size',isMobile?16:22).style('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.9);
+                        var _sel3 = gOceanCurrents.append('text').attr('x',xy[0]).attr('y',xy[1]).text(arrow).attr('fill',color).attr('font-size',isMobile?16:22).style('pointer-events','none');
+                        if (skipFadeIn) _sel3.attr('opacity',0.9); else _sel3.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.9);
                         var first = d.coords[0];
                         var fxy = proj(first);
                         if (fxy && !isNaN(fxy[0])) {
                             var mid = d.coords[Math.floor(d.coords.length/2)];
                             var mxy = proj(mid);
                             if (mxy && !isNaN(mxy[0])) {
-                                gOceanCurrents.append('text').attr('x',mxy[0]-10).attr('y',mxy[1]-6).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill','#fff').attr('font-size',isMobile?7:10).attr('font-weight','bold').style('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.95);
+                                var _sel4 = gOceanCurrents.append('text').attr('x',mxy[0]-10).attr('y',mxy[1]-6).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill','#fff').attr('font-size',isMobile?7:10).attr('font-weight','bold').style('pointer-events','none');
+                                if (skipFadeIn) _sel4.attr('opacity',0.95); else _sel4.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.95);
                             }
                         }
                     }
                 });
             }
-            function drawWinds() {
+            function drawWinds(skipFadeIn) {
                 gWinds.selectAll('*').remove();
                 if (!windsVisible) return;
                 var proj = getActiveProjection();
                 windsData.forEach(function(d) {
                     var color = d.type === 'trade' ? MAP_COLORS.winds.trade : d.type === 'westerly' ? MAP_COLORS.winds.westerly : d.type === 'polar' ? MAP_COLORS.winds.polar : d.type === 'monsoon' ? MAP_COLORS.winds.monsoon : MAP_COLORS.winds.other;
-                    var line = gWinds.append('path').datum({type:'LineString', coordinates:d.coords}).attr('d', pathGen).attr('fill','none').attr('stroke',color).attr('stroke-width',isMobile?3:5).attr('stroke-dasharray','5,5').attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(){showFeatureDetail('wind',d);}).attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.7);
+                    var line = gWinds.append('path').datum({type:'LineString', coordinates:d.coords}).attr('d', pathGen).attr('fill','none').attr('stroke',color).attr('stroke-width',isMobile?3:5).attr('stroke-dasharray','5,5').attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(){showFeatureDetail('wind',d);});
+                    if (skipFadeIn) line.attr('opacity',0.7); else line.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.7);
                     gWinds.append('path').datum({type:'LineString', coordinates:d.coords}).attr('d', pathGen).attr('fill','none').attr('stroke','transparent').attr('stroke-width',isMobile?16:24).style('cursor','pointer').on('click',function(){showFeatureDetail('wind',d);});
                     var last = d.coords[d.coords.length-1];
                     var xy = proj(last);
                     if (xy && !isNaN(xy[0])) {
-                        gWinds.append('text').attr('x',xy[0]).attr('y',xy[1]).text('➤').attr('fill',color).attr('font-size',isMobile?14:20).style('pointer-events','none').style('cursor','pointer').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.85);
+                        var _sel = gWinds.append('text').attr('x',xy[0]).attr('y',xy[1]).text('➤').attr('fill',color).attr('font-size',isMobile?14:20).style('pointer-events','none').style('cursor','pointer');
+                        if (skipFadeIn) _sel.attr('opacity',0.85); else _sel.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.85);
                     }
                     var mid = d.coords[Math.floor(d.coords.length/2)];
                     var mxy = proj(mid);
                     if (mxy && !isNaN(mxy[0])) {
-                        gWinds.append('text').attr('x',mxy[0]).attr('y',mxy[1]-8).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill','#fff').attr('font-size',isMobile?9:13).attr('font-weight','bold').style('pointer-events','none').style('text-shadow','0 0 5px rgba(0,0,0,0.7)').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.95);
+                        var _sel2 = gWinds.append('text').attr('x',mxy[0]).attr('y',mxy[1]-8).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill','#fff').attr('font-size',isMobile?9:13).attr('font-weight','bold').style('pointer-events','none').style('text-shadow','0 0 5px rgba(0,0,0,0.7)');
+                        if (skipFadeIn) _sel2.attr('opacity',0.95); else _sel2.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.95);
                     }
                 });
             }
@@ -1354,7 +1391,7 @@
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(function(){requestAnimationFrame(function(){countryPanel.classList.add('visible');});});
             }
-            function drawEarthquakes() {
+            function drawEarthquakes(skipFadeIn) {
                 gEarthquakes.selectAll('*').remove();
                 if (!earthquakesVisible) return;
                 var proj = getActiveProjection();
@@ -1362,11 +1399,13 @@
                 tectonicPlatesData.forEach(function(p,i){
                     var pathD = pathGen({type:'Polygon',coordinates:[p.coords]});
                     if (pathD) {
-                        gEarthquakes.append('path').attr('d',pathD).attr('fill',plateColors[i%plateColors.length]).attr('stroke',plateColors[i%plateColors.length]).attr('stroke-width',1).attr('stroke-dasharray','3,3').attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(){showTectonicPlateDetail(p);}).attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.04);
+                        var _sel = gEarthquakes.append('path').attr('d',pathD).attr('fill',plateColors[i%plateColors.length]).attr('stroke',plateColors[i%plateColors.length]).attr('stroke-width',1).attr('stroke-dasharray','3,3').attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(){showTectonicPlateDetail(p);});
+                        if (skipFadeIn) _sel.attr('opacity',0.04); else _sel.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.04);
                         var mid = p.coords[Math.floor(p.coords.length/2)];
                         var mxy = proj(mid);
                         if (mxy&&!isNaN(mxy[0])) {
-                            gEarthquakes.append('text').attr('x',mxy[0]).attr('y',mxy[1]).text(function(){return lang==='ar'?p.name:lang==='ru'?(p.name_ru||p.name_en):lang==='uz'?(p.name_uz||p.name_en):lang==='es'?(p.name_es||p.name_en):p.name_en;}).attr('fill','#fff').attr('font-size',isMobile?8:11).attr('text-anchor','middle').style('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.7);
+                            var _sel2 = gEarthquakes.append('text').attr('x',mxy[0]).attr('y',mxy[1]).text(function(){return lang==='ar'?p.name:lang==='ru'?(p.name_ru||p.name_en):lang==='uz'?(p.name_uz||p.name_en):lang==='es'?(p.name_es||p.name_en):p.name_en;}).attr('fill','#fff').attr('font-size',isMobile?8:11).attr('text-anchor','middle').style('pointer-events','none');
+                            if (skipFadeIn) _sel2.attr('opacity',0.7); else _sel2.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.7);
                         }
                     }
                 });
@@ -1377,7 +1416,8 @@
                     if (!xy || isNaN(xy[0])) return;
                     var eqColor = d.magnitude >= 9 ? MAP_COLORS.earthquakes.major9 : d.magnitude >= 8 ? MAP_COLORS.earthquakes.major8 : d.magnitude >= 7 ? MAP_COLORS.earthquakes.major7 : d.magnitude >= 6 ? MAP_COLORS.earthquakes.major6 : MAP_COLORS.earthquakes.below6;
                     var r = isMobile ? 8 : 12;
-                    gEarthquakes.append('circle').attr('cx',xy[0]).attr('cy',xy[1]).attr('r',r).attr('fill',eqColor).attr('stroke','#fff').attr('stroke-width',1.5).style('cursor','pointer').on('click',function(){showEarthquakeDetail(d);}).attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.85);
+                    var _sel3 = gEarthquakes.append('circle').attr('cx',xy[0]).attr('cy',xy[1]).attr('r',r).attr('fill',eqColor).attr('stroke','#fff').attr('stroke-width',1.5).style('cursor','pointer').on('click',function(){showEarthquakeDetail(d);});
+                    if (skipFadeIn) _sel3.attr('opacity',0.85); else _sel3.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.85);
                     gEarthquakes.append('circle').attr('cx',xy[0]).attr('cy',xy[1]).attr('r',r+4).attr('fill','transparent').style('cursor','pointer').on('click',function(){showEarthquakeDetail(d);});
                 });
             }
@@ -1395,7 +1435,7 @@
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(function(){requestAnimationFrame(function(){countryPanel.classList.add('visible');});});
             }
-            function drawVolcanoes() {
+            function drawVolcanoes(skipFadeIn) {
                 gVolcanoes.selectAll('*').remove();
                 if (!volcanoesVisible) return;
                 var proj = getActiveProjection();
@@ -1405,12 +1445,14 @@
                     var px = xy[0], py = xy[1];
                     var s = isMobile ? 8 : 13;
                     var group = gVolcanoes.append('g').style('cursor','pointer').on('click',function(){showVolcanoDetail(d);});
-                    group.append('path').attr('d','M'+px+','+(py-s)+' L'+(px-s*0.7)+','+(py+s*0.5)+' L'+(px+s*0.7)+','+(py+s*0.5)+' Z').attr('fill',MAP_COLORS.volcanoes.fill).attr('stroke',MAP_COLORS.volcanoes.stroke).attr('stroke-width',1).attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.9);
-                    group.append('circle').attr('cx',px).attr('cy',py-s*0.2).attr('r',isMobile?3:4).attr('fill',MAP_COLORS.volcanoes.glow).attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.8);
+                    var _sel = group.append('path').attr('d','M'+px+','+(py-s)+' L'+(px-s*0.7)+','+(py+s*0.5)+' L'+(px+s*0.7)+','+(py+s*0.5)+' Z').attr('fill',MAP_COLORS.volcanoes.fill).attr('stroke',MAP_COLORS.volcanoes.stroke).attr('stroke-width',1);
+                    if (skipFadeIn) _sel.attr('opacity',0.9); else _sel.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.9);
+                    _sel = group.append('circle').attr('cx',px).attr('cy',py-s*0.2).attr('r',isMobile?3:4).attr('fill',MAP_COLORS.volcanoes.glow);
+                    if (skipFadeIn) _sel.attr('opacity',0.8); else _sel.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.8);
                     group.append('text').attr('x',px+s+3).attr('y',py+2).text(function(){return lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;}).attr('fill',MAP_COLORS.volcanoes.fill).attr('font-size',isMobile?9:12).attr('font-weight','bold').style('pointer-events','none');
                 });
             }
-            function drawGeopoliticalBlocs() {
+            function drawGeopoliticalBlocs(skipFadeIn) {
                 gGeopoliticalBlocs.selectAll('*').remove();
                 if (!geopoliticalBlocsVisible) return;
                 if (selectedBloc !== 'all') {
@@ -1425,10 +1467,12 @@
                             if (bloc.members.some(function(m){return getCleanName(m)===cleanName;})) {
                                 var pathData = pathGen(f);
                                 if (pathData) {
-                                    gGeopoliticalBlocs.append('path').attr('d',pathData).attr('fill',blocColor).attr('stroke',blocColor).attr('stroke-width',1.5).attr('vector-effect','non-scaling-stroke').style('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.3);
+                                    var _sel = gGeopoliticalBlocs.append('path').attr('d',pathData).attr('fill',blocColor).attr('stroke',blocColor).attr('stroke-width',1.5).attr('vector-effect','non-scaling-stroke').style('pointer-events','none');
+                                    if (skipFadeIn) _sel.attr('opacity',0.3); else _sel.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.3);
                                     var centroid = d3.geoPath().projection(getActiveProjection()).centroid(f);
                                     if (centroid && !isNaN(centroid[0])) {
-                                        gGeopoliticalBlocs.append('text').attr('x',centroid[0]).attr('y',centroid[1]).text(function(){return getDisplayName(name);}).attr('fill','#fff').attr('font-size',fs).attr('font-weight','bold').attr('text-anchor','middle').attr('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.9);
+                                        var _sel2 = gGeopoliticalBlocs.append('text').attr('x',centroid[0]).attr('y',centroid[1]).text(function(){return getDisplayName(name);}).attr('fill','#fff').attr('font-size',fs).attr('font-weight','bold').attr('text-anchor','middle').attr('pointer-events','none');
+                                        if (skipFadeIn) _sel2.attr('opacity',0.9); else _sel2.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.9);
                                     }
                                 }
                             }
@@ -1491,7 +1535,7 @@
                 countryPanel.style.display = 'block';
                 requestAnimationFrame(function(){requestAnimationFrame(function(){countryPanel.classList.add('visible');});});
             }
-            function drawDesertsForests() {
+            function drawDesertsForests(skipFadeIn) {
                 gDesertsForests.selectAll('*').remove();
                 if (!desertsForestsVisible) return;
                 var proj = getActiveProjection();
@@ -1511,15 +1555,17 @@
                         if (mxy && !isNaN(mxy[0])) {
                             var labelText = lang === 'ar' ? d.name : lang === 'ru' ? (d.name_ru || d.name_en) : lang === 'uz' ?(d.name_uz || d.name_en): lang === 'es' ?(d.name_es || d.name_en) : d.name_en;
                             var fontSize = Math.max(3, Math.min(15, (isMobile ? 9 : 12) / k));
-                            gDesertsForests.append('text').attr('x',mxy[0]).attr('y',mxy[1]).text(labelText).attr('fill','#fff').attr('font-size',fontSize).attr('font-weight','bold').attr('text-anchor','middle').style('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.95);
+                            var _sel = gDesertsForests.append('text').attr('x',mxy[0]).attr('y',mxy[1]).text(labelText).attr('fill','#fff').attr('font-size',fontSize).attr('font-weight','bold').attr('text-anchor','middle').style('pointer-events','none');
+                            if (skipFadeIn) _sel.attr('opacity',0.95); else _sel.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.95);
                             gDesertsForests.append('circle').datum(d).attr('cx',mxy[0]).attr('cy',mxy[1]).attr('r',isMobile?20:30).attr('fill','transparent').style('cursor','pointer').on('click',function(e,dd){showDesertForestDetail(dd);});
                         }
                     }
                 });
             }
-            function drawBorderDisputes() {
+            function drawBorderDisputes(skipFadeIn) {
                 gBorderDisputes.selectAll('*').remove();
-                if (!borderDisputesVisible) return;
+                var counterEl = document.getElementById('borderDisputesCounter');
+                if (!borderDisputesVisible) { if (counterEl) counterEl.style.display = 'none'; return; }
                 var proj = getActiveProjection();
                 borderDisputesData.forEach(function(d) {
                     var p = proj(d.coords);
@@ -1529,10 +1575,14 @@
                     var rBase = isMobile ? 7 : 11;
                     var r = rBase / k;
                     var x = p[0], y = p[1];
-                    gBorderDisputes.append('circle').attr('cx',x).attr('cy',y).attr('r',Math.max(2, r*2.2)).attr('fill',color).attr('vector-effect','non-scaling-stroke').style('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.12);
-                    gBorderDisputes.append('circle').attr('cx',x).attr('cy',y).attr('r',Math.max(1.5, r*1.4)).attr('fill',color).attr('vector-effect','non-scaling-stroke').style('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.2);
-                    gBorderDisputes.append('circle').datum(d).attr('cx',x).attr('cy',y).attr('r',Math.max(1, r)).attr('fill',color).attr('stroke','#fff').attr('stroke-width',(isMobile?1:1.5)).attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(e,dd){showBorderDisputeDetail(dd);}).attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.9);
-                    gBorderDisputes.append('circle').attr('cx',x).attr('cy',y).attr('r',Math.max(3, r*3)).attr('fill','transparent').attr('stroke',color).attr('stroke-width',(isMobile?0.8:1.2)).attr('vector-effect','non-scaling-stroke').style('pointer-events','none').attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.25);
+                    var _sel = gBorderDisputes.append('circle').attr('cx',x).attr('cy',y).attr('r',Math.max(2, r*2.2)).attr('fill',color).attr('vector-effect','non-scaling-stroke').style('pointer-events','none');
+                    if (skipFadeIn) _sel.attr('opacity',0.12); else _sel.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.12);
+                    _sel = gBorderDisputes.append('circle').attr('cx',x).attr('cy',y).attr('r',Math.max(1.5, r*1.4)).attr('fill',color).attr('vector-effect','non-scaling-stroke').style('pointer-events','none');
+                    if (skipFadeIn) _sel.attr('opacity',0.2); else _sel.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.2);
+                    _sel = gBorderDisputes.append('circle').datum(d).attr('cx',x).attr('cy',y).attr('r',Math.max(1, r)).attr('fill',color).attr('stroke','#fff').attr('stroke-width',(isMobile?1:1.5)).attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(e,dd){showBorderDisputeDetail(dd);});
+                    if (skipFadeIn) _sel.attr('opacity',0.9); else _sel.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.9);
+                    _sel = gBorderDisputes.append('circle').attr('cx',x).attr('cy',y).attr('r',Math.max(3, r*3)).attr('fill','transparent').attr('stroke',color).attr('stroke-width',(isMobile?0.8:1.2)).attr('vector-effect','non-scaling-stroke').style('pointer-events','none');
+                    if (skipFadeIn) _sel.attr('opacity',0.25); else _sel.attr('opacity',0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity',0.25);
                     var labelText = lang === 'ar' ? d.name_ar : lang === 'ru' ? (d.name_ru || d.name_en) : lang === 'uz' ?(d.name_uz || d.name_en): lang === 'es' ?(d.name_es || d.name_en) : d.name_en;
                     var fs = Math.max(3, Math.min(14, (isMobile ? 7 : 10) / k));
                     gBorderDisputes.append('text').attr('x',x).attr('y',y-r-3/k).text(labelText).attr('fill',color).attr('font-size',fs).attr('font-weight','bold').attr('text-anchor','middle').style('pointer-events','none');
@@ -1540,7 +1590,10 @@
                 var activeCount = borderDisputesData.filter(function(d){return d.type==='active';}).length;
                 var ceasefireCount = borderDisputesData.filter(function(d){return d.type==='ceasefire';}).length;
                 var maritimeCount = borderDisputesData.filter(function(d){return d.type==='maritime';}).length;
-                gBorderDisputes.append('text').attr('x',10).attr('y',isMobile?12:16).text('⚔️ '+activeCount+'  ☮️ '+ceasefireCount+'  🌊 '+maritimeCount).attr('fill','rgba(255,255,255,0.6)').attr('font-size',isMobile?8:10).attr('font-weight','bold').style('pointer-events','none');
+                if (counterEl) {
+                    counterEl.textContent = '⚔️ ' + activeCount + '  ☮️ ' + ceasefireCount + '  🌊 ' + maritimeCount;
+                    counterEl.style.display = '';
+                }
             }
             function showBorderDisputeDetail(d) {
                 if (!d) return;
@@ -2270,8 +2323,7 @@
                     densitySpotsToggle.classList.remove('toggle-on');
                     if (densityCtx) densityCtx.clearRect(0, 0, densityCanvas.width, densityCanvas.height);
                 }
-                modeButtons.forEach(b => b.classList.remove('active'));
-                document.querySelector(`.mode-btn[data-mode="${mode}"]`).classList.add('active');
+                setActiveByAttr(modeButtons, `.mode-btn[data-mode="${mode}"]`);
                 requestAnimationFrame(function() { updateAllStyles(); });
                 updateCoordinatesDisplay({ clientX: 0, clientY: 0 });
             }
@@ -2499,7 +2551,8 @@
                 if (globeViewBtn) globeViewBtn.classList.toggle('toggle-on', globeModeActive);
 
                 if (globeModeActive) {
-                    if (quizBtn) { quizBtn.disabled = true; quizBtn.classList.add('quiz-disabled'); quizBtn.title = t('quizUnavailableOnGlobe'); }
+                    var quizBtnEl = document.getElementById('quizBtn');
+                    if (quizBtnEl) { quizBtnEl.disabled = true; quizBtnEl.classList.add('quiz-disabled'); quizBtnEl.title = t('quizUnavailableOnGlobe'); }
                     clearMeasurement();
                     var lbl = document.getElementById('headerProjectionLabel');
                     if (lbl) { lbl.setAttribute('data-i18n', 'globeProjectionType'); lbl.textContent = t('globeProjectionType'); }
@@ -2543,7 +2596,8 @@
                     if (measurePoints.length > 0) { if (!gMeasure) gMeasure = gMap.append('g').attr('class', 'measure-layer'); redrawMeasureLayer(); }
                     fullGlobeRedraw();
                 } else {
-                    if (quizBtn) { quizBtn.disabled = false; quizBtn.classList.remove('quiz-disabled'); quizBtn.title = t('quizMode'); }
+                    var quizBtnEl2 = document.getElementById('quizBtn');
+                    if (quizBtnEl2) { quizBtnEl2.disabled = false; quizBtnEl2.classList.remove('quiz-disabled'); quizBtnEl2.title = t('quizMode'); }
                     clearMeasurement();
                     var lbl = document.getElementById('headerProjectionLabel');
                     if (lbl) { lbl.setAttribute('data-i18n', 'headerProjectionType'); lbl.textContent = t('headerProjectionType'); }
@@ -2630,6 +2684,12 @@
                 document.querySelectorAll('[data-i18n-title]').forEach(function(el) {
                     var key = el.dataset.i18nTitle;
                     el.title = t(key);
+                    el.setAttribute('data-tooltip', t(key));
+                });
+                document.querySelectorAll('.btn[title]').forEach(function(el) {
+                    if (!el.getAttribute('data-tooltip')) {
+                        el.setAttribute('data-tooltip', el.title);
+                    }
                 });
                 document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
                     var key = el.dataset.i18nPlaceholder;
@@ -3228,8 +3288,8 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 const bar1Dens = dens1 ? (dens1 / maxDens * 100) : 0;
                 const bar2Dens = dens2 ? (dens2 / maxDens * 100) : 0;
                 html += '<tr><td style="padding:4px;">' + e(t('densityTitle')) + '</td>' +
-                    '<td style="padding:4px;">' + e('' + dens1) + ' ' + e(t('densityUnit')) + '<br><span class="compare-bar" style="width:' + bar1Dens + '%;background:#ffa726;"></span></td>' +
-                    '<td style="padding:4px;">' + e('' + dens2) + ' ' + e(t('densityUnit')) + '<br><span class="compare-bar" style="width:' + bar2Dens + '%;background:#ffa726;"></span></td></tr>';
+                    '<td style="padding:4px;">' + (dens1 ? e('' + dens1) : '?') + ' ' + e(t('densityUnit')) + '<br><span class="compare-bar" style="width:' + bar1Dens + '%;background:#ffa726;"></span></td>' +
+                    '<td style="padding:4px;">' + (dens2 ? e('' + dens2) : '?') + ' ' + e(t('densityUnit')) + '<br><span class="compare-bar" style="width:' + bar2Dens + '%;background:#ffa726;"></span></td></tr>';
 
                 const bar1Pop = pop1 ? (pop1 / maxPop * 100) : 0;
                 const bar2Pop = pop2 ? (pop2 / maxPop * 100) : 0;
@@ -3286,12 +3346,13 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 var fsVal = fs;
                 var ox = offX / k, oy = offY / k;
                 for (var i = 0; i < circleNodes.length; i++) {
-                    circleNodes[i].setAttribute('r', rVal);
+                    var isHalo = (i % 2 === 0);
+                    circleNodes[i].setAttribute('r', isHalo ? rVal * 1.8 : rVal);
                 }
                 for (var i = 0; i < textNodes.length; i++) {
                     var t = textNodes[i];
                     t.setAttribute('font-size', fsVal + 'px');
-                    var c = circleNodes[i];
+                    var c = circleNodes[i * 2 + 1];
                     if (c) {
                         t.setAttribute('x', parseFloat(c.getAttribute('cx')) + rVal + ox);
                         t.setAttribute('y', parseFloat(c.getAttribute('cy')) + oy);
@@ -3302,12 +3363,12 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
             function updateOverlayPositions() {
                 const k = Math.max(0.4, currentTransform.k);
                 if (naturalResourcesVisible) {
-                    const r2 = Math.max(4, (isMobile ? 6 : 10) / k);
+                    const r2 = Math.max(4, Math.min(14, (isMobile ? 6 : 8) * Math.pow(k, 0.4)));
                     const fs2 = Math.max(3, Math.min(16, (isMobile ? 9 : 12) / k));
                     fastUpdateLabels(gNaturalResources, gNaturalResources.selectAll('circle'), k, r2, fs2, 3, 2);
                 }
                 if (ethnicGroupsVisible) {
-                    const r3 = Math.max(4, (isMobile ? 6 : 10) / k);
+                    const r3 = Math.max(4, Math.min(14, (isMobile ? 6 : 8) * Math.pow(k, 0.4)));
                     const fs3 = Math.max(3, Math.min(16, (isMobile ? 9 : 12) / k));
                     fastUpdateLabels(gEthnicGroups, gEthnicGroups.selectAll('circle'), k, r3, fs3, 3, 2);
                 }
@@ -3349,15 +3410,15 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         updateOverlayPositions();
                         updateLabels();
                         drawPointLayersCanvas();
-                        if (corridorsVisible || additionalWaterwaysVisible) drawRoutes();
-                        if (borderDisputesVisible) drawBorderDisputes();
-                        if (desertsForestsVisible) drawDesertsForests();
-                        if (geopoliticalBlocsVisible) drawGeopoliticalBlocs();
-                        if (oceanCurrentsVisible) drawOceanCurrents();
-                        if (windsVisible) drawWinds();
-                        if (earthquakesVisible) drawEarthquakes();
-                        if (volcanoesVisible) drawVolcanoes();
-                        if (timezonesVisible) drawTimezones();
+                        if (corridorsVisible || additionalWaterwaysVisible) drawRoutes(true);
+                        if (borderDisputesVisible) drawBorderDisputes(true);
+                        if (desertsForestsVisible) drawDesertsForests(true);
+                        if (geopoliticalBlocsVisible) drawGeopoliticalBlocs(true);
+                        if (oceanCurrentsVisible) drawOceanCurrents(true);
+                        if (windsVisible) drawWinds(true);
+                        if (earthquakesVisible) drawEarthquakes(true);
+                        if (volcanoesVisible) drawVolcanoes(true);
+                        if (timezonesVisible) drawTimezones(true);
                     }, 200);
                 });
                 svg.call(zoomBehavior);
@@ -3859,7 +3920,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 hash.set('k', currentTransform.k.toFixed(2));
                 hash.set('x', currentTransform.x.toFixed(0));
                 hash.set('y', currentTransform.y.toFixed(0));
-                window.location.hash = hash.toString();
+                history.replaceState(null, '', '#' + hash.toString());
             }
             // Debounced version used during zoom to avoid 60 writes/sec
             const updateHashDebounced = debounce(updateHash, 300);
@@ -3878,10 +3939,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     const filterVal = hash.get('filter');
                     if (filterVal && VALID_FILTERS.includes(filterVal)) {
                         currentReligionFilter = filterVal;
-                        religionButtons.forEach(b => b.classList.remove('active'));
-                        const btn = document.querySelector(
-                            `.religion-btn[data-religion="${currentReligionFilter}"]`);
-                        if (btn) btn.classList.add('active');
+                        setActiveByAttr(religionButtons, `.religion-btn[data-religion="${currentReligionFilter}"]`);
                     }
                     // Restore layer flags from hash using registry
                     Object.keys(LAYER_DEFS).forEach(function(name) {
@@ -3908,7 +3966,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         const k = +hash.get('k'),
                             x = +hash.get('x'),
                             y = +hash.get('y');
-                        if (isFinite(k) && isFinite(x) && isFinite(y) && k >= 0.1 && k <= 50)
+                        if (isFinite(k) && isFinite(x) && isFinite(y) && k >= 0.5 && k <= 12)
                             svg.call(zoomBehavior.transform, d3.zoomIdentity.translate(x, y).scale(k));
                     }
                     updateActiveLayerCount();
@@ -3946,8 +4004,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
 
             function resetLayersAndModes() {
                 currentReligionFilter = 'all';
-                religionButtons.forEach(b => b.classList.remove('active'));
-                document.querySelector('.religion-btn[data-religion="all"]').classList.add('active');
+                setActiveByAttr(religionButtons, '.religion-btn[data-religion="all"]');
                 setMode('religion');
                 if (showLabels) toggleLabels();
                 if (sectMode) toggleSect();
@@ -4037,6 +4094,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 let rows = [];
                 countryNamesList.forEach(function(name) {
                     const info = getCountryInfo(name);
+                    if (!info) return;
                     const displayName = getDisplayName(name);
                     if (searchTerm && !displayName.toLowerCase().includes(searchTerm)) return;
                     const population = info ? info.population_2026 : null;
@@ -4133,6 +4191,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 document.addEventListener('keydown', function(e) {
                     if (e.target.tagName === 'INPUT') return;
                     if (quizActive) return;
+                    if ((e.ctrlKey || e.metaKey || e.altKey) && !(e.ctrlKey && e.code === 'KeyS')) return;
                     const code = e.code;
                     if (code === 'KeyR') setMode('religion');
                     else if (code === 'KeyT') setMode('terrain');
@@ -4193,9 +4252,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
 
             // ── Religion button state ──
             function updateReligionButtons() {
-                religionButtons.forEach(b => b.classList.remove('active'));
-                const btn = document.querySelector(`.religion-btn[data-religion="${currentReligionFilter}"]`);
-                if (btn) btn.classList.add('active');
+                setActiveByAttr(religionButtons, `.religion-btn[data-religion="${currentReligionFilter}"]`);
             }
 
             // ── init() ──
@@ -4450,8 +4507,8 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 loadingMsg.remove();
 
                 renderCountries(features);
-                try { applyLanguage(); } catch(e) { console.error('applyLanguage error:', e); }
                 try { loadFromHash(); } catch(e) {}
+                try { applyLanguage(); } catch(e) { console.error('applyLanguage error:', e); }
                 try { updateHash(); } catch(e) {}
 
                 mapContainer.addEventListener('mousemove', updateCoordinatesDisplay);
@@ -5257,9 +5314,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     });
                     if (currentReligionFilter !== 'all') {
                         currentReligionFilter = 'all';
-                        religionButtons.forEach(function(b) { b.classList.remove('active'); });
-                        var allBtn = document.querySelector('.religion-btn[data-religion="all"]');
-                        if (allBtn) allBtn.classList.add('active');
+                        setActiveByAttr(religionButtons, '.religion-btn[data-religion="all"]');
                     }
                     if (colorMode !== 'normal') setMode('normal');
                 }
@@ -5276,9 +5331,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     });
                     if (s.currentReligionFilter !== 'all') {
                         currentReligionFilter = s.currentReligionFilter;
-                        religionButtons.forEach(function(b) { b.classList.remove('active'); });
-                        var btn = document.querySelector('.religion-btn[data-religion="' + s.currentReligionFilter + '"]');
-                        if (btn) btn.classList.add('active');
+                        setActiveByAttr(religionButtons, '.religion-btn[data-religion="' + s.currentReligionFilter + '"]');
                     }
                     if (s.colorMode !== colorMode) setMode(s.colorMode);
                 }
@@ -6717,7 +6770,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 quizEndEarlyBtn.addEventListener('click', function() {
                     if (!quizActive) return;
                     if (confirm(t('quizEndEarlyConfirm'))) {
-                        if (customQuizQuestions.length > 0 && customQuizClickHandler !== null) {
+                        if (customQuizQuestions.length > 0) {
                             endCustomQuiz('endedEarly');
                         } else {
                             finishQuizOrReview('endedEarly');
@@ -7002,7 +7055,6 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 }
 
                 updateActiveLayerCount();
-                console.log('🦋 جميع التحسينات مطبقة بنجاح!');
             }
 
             function renderTextBlockToImage(lines, widthPx, heightPx) {
@@ -7131,51 +7183,61 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
 
                         // Legend swatches (vector rects — no text, no glyph issue)
                         var legendX = 8;
+                        var labelPromises = [];
                         swatches.forEach(function(s) {
                             var rgb = s.color.replace(/rgb\(|rgba\(|\)/g, '').split(',').map(function(v) { return parseInt(v.trim()); });
                             if (rgb.length >= 3) {
                                 pdf.setFillColor(rgb[0], rgb[1], rgb[2]);
                                 pdf.rect(legendX, ph - 11, 3, 3, 'F');
                             }
-                            // Legend label as image to support Unicode
-                            var labelImgPromise = renderTextBlockToImage([s.label], 200, 24);
-                            // Render labels inline — small enough to await synchronously via .then
-                            labelImgPromise.then(function(labelImg) {
-                                var labelW = Math.min(pdf.getTextWidth(s.label) * 1.8, 40);
-                                pdf.addImage(labelImg, 'PNG', legendX + 4, ph - 12, labelW, 5);
-                            });
+                            var thisLegendX = legendX;
+                            labelPromises.push(
+                                renderTextBlockToImage([s.label], 200, 24).then(function(labelImg) {
+                                    var labelW = Math.min(pdf.getTextWidth(s.label) * 1.8, 40);
+                                    return { labelImg: labelImg, labelW: labelW, x: thisLegendX };
+                                })
+                            );
                             legendX += 36;
                         });
 
-                        // Gradient bar
-                        if (gradStops.length >= 2) {
-                            var gradW = pw - legendX - 8;
-                            if (gradW > 20) {
-                                gradStops.forEach(function(c, i) {
-                                    var rgb = c.replace(/rgb\(|rgba\(|\)/g, '').split(',').map(function(v) { return parseInt(v.trim()); });
-                                    if (rgb.length >= 3) {
-                                        pdf.setFillColor(rgb[0], rgb[1], rgb[2]);
-                                        var segW = gradW / gradStops.length;
-                                        pdf.rect(legendX + i * segW, ph - 11, segW + 0.5, 3, 'F');
-                                    }
-                                });
+                        return Promise.all(labelPromises).then(function(labelResults) {
+                            labelResults.forEach(function(r) {
+                                pdf.addImage(r.labelImg, 'PNG', r.x + 4, ph - 12, r.labelW, 5);
+                            });
+
+                            // Gradient bar
+                            if (gradStops.length >= 2) {
+                                var gradW = pw - legendX - 8;
+                                if (gradW > 20) {
+                                    gradStops.forEach(function(c, i) {
+                                        var rgb = c.replace(/rgb\(|rgba\(|\)/g, '').split(',').map(function(v) { return parseInt(v.trim()); });
+                                        if (rgb.length >= 3) {
+                                            pdf.setFillColor(rgb[0], rgb[1], rgb[2]);
+                                            var segW = gradW / gradStops.length;
+                                            pdf.rect(legendX + i * segW, ph - 11, segW + 0.5, 3, 'F');
+                                        }
+                                    });
+                                }
                             }
-                        }
 
-                        // Footer citation as image
-                        var footerAspect = 800 / 36;
-                        var ftrW = 140;
-                        var ftrH = ftrW / footerAspect;
-                        if (ftrH > 8) { ftrH = 8; ftrW = ftrH * footerAspect; }
-                        pdf.addImage(footerImgData, 'PNG', (pw - ftrW) / 2, ph - 7 - ftrH / 2, ftrW, ftrH);
+                            // Footer citation as image
+                            var footerAspect = 800 / 36;
+                            var ftrW = 140;
+                            var ftrH = ftrW / footerAspect;
+                            if (ftrH > 8) { ftrH = 8; ftrW = ftrH * footerAspect; }
+                            pdf.addImage(footerImgData, 'PNG', (pw - ftrW) / 2, ph - 7 - ftrH / 2, ftrW, ftrH);
 
-                        pdf.setProperties({
-                            title: t('appName'),
-                            author: 'Lepidos Atlas',
-                            subject: t(exportProjKey),
-                            keywords: 'waterman, butterfly, map, atlas, lepidos'
+                            pdf.setProperties({
+                                title: t('appName'),
+                                author: 'Lepidos Atlas',
+                                subject: t(exportProjKey),
+                                keywords: 'waterman, butterfly, map, atlas, lepidos'
+                            });
+                            pdf.save('Waterman_Map_Export.pdf');
+                        }).catch(function(err) {
+                            console.error('PDF legend label error:', err);
+                            pdf.save('Waterman_Map_Export.pdf');
                         });
-                        pdf.save('Waterman_Map_Export.pdf');
                     }).catch(function(err) {
                         console.error('PDF export error:', err);
                     }).finally(function() {
@@ -7289,8 +7351,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 religionButtons.forEach(function(b) {
                     b.addEventListener('click', function() {
                         currentReligionFilter = b.dataset.religion;
-                        religionButtons.forEach(function(bb) { bb.classList.remove('active'); });
-                        b.classList.add('active');
+                        setActiveByAttr(religionButtons, '.religion-btn[data-religion="' + b.dataset.religion + '"]');
                         updateAllStyles();
                     });
                 });

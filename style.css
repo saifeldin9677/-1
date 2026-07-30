@@ -299,6 +299,20 @@ body {
     overflow-y: auto;
     transition: opacity var(--dur-slow) var(--ease);
 }
+.border-disputes-counter {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    background: var(--legend-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 6px 10px;
+    font-size: 0.75em;
+    font-weight: bold;
+    color: rgba(255,255,255,0.7);
+    z-index: 999;
+    pointer-events: none;
+}
 .legend-color {
     width: 10px;
     height: 10px;
@@ -1723,8 +1737,8 @@ body {
     font-size: 0.45em;
     font-weight: 500;
 }
-.btn[title]:hover::after {
-    content: attr(title);
+.btn[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
     position: absolute;
     bottom: calc(100% + 6px);
     left: 50%;
@@ -1739,7 +1753,7 @@ body {
     z-index: 9999;
 }
 @media (min-width: 1024px) {
-    .btn[title]:hover::after {
+    .btn[data-tooltip]:hover::after {
         bottom: auto;
         top: calc(100% + 6px);
     }
@@ -3065,8 +3079,6 @@ body {
 
 /* ── Lucide icon sizing (overrides inline width/height attributes) ── */
 svg[class*="lucide"] { width: 14px !important; height: 14px !important; }
-.btn svg[class*="lucide"]:not(.zoom-btn svg *) { width: 7px !important; height: 7px !important; }
-.control-label svg[class*="lucide"] { width: 6px !important; height: 6px !important; }
 .zoom-btn svg[class*="lucide"] { width: 16px !important; height: 16px !important; }
 .logo-icon svg[class*="lucide"] { width: 20px !important; height: 20px !important; }
 .menu-toggle svg[class*="lucide"], .layers-toggle svg[class*="lucide"] { width: 20px !important; height: 20px !important; }

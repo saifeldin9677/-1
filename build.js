@@ -31,6 +31,15 @@ run('npx html-minifier-terser --collapse-whitespace --remove-comments --remove-r
 console.log('\nDone. Output in dist/');
 fs.copyFileSync(path.join(SRC, 'admin-boundaries-data.json'), path.join(DIST, 'admin-boundaries-data.json'));
 console.log('  Copied admin-boundaries-data.json');
+['manifest.json', 'sw.js', 'icon-192.png', 'icon-512.png'].forEach(function(f) {
+    var srcPath = path.join(SRC, f);
+    if (fs.existsSync(srcPath)) {
+        fs.copyFileSync(srcPath, path.join(DIST, f));
+        console.log('  Copied ' + f);
+    } else {
+        console.log('  Skipped ' + f + ' (not found in source)');
+    }
+});
 const files = ['app.js', 'data.js', 'style.css', 'index.html'];
 const origTotal = files.reduce((s, f) => s + fs.statSync(path.join(SRC, f)).size, 0);
 const distTotal = files.reduce((s, f) => s + fs.statSync(path.join(DIST, f)).size, 0);
