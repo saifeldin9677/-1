@@ -151,6 +151,8 @@
             const mapContainer = document.getElementById('mapContainer');
             const densityCanvas = document.getElementById('densityCanvas');
             let densityCtx = null;
+            const adminBoundariesCanvas = document.getElementById('adminBoundariesCanvas');
+            let adminBoundariesCtx = null;
 
             // ── Density canvas setup ──
             function initDensityCanvas() {
@@ -162,6 +164,14 @@
                 densityCanvas.style.height = rect.height + 'px';
                 densityCtx = densityCanvas.getContext('2d');
                 densityCtx.scale(dpr, dpr);
+                if (adminBoundariesCanvas) {
+                    adminBoundariesCanvas.width = rect.width * dpr;
+                    adminBoundariesCanvas.height = rect.height * dpr;
+                    adminBoundariesCanvas.style.width = rect.width + 'px';
+                    adminBoundariesCanvas.style.height = rect.height + 'px';
+                    adminBoundariesCtx = adminBoundariesCanvas.getContext('2d');
+                    adminBoundariesCtx.scale(dpr, dpr);
+                }
             }
 
             // ── State variables ──
@@ -1660,20 +1670,42 @@
             function drawAdminBoundariesDebounced() {
                 clearTimeout(_adminBoundariesRedrawTimeout);
                 _adminBoundariesRedrawTimeout = setTimeout(function() {
-                    drawAdminBoundaries();
+                    if (globeModeActive) {
+                        gAdminBoundaries.selectAll('*').remove();
+                        ensureAdminBoundariesLoaded().then(drawAdminBoundariesCanvas);
+                    } else {
+                        drawAdminBoundaries();
+                    }
                 }, 200);
             }
             function drawAdminBoundaries() {
                 gAdminBoundaries.selectAll('*').remove();
-                if (!adminBoundariesVisible) return;
+                if (!adminBoundariesVisible) {
+                    if (globeModeActive && adminBoundariesCtx) {
+                        var clearRect = getMapRect();
+                        adminBoundariesCtx.clearRect(0, 0, clearRect.width, clearRect.height);
+                    }
+                    return;
+                }
                 ensureAdminBoundariesLoaded().then(function(features) {
                     if (!features || !features.length || !adminBoundariesVisible) return;
+                    if (globeModeActive) {
+                        drawAdminBoundariesCanvas(features);
+                        return;
+                    }
                     var strokeColor = MAP_COLORS.adminBoundaries.stroke;
                     var sw = isMobile ? 0.4 : 0.6;
                     var merged = getMergedAdminBoundaries(features);
+
+                    var proj = getActiveProjection();
+                    var originalPrecision = proj.precision();
+                    proj.precision(5);
+                    var d = pathGen(merged);
+                    proj.precision(originalPrecision);
+
                     gAdminBoundaries.append('path')
                         .datum(merged)
-                        .attr('d', pathGen)
+                        .attr('d', d)
                         .attr('fill', 'none')
                         .attr('stroke', strokeColor)
                         .attr('stroke-width', sw)
@@ -1682,6 +1714,35 @@
                         .attr('vector-effect', 'non-scaling-stroke')
                         .style('pointer-events', 'none');
                 });
+            }
+            function drawAdminBoundariesCanvas(features) {
+                if (!adminBoundariesCtx) return;
+                var rect = getMapRect();
+                var dpr = window.devicePixelRatio || 1;
+                var targetW = rect.width * dpr;
+                var targetH = rect.height * dpr;
+                if (adminBoundariesCanvas.width !== targetW || adminBoundariesCanvas.height !== targetH) {
+                    adminBoundariesCanvas.width = targetW;
+                    adminBoundariesCanvas.height = targetH;
+                    adminBoundariesCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                }
+                adminBoundariesCtx.clearRect(0, 0, rect.width, rect.height);
+                if (!adminBoundariesVisible) return;
+                var merged = getMergedAdminBoundaries(features);
+                var proj = getActiveProjection();
+                var originalPrecision = proj.precision();
+                proj.precision(5);
+                var canvasPathGen = d3.geoPath(proj, adminBoundariesCtx);
+                adminBoundariesCtx.save();
+                adminBoundariesCtx.beginPath();
+                canvasPathGen(merged);
+                adminBoundariesCtx.strokeStyle = MAP_COLORS.adminBoundaries.stroke;
+                adminBoundariesCtx.lineWidth = isMobile ? 0.4 : 0.6;
+                adminBoundariesCtx.globalAlpha = 0.5;
+                adminBoundariesCtx.setLineDash([2, 2]);
+                adminBoundariesCtx.stroke();
+                adminBoundariesCtx.restore();
+                proj.precision(originalPrecision);
             }
 
             // ── Toggle functions ──

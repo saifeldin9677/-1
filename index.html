@@ -81,6 +81,7 @@
     <div class="content-row" id="contentRow">
     <div class="map-container" id="mapContainer" role="application" data-i18n-aria-label="mapAriaLabel">
         <svg id="mapSvg"></svg>
+        <canvas id="adminBoundariesCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:4;"></canvas>
         <canvas id="densityCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:5;"></canvas>
         <div class="tooltip" id="tooltip" role="status" aria-live="polite"></div>
         <div class="export-blocking-overlay" id="exportBlockingOverlay" style="display:none" role="status" aria-live="polite">
