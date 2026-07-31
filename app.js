@@ -2014,7 +2014,6 @@
                         densityCtx.stroke();
                     });
                 }
-            }
 
                 // ── Admin boundary labels ──
                 if (adminBoundariesVisible && adminBoundariesData && currentTransform.k > 3) {
@@ -2041,6 +2040,7 @@
                         });
                     }
                 }
+            }
 
                 // ── Country labels ──
             function getAreaThreshold() {
