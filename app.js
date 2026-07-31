@@ -404,6 +404,17 @@
                 return name;
             }
 
+            function getAdminDisplayName(enName) {
+                if (!enName) return '';
+                let clean = getCleanName(enName);
+                let exact = null;
+                if (lang === 'ar') exact = arabicNames[clean] || arabicNames[enName];
+                else if (lang === 'ru') exact = russianNames[clean] || russianNames[enName];
+                else if (lang === 'uz') exact = uzbekNames[clean] || uzbekNames[enName];
+                else if (lang === 'es') exact = spanishNames[clean] || spanishNames[enName];
+                return exact || enName;
+            }
+
             function getReligion(name) {
                 if (!name) return 'unknown';
                 if (religionByCountry[name]) return religionByCountry[name];
@@ -1681,8 +1692,9 @@
             function drawAdminBoundaries() {
                 gAdminBoundaries.selectAll('*').remove();
                 if (!adminBoundariesVisible) {
-                    if (globeModeActive && adminBoundariesCtx) {
+                    if (adminBoundariesCtx) {
                         var clearRect = getMapRect();
+                        adminBoundariesCtx.setTransform((window.devicePixelRatio || 1), 0, 0, (window.devicePixelRatio || 1), 0, 0);
                         adminBoundariesCtx.clearRect(0, 0, clearRect.width, clearRect.height);
                     }
                     return;
@@ -1693,26 +1705,52 @@
                         drawAdminBoundariesCanvas(features);
                         return;
                     }
-                    var strokeColor = MAP_COLORS.adminBoundaries.stroke;
-                    var sw = isMobile ? 0.4 : 0.6;
-                    var merged = getMergedAdminBoundaries(features);
-
-                    var proj = getActiveProjection();
-                    var originalPrecision = proj.precision();
-                    proj.precision(5);
-                    var d = pathGen(merged);
-                    proj.precision(originalPrecision);
-
-                    gAdminBoundaries.append('path')
-                        .datum(merged)
-                        .attr('d', d)
-                        .attr('fill', 'none')
-                        .attr('stroke', strokeColor)
-                        .attr('stroke-width', sw)
-                        .attr('stroke-opacity', 0.5)
-                        .attr('stroke-dasharray', '2,2')
-                        .attr('vector-effect', 'non-scaling-stroke')
-                        .style('pointer-events', 'none');
+                    drawAdminBoundariesCanvas2D(features);
+                });
+            }
+            function drawAdminBoundariesCanvas2D(features) {
+                if (!adminBoundariesCtx) return;
+                var rect = getMapRect();
+                var dpr = window.devicePixelRatio || 1;
+                var targetW = rect.width * dpr;
+                var targetH = rect.height * dpr;
+                if (adminBoundariesCanvas.width !== targetW || adminBoundariesCanvas.height !== targetH) {
+                    adminBoundariesCanvas.width = targetW;
+                    adminBoundariesCanvas.height = targetH;
+                }
+                adminBoundariesCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                adminBoundariesCtx.clearRect(0, 0, rect.width, rect.height);
+                if (!adminBoundariesVisible) return;
+                var k = (currentTransform && currentTransform.k) || 1;
+                var tx = (currentTransform && currentTransform.x) || 0;
+                var ty = (currentTransform && currentTransform.y) || 0;
+                adminBoundariesCtx.setTransform(k * dpr, 0, 0, k * dpr, tx * dpr, ty * dpr);
+                var merged = getMergedAdminBoundaries(features);
+                var proj = getActiveProjection();
+                var originalPrecision = proj.precision();
+                proj.precision(5);
+                var canvasPathGen = d3.geoPath(proj, adminBoundariesCtx);
+                adminBoundariesCtx.beginPath();
+                canvasPathGen(merged);
+                adminBoundariesCtx.strokeStyle = MAP_COLORS.adminBoundaries.stroke;
+                adminBoundariesCtx.lineWidth = (isMobile ? 0.4 : 0.6) / k;
+                adminBoundariesCtx.globalAlpha = 0.5;
+                adminBoundariesCtx.setLineDash([2 / k, 2 / k]);
+                adminBoundariesCtx.stroke();
+                proj.precision(originalPrecision);
+            }
+            function scheduleAdminBoundariesRedraw() {
+                if (!adminBoundariesVisible || globeModeActive) return;
+                if (scheduleAdminBoundariesRedraw.pending) return;
+                scheduleAdminBoundariesRedraw.pending = true;
+                requestAnimationFrame(function() {
+                    scheduleAdminBoundariesRedraw.pending = false;
+                    if (!adminBoundariesVisible || globeModeActive) return;
+                    ensureAdminBoundariesLoaded().then(function(features) {
+                        if (features && features.length && adminBoundariesVisible && !globeModeActive) {
+                            drawAdminBoundariesCanvas2D(features);
+                        }
+                    });
                 });
             }
             function drawAdminBoundariesCanvas(features) {
@@ -2035,8 +2073,9 @@
                             const sy = y * k + ty;
                             const margin = 40;
                             if (sx < -margin || sx > rect.width + margin || sy < -margin || sy > rect.height + margin) return;
-                            densityCtx.strokeText(c.name, sx, sy);
-                            densityCtx.fillText(c.name, sx, sy);
+                            const label = getAdminDisplayName(c.name);
+                            densityCtx.strokeText(label, sx, sy);
+                            densityCtx.fillText(label, sx, sy);
                         });
                     }
                 }
@@ -2856,6 +2895,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     var def = LAYER_DEFS[name];
                     if (def.drawFn && def.getFlag()) def.drawFn();
                 });
+                drawPointLayersCanvas();
                 updateCoordinatesDisplay({ clientX: 0, clientY: 0 });
                 // Re-render data table if open (language changed)
                 if (dataTableOverlay && dataTableOverlay.classList.contains('visible')) {
@@ -3515,6 +3555,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     updateInfoOverlay();
                     updateHashDebounced();
                     schedulePointLayersRedraw();
+                    scheduleAdminBoundariesRedraw();
                 }).on('end', function() {
                     clearTimeout(_zoomEndTimeout);
                     _zoomEndTimeout = setTimeout(function() {
@@ -3523,6 +3564,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         updateOverlayPositions();
                         updateLabels();
                         drawPointLayersCanvas();
+                        scheduleAdminBoundariesRedraw();
                         if (corridorsVisible || additionalWaterwaysVisible) drawRoutes(true);
                         if (borderDisputesVisible) drawBorderDisputes(true);
                         if (desertsForestsVisible) drawDesertsForests(true);
