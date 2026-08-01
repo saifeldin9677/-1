@@ -1651,7 +1651,7 @@
                 var basePath = window.location.pathname.replace(/\/[^\/]*$/, '/');
                 adminBoundariesLoading = fetch(basePath + 'admin-boundaries-data.json')
                     .then(function(r) { return r.json(); })
-                    .then(function(data) { adminBoundariesData = data; return data; })
+                    .then(function(data) { adminBoundariesData = data; try { getAdminLabelMeta(data); } catch(e) {} return data; })
                     .catch(function(err) {
                         console.error('Failed to load admin boundaries:', err);
                         adminBoundariesLoading = null;
@@ -1700,6 +1700,31 @@
                     });
                 }
                 return adminBoundariesCentroids;
+            }
+            let adminLabelMeta = null;
+            let adminLabelMetaFeatures = null;
+            function getAdminLabelMeta(features) {
+                if (adminLabelMeta && adminLabelMetaFeatures === features) return adminLabelMeta;
+                var items = features.map(function(f) {
+                    return {
+                        name: f.name,
+                        centroid: d3.geoCentroid({ type: 'Feature', geometry: { type: f.type, coordinates: f.coordinates } }),
+                        area: d3.geoArea({ type: 'Feature', geometry: { type: f.type, coordinates: f.coordinates } })
+                    };
+                });
+                items.sort(function(a, b) { return b.area - a.area; });
+                for (var j = 0; j < items.length; j++) items[j].i = j;
+                adminLabelMeta = { items: items, total: items.length };
+                adminLabelMetaFeatures = features;
+                return adminLabelMeta;
+            }
+            const ADMIN_TIER_STEPS = [[4, 0.12], [6, 0.25], [8, 0.4], [10, 0.55], [13, 0.7], [17, 0.85], [21, 0.97], [24, 1]];
+            function adminTierCount(k, total) {
+                var frac = 0;
+                for (var s = 0; s < ADMIN_TIER_STEPS.length; s++) {
+                    if (k >= ADMIN_TIER_STEPS[s][0]) frac = ADMIN_TIER_STEPS[s][1];
+                }
+                return Math.max(1, Math.round(total * frac));
             }
             function drawAdminBoundariesDebounced() {
                 clearTimeout(_adminBoundariesRedrawTimeout);
@@ -2159,29 +2184,80 @@
                 }
 
                 // ── Admin boundary labels ──
-                if (adminBoundariesVisible && adminBoundariesData && currentTransform.k > 3) {
+                if (adminBoundariesVisible && adminBoundariesData && currentTransform.k >= 4) {
                     hasAny = true;
-                    const centroids = getAdminBoundariesCentroids(adminBoundariesData);
-                    const fontSize = Math.max(9, Math.min(13, 10 * Math.pow(k, 0.25)));
                     if (!_isZooming) {
-                        densityCtx.font = fontSize + 'px -apple-system, BlinkMacSystemFont, "Noto Sans Arabic", Tahoma, sans-serif';
+                        const meta = getAdminLabelMeta(adminBoundariesData);
+                        const limit = adminTierCount(k, meta.total);
+                        const ringBounds = _adminRingBoundsFor(adminBoundariesData);
+                        const cell = 32;
+                        const grid = new Map();
+                        function overlaps(x0, y0, x1, y1) {
+                            const gx0 = Math.floor(x0 / cell), gy0 = Math.floor(y0 / cell);
+                            const gx1 = Math.floor(x1 / cell), gy1 = Math.floor(y1 / cell);
+                            for (let gx = gx0; gx <= gx1; gx++) {
+                                for (let gy = gy0; gy <= gy1; gy++) {
+                                    const cellRects = grid.get(gx + ',' + gy);
+                                    if (cellRects) {
+                                        for (let r = 0; r < cellRects.length; r++) {
+                                            const rr = cellRects[r];
+                                            if (rr.x0 < x1 && rr.x1 > x0 && rr.y0 < y1 && rr.y1 > y0) return true;
+                                        }
+                                    }
+                                }
+                            }
+                            return false;
+                        }
+                        function addRect(x0, y0, x1, y1) {
+                            const gx0 = Math.floor(x0 / cell), gy0 = Math.floor(y0 / cell);
+                            const gx1 = Math.floor(x1 / cell), gy1 = Math.floor(y1 / cell);
+                            for (let gx = gx0; gx <= gx1; gx++) {
+                                for (let gy = gy0; gy <= gy1; gy++) {
+                                    const key = gx + ',' + gy;
+                                    let arr = grid.get(key);
+                                    if (!arr) { arr = []; grid.set(key, arr); }
+                                    arr.push({ x0: x0, y0: y0, x1: x1, y1: y1 });
+                                }
+                            }
+                        }
                         densityCtx.textBaseline = 'middle';
-                        densityCtx.lineWidth = 2.5;
+                        densityCtx.textAlign = 'center';
+                        densityCtx.lineWidth = 3;
                         densityCtx.strokeStyle = MAP_COLORS.ui.textStroke;
-                        densityCtx.fillStyle = 'rgba(255,255,255,0.85)';
+                        densityCtx.fillStyle = 'rgba(255,255,255,0.9)';
                         densityCtx.lineJoin = 'round';
-                        centroids.forEach(function(c) {
-                            if (globeModeActive && !isPointVisibleOnGlobe(c.centroid)) return;
-                            const [x, y] = proj(c.centroid);
-                            if (isNaN(x) || isNaN(y)) return;
-                            const sx = x * k + tx;
-                            const sy = y * k + ty;
-                            const margin = 40;
-                            if (sx < -margin || sx > rect.width + margin || sy < -margin || sy > rect.height + margin) return;
-                            const label = getAdminDisplayName(c.name);
+                        const fontFamily = '-apple-system, BlinkMacSystemFont, "Noto Sans Arabic", Tahoma, sans-serif';
+                        const pad = 60;
+                        for (let oi = 0; oi < meta.items.length && oi < limit; oi++) {
+                            const it = meta.items[oi];
+                            const bb = ringBounds[it.i];
+                            if (!bb) continue;
+                            const cx = (bb[0] + bb[2]) / 2, cy = (bb[1] + bb[3]) / 2;
+                            if (isNaN(cx) || isNaN(cy)) continue;
+                            const sx = cx * k + tx, sy = cy * k + ty;
+                            if (sx < -pad || sx > rect.width + pad || sy < -pad || sy > rect.height + pad) continue;
+                            if (globeModeActive && !isPointVisibleOnGlobe(it.centroid)) continue;
+                            const label = getAdminDisplayName(it.name);
+                            if (!label) continue;
+                            const wpx = (bb[2] - bb[0]) * k, hpx = (bb[3] - bb[1]) * k;
+                            if (wpx < 2 || hpx < 2) continue;
+                            let fs = Math.min(wpx / (label.length * 0.6), hpx / 1.5, 16);
+                            if (fs < 9) continue;
+                            densityCtx.font = fs + 'px ' + fontFamily;
+                            const tw = densityCtx.measureText(label).width;
+                            if (tw > wpx) {
+                                fs = Math.floor(fs * wpx / tw);
+                                if (fs < 9) continue;
+                                densityCtx.font = fs + 'px ' + fontFamily;
+                            }
+                            const th = fs * 1.4;
+                            const lx0 = sx - tw / 2 - 2, ly0 = sy - th / 2 - 2;
+                            const lx1 = sx + tw / 2 + 2, ly1 = sy + th / 2 + 2;
+                            if (overlaps(lx0, ly0, lx1, ly1)) continue;
+                            addRect(lx0, ly0, lx1, ly1);
                             densityCtx.strokeText(label, sx, sy);
                             densityCtx.fillText(label, sx, sy);
-                        });
+                        }
                     }
                 }
             }
@@ -3648,7 +3724,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     });
                 }
 
-                zoomBehavior = d3.zoom().scaleExtent([0.5, 12]).translateExtent([
+                zoomBehavior = d3.zoom().scaleExtent([0.5, 24]).translateExtent([
                     [-width * 2, -height * 2],
                     [width * 3, height * 3]
                 ]).on('zoom', function(e) {
