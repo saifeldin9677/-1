@@ -1,6 +1,6 @@
-const LEPIDOS_CACHE_VERSION = 'lepidos-v1';
-const LEPIDOS_CACHE_PRECACHE = 'lepidos-precache-v1';
-const LEPIDOS_CACHE_RUNTIME = 'lepidos-runtime-v1';
+const LEPIDOS_CACHE_VERSION = 'lepidos-v3';
+const LEPIDOS_CACHE_PRECACHE = 'lepidos-precache-v3';
+const LEPIDOS_CACHE_RUNTIME = 'lepidos-runtime-v3';
 
 const PRECACHE_URLS = [
     './',
@@ -11,6 +11,14 @@ const PRECACHE_URLS = [
     './manifest.json',
     './admin-boundaries-data.json',
     './admin-name-translations.json',
+    './timezone-data.json',
+    './countries-110m.json',
+    './vendor/d3.min.js',
+    './vendor/d3-geo-projection.min.js',
+    './vendor/topojson-client.min.js',
+    './vendor/html2canvas.min.js',
+    './vendor/jspdf.umd.min.js',
+    './vendor/lucide.min.js',
     './icon-192.png',
     './icon-512.png'
 ];
