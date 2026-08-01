@@ -2898,6 +2898,8 @@
                     drawEarthquakes();
                     drawVolcanoes();
                     drawPointLayersCanvas();
+                } else if (gTimezones && timezonesVisible) {
+                    gTimezones.selectAll('*').remove();
                 }
             }
 
@@ -8039,14 +8041,8 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     projOverlay.classList.remove('active');
                     try { localStorage.setItem('projectionExplainerDone', '1'); } catch(e) {}
                     if (typeof window.startOnboarding === 'function') {
-                        var tempDone = !!window._tempOnboardDone;
-                        try { window._tempOnboardDone = false; } catch(e) {}
-                        var onboardDone = false;
-                        try { onboardDone = localStorage.getItem('onboardDone') === '1'; } catch(e) {}
-                        if (tempDone || !onboardDone) {
-                            try { localStorage.removeItem('onboardDone'); } catch(e) {}
-                            setTimeout(function() { window.startOnboarding(); }, 300);
-                        }
+                        try { localStorage.removeItem('onboardDone'); } catch(e) {}
+                        setTimeout(function() { window.startOnboarding(); }, 300);
                     }
                 }
                 if (projContinue) projContinue.addEventListener('click', closeProjection);
@@ -8083,7 +8079,6 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         try { projDoneCheck = localStorage.getItem('projectionExplainerDone') === '1'; } catch(e) {}
                         if (!projDoneCheck) {
                             try { localStorage.setItem('onboardDone', '1'); } catch(e) {}
-                            window._tempOnboardDone = true;
                         }
 
                         init();

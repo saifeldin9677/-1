@@ -29,6 +29,10 @@ run('npx html-minifier-terser --collapse-whitespace --remove-comments --remove-r
 // Rewrite paths in dist/index.html: *.js → *.min.js etc. — not needed since
 // we keep same filenames in dist/. Just report sizes.
 console.log('\nDone. Output in dist/');
+if (fs.existsSync(path.join(SRC, 'vendor'))) {
+    fs.cpSync(path.join(SRC, 'vendor'), path.join(DIST, 'vendor'), { recursive: true });
+    console.log('  Copied vendor/');
+}
 fs.copyFileSync(path.join(SRC, 'admin-boundaries-data.json'), path.join(DIST, 'admin-boundaries-data.json'));
 console.log('  Copied admin-boundaries-data.json');
 fs.copyFileSync(path.join(SRC, 'admin-name-translations.json'), path.join(DIST, 'admin-name-translations.json'));
