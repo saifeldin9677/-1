@@ -1705,15 +1705,15 @@
             let adminLabelMetaFeatures = null;
             function getAdminLabelMeta(features) {
                 if (adminLabelMeta && adminLabelMetaFeatures === features) return adminLabelMeta;
-                var items = features.map(function(f) {
+                var items = features.map(function(f, fi) {
                     return {
+                        i: fi,
                         name: f.name,
                         centroid: d3.geoCentroid({ type: 'Feature', geometry: { type: f.type, coordinates: f.coordinates } }),
                         area: d3.geoArea({ type: 'Feature', geometry: { type: f.type, coordinates: f.coordinates } })
                     };
                 });
                 items.sort(function(a, b) { return b.area - a.area; });
-                for (var j = 0; j < items.length; j++) items[j].i = j;
                 adminLabelMeta = { items: items, total: items.length };
                 adminLabelMetaFeatures = features;
                 return adminLabelMeta;
