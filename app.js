@@ -542,6 +542,7 @@
 
             function getTimezoneColor(offset) {
                 var tzColors = MAP_COLORS.timezones;
+                if (offset == null) return tzColors[4];
                 if (offset <= -12) return tzColors[0];
                 if (offset <= -9) return tzColors[1];
                 if (offset <= -6) return tzColors[2];
@@ -1051,89 +1052,111 @@
             }
 
             // ── Timezone overlay ──
+            var timezoneData = null;
+            var timezoneDataLoading = null;
+
+            function ensureTimezoneDataLoaded() {
+                if (timezoneData) return Promise.resolve(timezoneData);
+                if (timezoneDataLoading) return timezoneDataLoading;
+                var basePath = window.location.pathname.replace(/\/[^\/]*$/, '/');
+                timezoneDataLoading = fetch(basePath + 'timezone-data.json')
+                    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+                    .then(function(entries) {
+                        timezoneData = entries.map(function(e) {
+                            var rings = e.rings.map(function(ring) {
+                                if (d3.geoArea({ type: 'Polygon', coordinates: [ring] }) > 2 * Math.PI) {
+                                    ring = ring.slice().reverse();
+                                }
+                                return ring;
+                            });
+                            return {
+                                tz: e.tz,
+                                rings: rings,
+                                zone: computeTzOffset(e.tz),
+                                label: e.tz,
+                                places: tzShortName(e.tz)
+                            };
+                        });
+                        return timezoneData;
+                    })
+                    .catch(function(err) {
+                        console.error('Failed to load timezone data:', err);
+                        timezoneDataLoading = null;
+                        return [];
+                    });
+                return timezoneDataLoading;
+            }
+
+            function computeTzOffset(tzid) {
+                var et = tzid.match(/^Etc\/GMT([+-]?\d+)$/) || tzid.match(/^Etc\/UTC([+-]?\d+)$/);
+                if (et) return -parseFloat(et[1]);
+                var num = tzid.match(/^([+-])(\d{2}):?(\d{2})$/);
+                if (num) return (num[1] === '-' ? -1 : 1) * (parseInt(num[2], 10) + parseInt(num[3], 10) / 60);
+                try {
+                    var fmt = new Intl.DateTimeFormat('en-US', { timeZone: tzid, timeZoneName: 'longOffset' });
+                    var parts = fmt.formatToParts(new Date());
+                    var off = '';
+                    parts.forEach(function(p) { if (p.type === 'timeZoneName') off = p.value; });
+                    var m = off.match(/GMT([+-])(\d{1,2})(?::?(\d{2}))?/);
+                    if (m) return (m[1] === '-' ? -1 : 1) * (parseInt(m[2], 10) + parseInt(m[3] || '0', 10) / 60);
+                } catch (e) {}
+                return null;
+            }
+
+            function tzShortName(tzid) {
+                var i = tzid.lastIndexOf('/');
+                var name = i >= 0 ? tzid.slice(i + 1) : tzid;
+                return name.replace(/_/g, ' ');
+            }
+
+            function formatUtcOffset(offset) {
+                if (offset == null) return 'UTC?';
+                var sign = offset >= 0 ? '+' : '-';
+                var abs = Math.abs(offset);
+                var h = Math.floor(abs);
+                var m = Math.round((abs - h) * 60);
+                return 'UTC' + sign + (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+            }
+
             function drawTimezones(skipFadeIn) {
+                if (!gTimezones) return;
                 gTimezones.selectAll('*').remove();
-                if (!timezonesVisible) return;
-                timezoneBoundariesData.forEach(function(tz) {
-                    var rings = tz.coordinates;
-                    var lineGeometry = rings.length > 1
-                        ? { type: 'MultiLineString', coordinates: rings }
-                        : { type: 'LineString', coordinates: rings[0] };
-                    var geoFeature = { type: 'Feature', geometry: lineGeometry, properties: { zone: tz.zone, label: tz.label, places: tz.places } };
-                    var color = getTimezoneColor(tz.zone);
-
-                    // Halo (soft, wide, low-opacity)
-                    gTimezones.append('path')
-                        .datum(geoFeature)
-                        .attr('d', pathGen)
-                        .attr('fill', 'none')
-                        .attr('stroke', color)
-                        .attr('stroke-width', isMobile ? 3 : 5)
-                        .attr('stroke-opacity', 0.25)
-                        .attr('vector-effect', 'non-scaling-stroke')
-                        .style('pointer-events', 'none');
-
-                    // Main boundary line
-                    var mainPath = gTimezones.append('path')
-                        .datum(geoFeature)
-                        .attr('d', pathGen)
-                        .attr('fill', 'none')
-                        .attr('stroke', color)
-                        .attr('stroke-width', isMobile ? 1.2 : 1.8)
-                        .attr('stroke-opacity', 0.9)
-                        .attr('vector-effect', 'non-scaling-stroke')
-                        .style('cursor', 'pointer')
-                        .on('mouseenter', function(e) {
-                            mainPath.attr('stroke-width', isMobile ? 2 : 3);
-                            tooltip.textContent = tz.label + ' — ' + tz.places;
-                            tooltip.classList.add('visible');
-                        })
-                        .on('mousemove', function(e) {
-                            _pendingTooltipEvent = e;
-                            if (!_tooltipRAFPending) {
-                                _tooltipRAFPending = true;
-                                requestAnimationFrame(_flushTooltipPosition);
-                            }
-                        })
-                        .on('mouseleave', function() {
-                            mainPath.attr('stroke-width', isMobile ? 1.2 : 1.8);
-                            tooltip.classList.remove('visible');
-                        })
-                        .on('click', function() { showFeatureDetail('timezone', tz); });
-
-                    // Clickable centroid marker — compute in lon/lat, then project
-                    var centroidLonLat = d3.geoCentroid(geoFeature);
-                    if (centroidLonLat && !isNaN(centroidLonLat[0]) && !isNaN(centroidLonLat[1])) {
-                        var centroid = getActiveProjection()(centroidLonLat);
-                        if (centroid && !isNaN(centroid[0]) && !isNaN(centroid[1])) {
-                            gTimezones.append('circle')
-                                .attr('cx', centroid[0])
-                                .attr('cy', centroid[1])
-                                .attr('r', isMobile ? 3 : 4)
-                                .attr('fill', color)
-                                .attr('fill-opacity', 0.85)
-                                .attr('stroke', '#fff')
-                                .attr('stroke-width', 0.5)
-                                .style('cursor', 'pointer')
-                                .on('mouseenter', function(e) {
-                                    mainPath.attr('stroke-width', isMobile ? 2 : 3);
-                                    tooltip.textContent = tz.label + ' — ' + tz.places;
-                                    tooltip.classList.add('visible');
-                                })
-                                .on('mousemove', function(e) {
-                                    _pendingTooltipEvent = e;
-                                    if (!_tooltipRAFPending) {
-                                        _tooltipRAFPending = true;
-                                        requestAnimationFrame(_flushTooltipPosition);
-                                    }
-                                })
-                                .on('mouseleave', function() {
-                                    mainPath.attr('stroke-width', isMobile ? 1.2 : 1.8);
-                                    tooltip.classList.remove('visible');
-                                })
-                                .on('click', function() { showFeatureDetail('timezone', tz); });
-                        }
-                    }
+                if (!timezonesVisible || !timezoneData) return;
+                timezoneData.forEach(function(entry) {
+                    var color = getTimezoneColor(entry.zone);
+                    entry.rings.forEach(function(ring) {
+                        var geoFeature = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: { tz: entry.tz, zone: entry.zone, label: entry.label } };
+                        gTimezones.append('path')
+                            .datum(geoFeature)
+                            .attr('d', pathGen)
+                            .attr('fill', color)
+                            .attr('fill-opacity', 0.38)
+                            .attr('stroke', color)
+                            .attr('stroke-width', 1)
+                            .attr('stroke-opacity', 0.9)
+                            .attr('vector-effect', 'non-scaling-stroke')
+                            .style('fill-rule', 'evenodd')
+                            .style('cursor', 'pointer')
+                            .on('mouseenter', function() {
+                                var now = '';
+                                try {
+                                    now = new Intl.DateTimeFormat('en-US', { timeZone: entry.tz, hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date());
+                                } catch (e) {}
+                                tooltip.textContent = entry.label + ' \u2014 ' + formatUtcOffset(entry.zone) + (now ? ' (' + now + ')' : '');
+                                tooltip.classList.add('visible');
+                            })
+                            .on('mousemove', function(e) {
+                                _pendingTooltipEvent = e;
+                                if (!_tooltipRAFPending) {
+                                    _tooltipRAFPending = true;
+                                    requestAnimationFrame(_flushTooltipPosition);
+                                }
+                            })
+                            .on('mouseleave', function() {
+                                tooltip.classList.remove('visible');
+                            })
+                            .on('click', function() { showFeatureDetail('timezone', entry); });
+                    });
                 });
             }
 
@@ -1954,13 +1977,18 @@
                 if (type === 'route') { showRouteDetail(data); return; }
                 if (type === 'wind') { showWindDetail(data); return; }
                 if (type === 'timezone') {
+                    var _tzNow = '';
+                    try { _tzNow = new Intl.DateTimeFormat('en-US', { timeZone: data.tz, hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date()); } catch (e) {}
                     var tzHtml = '<h3>' + t('timezonesLegend') + ': ' + data.label + '</h3>';
                     tzHtml += '<p><strong>' + t('timezonePlaces') + ':</strong> ' + data.places + '</p>';
-                    tzHtml += '<p><strong>' + t('timezoneOffset') + ':</strong> UTC' + (data.zone >= 0 ? '+' : '') + data.zone + '</p>';
-                    var contentEl = document.getElementById('featureContent');
-                    if (contentEl) contentEl.innerHTML = tzHtml;
-                    var panel = document.getElementById('featurePanel');
-                    if (panel) { panel.classList.remove('visible'); panel.style.display = 'block'; requestAnimationFrame(function(){requestAnimationFrame(function(){panel.classList.add('visible');});}); }
+                    tzHtml += '<p><strong>' + t('timezoneOffset') + ':</strong> ' + formatUtcOffset(data.zone) + (_tzNow ? ' &nbsp;(' + _tzNow + ')' : '') + '</p>';
+                    panelContent.innerHTML = tzHtml;
+                    countryPanel.style.display = 'block';
+                    requestAnimationFrame(function() {
+                        requestAnimationFrame(function() {
+                            countryPanel.classList.add('visible');
+                        });
+                    });
                     return;
                 }
 
@@ -2038,7 +2066,7 @@
                 // ── Density spots ──
                 if (colorMode === 'density' && densitySpotsMode) {
                     hasAny = true;
-                    const spots = isMobile ? densitySpots.slice(0, 40) : densitySpots;
+                    const spots = isMobile ? densitySpots.filter((d, i) => i % Math.ceil(densitySpots.length / 40) === 0) : densitySpots;
                     const fontSize = Math.max(11, Math.min(22, 13 * Math.pow(k, 0.4)));
                     if (!_isZooming) {
                         densityCtx.font = 'bold ' + fontSize + 'px -apple-system, BlinkMacSystemFont, "Noto Sans Arabic", Tahoma, sans-serif';
@@ -2694,7 +2722,15 @@
             }
 
             function toggleCapitals() { toggleLayer('capitals'); }
-            function toggleTimezones() { toggleLayer('timezones'); }
+            function toggleTimezones() {
+                var turningOn = !timezonesVisible;
+                toggleLayer('timezones');
+                if (turningOn) {
+                    ensureTimezoneDataLoaded().then(function() {
+                        if (timezonesVisible) drawTimezones(true);
+                    });
+                }
+            }
             function toggleMajorCities() { toggleLayer('majorCities'); }
 
             function toggleCoords() {
@@ -3990,7 +4026,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 }
 
                 function redrawMeasureLayer() {
-                    if (!gMeasure) return;
+                    if (!gMeasure) gMeasure = gMap.append('g').attr('class', 'measure-layer');
                     gMeasure.selectAll('*').remove();
                     var proj = getActiveProjection();
                     measurePoints.forEach(function(pt) {
@@ -6907,7 +6943,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 }
 
                 function handleTFAnswer(studentChoice) {
-                    if (!quizActive) return;
+                    if (!quizActive || customQuizQuestions.length === 0) return;
                     var cq = customQuizQuestions[customQuizCurrentIndex];
                     var q = cq.question;
                     var isCorrect = (studentChoice === q.correctAnswer);
@@ -8003,8 +8039,14 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     projOverlay.classList.remove('active');
                     try { localStorage.setItem('projectionExplainerDone', '1'); } catch(e) {}
                     if (typeof window.startOnboarding === 'function') {
-                        try { localStorage.removeItem('onboardDone'); } catch(e) {}
-                        setTimeout(function() { window.startOnboarding(); }, 300);
+                        var tempDone = !!window._tempOnboardDone;
+                        try { window._tempOnboardDone = false; } catch(e) {}
+                        var onboardDone = false;
+                        try { onboardDone = localStorage.getItem('onboardDone') === '1'; } catch(e) {}
+                        if (tempDone || !onboardDone) {
+                            try { localStorage.removeItem('onboardDone'); } catch(e) {}
+                            setTimeout(function() { window.startOnboarding(); }, 300);
+                        }
                     }
                 }
                 if (projContinue) projContinue.addEventListener('click', closeProjection);
@@ -8041,6 +8083,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         try { projDoneCheck = localStorage.getItem('projectionExplainerDone') === '1'; } catch(e) {}
                         if (!projDoneCheck) {
                             try { localStorage.setItem('onboardDone', '1'); } catch(e) {}
+                            window._tempOnboardDone = true;
                         }
 
                         init();

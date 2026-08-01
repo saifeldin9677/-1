@@ -33,6 +33,8 @@ fs.copyFileSync(path.join(SRC, 'admin-boundaries-data.json'), path.join(DIST, 'a
 console.log('  Copied admin-boundaries-data.json');
 fs.copyFileSync(path.join(SRC, 'admin-name-translations.json'), path.join(DIST, 'admin-name-translations.json'));
 console.log('  Copied admin-name-translations.json');
+fs.copyFileSync(path.join(SRC, 'timezone-data.json'), path.join(DIST, 'timezone-data.json'));
+console.log('  Copied timezone-data.json');
 ['manifest.json', 'sw.js', 'icon-192.png', 'icon-512.png'].forEach(function(f) {
     var srcPath = path.join(SRC, f);
     if (fs.existsSync(srcPath)) {

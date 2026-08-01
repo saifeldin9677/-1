@@ -1,76 +1,90 @@
-// إصدار الكاش (غيّر الرقم كلما أردت تحديثاً جديداً)
-const CACHE_NAME = 'waterman-v10';
+const LEPIDOS_CACHE_VERSION = 'lepidos-v1';
+const LEPIDOS_CACHE_PRECACHE = 'lepidos-precache-v1';
+const LEPIDOS_CACHE_RUNTIME = 'lepidos-runtime-v1';
 
-// الملفات الأساسية التي يجب أن تكون موجودة دائماً (حتى لو فشل التخزين الديناميكي)
-const STATIC_FILES = [
+const PRECACHE_URLS = [
     './',
     './index.html',
+    './style.css',
+    './app.js',
+    './data.js',
     './manifest.json',
+    './admin-boundaries-data.json',
+    './admin-name-translations.json',
     './icon-192.png',
     './icon-512.png'
 ];
 
-// مرحلة التثبيت: نخزن الملفات الأساسية فقط (لضمان نجاح التثبيت)
-self.addEventListener('install', event => {
+const RUNTIME_ORIGINS = [
+    'https://cdn.jsdelivr.net',
+    'https://cdnjs.cloudflare.com',
+    'https://fonts.googleapis.com',
+    'https://fonts.gstatic.com',
+    'https://www.gstatic.com'
+];
+
+self.addEventListener('install', function(event) {
+    self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('🦋 تخزين الملفات الأساسية...');
-                return cache.addAll(STATIC_FILES);
-            })
-            .then(() => {
-                console.log('✅ تم التثبيت!');
-                return self.skipWaiting();
-            })
+        caches.open(LEPIDOS_CACHE_PRECACHE).then(function(cache) {
+            return cache.addAll(PRECACHE_URLS);
+        })
     );
 });
 
-// مرحلة التنشيط: نسيطر على الصفحات ونحذف الكاش القديم
-self.addEventListener('activate', event => {
+self.addEventListener('activate', function(event) {
     event.waitUntil(
-        caches.keys().then(keys => {
+        caches.keys().then(function(keys) {
             return Promise.all(
-                keys.map(key => {
-                    if (key !== CACHE_NAME) {
-                        console.log('🗑️ حذف الكاش القديم:', key);
-                        return caches.delete(key);
-                    }
+                keys.filter(function(key) {
+                    return key.startsWith('lepidos-') && key !== LEPIDOS_CACHE_PRECACHE && key !== LEPIDOS_CACHE_RUNTIME;
+                }).map(function(key) {
+                    return caches.delete(key);
                 })
             );
-        }).then(() => {
-            console.log('✅ Service Worker نشط!');
+        }).then(function() {
             return self.clients.claim();
         })
     );
 });
 
-// مرحلة الجلب: استراتيجية "خزّن كل شيء تلمسه يدك" (Cache First + Dynamic Caching)
-self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request)
-            .then(cachedResponse => {
-                // إذا كان الملف موجوداً في الكاش، نعيده فوراً (وهذا يعمل حتى بدون إنترنت)
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
+self.addEventListener('fetch', function(event) {
+    var request = event.request;
+    if (request.method !== 'GET') return;
 
-                // إذا لم يكن موجوداً، نجلبه من الإنترنت
-                return fetch(event.request).then(response => {
-                    // نخزّن نسخة من الملف الذي جلبناه لاستخدامه لاحقاً دون إنترنت
-                    if (response && response.status === 200) {
-                        const clone = response.clone();
-                        caches.open(CACHE_NAME).then(cache => {
-                            cache.put(event.request, clone);
-                        });
-                    }
-                    return response;
-                }).catch(() => {
-                    // في حال عدم وجود إنترنت ولا كاش، نعيد الصفحة الرئيسية بدلاً من خطأ
-                    if (event.request.mode === 'navigate') {
-                        return caches.match('./index.html');
-                    }
-                    return new Response('', { status: 200 });
-                });
+    var url = new URL(request.url);
+
+    if (request.mode === 'navigate') {
+        event.respondWith(
+            fetch(request).then(function(response) {
+                if (response && response.ok) return response;
+                return caches.match('./index.html');
+            }).catch(function() {
+                return caches.match('./index.html');
             })
+        );
+        return;
+    }
+
+    var isSameOrigin = url.origin === self.location.origin;
+    var isRuntime = RUNTIME_ORIGINS.indexOf(url.origin) !== -1;
+    if (!isSameOrigin && !isRuntime) return;
+
+    event.respondWith(
+        caches.match(request).then(function(cached) {
+            var refresh = fetch(request).then(function(response) {
+                if (response && response.ok) {
+                    var copy = response.clone();
+                    var cacheName = isSameOrigin ? LEPIDOS_CACHE_PRECACHE : LEPIDOS_CACHE_RUNTIME;
+                    caches.open(cacheName).then(function(cache) {
+                        cache.put(request, copy);
+                    });
+                }
+                return response;
+            }).catch(function() {
+                return cached;
+            });
+            return cached || refresh;
+        })
     );
 });
