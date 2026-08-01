@@ -4983,7 +4983,15 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         { getEl: function() {
                             var mb = window.innerWidth <= 768;
                             return document.querySelector(mb ? '#mobileToolsBtn' : '#quizBtn');
-                        }, icon: '🎯', titleKey: 'onboardStep10Title', textKey: 'onboardStep10Text' }
+                        }, icon: '🎯', titleKey: 'onboardStep10Title', textKey: 'onboardStep10Text' },
+                        { getEl: function() {
+                            var mb = window.innerWidth <= 768;
+                            return document.querySelector(mb ? '#mobileToolsBtn' : '#globeViewBtn');
+                        }, icon: '🌏', titleKey: 'onboardStep11Title', textKey: 'onboardStep11Text' },
+                        { getEl: function() {
+                            var mb = window.innerWidth <= 768;
+                            return document.querySelector(mb ? '#mobileToolsBtn' : '#compareProjectionsBtn');
+                        }, icon: '📐', titleKey: 'onboardStep12Title', textKey: 'onboardStep12Text' }
                     ];
                     var currentStep = 0;
                     var isOpen = false;
