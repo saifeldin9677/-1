@@ -3815,7 +3815,12 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), 15000);
                 try {
-                    const response = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json', { signal: controller.signal });
+                    var basePath = window.location.pathname.replace(/\/[^\/]*$/, '/');
+                    const localUrl = basePath + 'countries-110m.json';
+                    let response = await fetch(localUrl, { signal: controller.signal });
+                    if (!response.ok) {
+                        response = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json', { signal: controller.signal });
+                    }
                     if (!response.ok) throw new Error('HTTP ' + response.status);
                     const data = await response.json();
                     return topojson.feature(data, data.objects.countries).features;
