@@ -31,6 +31,8 @@ run('npx html-minifier-terser --collapse-whitespace --remove-comments --remove-r
 console.log('\nDone. Output in dist/');
 fs.copyFileSync(path.join(SRC, 'admin-boundaries-data.json'), path.join(DIST, 'admin-boundaries-data.json'));
 console.log('  Copied admin-boundaries-data.json');
+fs.copyFileSync(path.join(SRC, 'admin-name-translations.json'), path.join(DIST, 'admin-name-translations.json'));
+console.log('  Copied admin-name-translations.json');
 ['manifest.json', 'sw.js', 'icon-192.png', 'icon-512.png'].forEach(function(f) {
     var srcPath = path.join(SRC, f);
     if (fs.existsSync(srcPath)) {

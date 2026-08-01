@@ -218,6 +218,8 @@
             let adminBoundariesLoading = null;
             let adminBoundariesMerged = null;
             let adminBoundariesCentroids = null;
+            let adminNameTranslations = null;
+            let adminNameTranslationsLoading = null;
             let _adminBoundariesRedrawTimeout = null;
             let lang = (function() { var s = localStorage.getItem('mapLang'); return s && ['ar','en','ru','uz','es'].includes(s) ? s : 'ar'; })();
             let allCountryFeatures = [];
@@ -406,6 +408,11 @@
 
             function getAdminDisplayName(enName) {
                 if (!enName) return '';
+                if (adminNameTranslations && adminNameTranslations[lang]) {
+                    var trMap = adminNameTranslations[lang];
+                    var tr = trMap[enName] || trMap[getCleanName(enName)];
+                    if (tr) return tr;
+                }
                 let clean = getCleanName(enName);
                 let exact = null;
                 if (lang === 'ar') exact = arabicNames[clean] || arabicNames[enName];
@@ -1656,6 +1663,22 @@
                 return adminBoundariesLoading;
             }
 
+            function ensureAdminNameTranslationsLoaded() {
+                if (adminNameTranslations) return Promise.resolve(adminNameTranslations);
+                if (adminNameTranslationsLoading) return adminNameTranslationsLoading;
+                var basePath = window.location.pathname.replace(/\/[^\/]*$/, '/');
+                adminNameTranslationsLoading = fetch(basePath + 'admin-name-translations.json')
+                    .then(function(r) { return r.ok ? r.json() : {}; })
+                    .then(function(data) { adminNameTranslations = data || {}; return adminNameTranslations; })
+                    .catch(function(err) {
+                        console.error('Failed to load admin name translations:', err);
+                        adminNameTranslationsLoading = null;
+                        adminNameTranslations = {};
+                        return adminNameTranslations;
+                    });
+                return adminNameTranslationsLoading;
+            }
+
             function getMergedAdminBoundaries(features) {
                 if (!adminBoundariesMerged) {
                     adminBoundariesMerged = {
@@ -1708,6 +1731,89 @@
                     drawAdminBoundariesCanvas2D(features);
                 });
             }
+            var _adminBakedCanvas = null;
+            var _adminBakedCtx = null;
+            var _adminBakedTransform = null;
+            var _adminBakeDirty = true;
+            var _adminRingBounds = null;
+            var _adminRingBoundsProj = null;
+            var _adminRingBoundsFeatures = null;
+            function _adminBakeInvalidate() { _adminBakeDirty = true; }
+            function _adminRingBoundsFor(features) {
+                var proj = getActiveProjection();
+                if (_adminRingBounds && _adminRingBoundsProj === proj && _adminRingBoundsFeatures === features) {
+                    return _adminRingBounds;
+                }
+                var collector = {
+                    minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity,
+                    moveTo: function(x, y) { if (x < this.minX) this.minX = x; if (x > this.maxX) this.maxX = x; if (y < this.minY) this.minY = y; if (y > this.maxY) this.maxY = y; },
+                    lineTo: function(x, y) { if (x < this.minX) this.minX = x; if (x > this.maxX) this.maxX = x; if (y < this.minY) this.minY = y; if (y > this.maxY) this.maxY = y; },
+                    closePath: function() {},
+                    reset: function() { this.minX = Infinity; this.minY = Infinity; this.maxX = -Infinity; this.maxY = -Infinity; }
+                };
+                var boundsGen = d3.geoPath(proj, collector);
+                var out = new Array(features.length);
+                for (var i = 0; i < features.length; i++) {
+                    collector.reset();
+                    var b = boundsGen({ type: 'Feature', geometry: { type: features[i].type, coordinates: features[i].coordinates } });
+                    out[i] = isFinite(collector.minX) ? [collector.minX, collector.minY, collector.maxX, collector.maxY] : null;
+                }
+                _adminRingBounds = out;
+                _adminRingBoundsProj = proj;
+                _adminRingBoundsFeatures = features;
+                return out;
+            }
+            function _adminNeedsRebake() {
+                if (_adminBakeDirty) return true;
+                if (!_adminBakedCanvas || !_adminBakedTransform) return true;
+                return false;
+            }
+            function bakeAdminBoundariesCanvas(features) {
+                var rect = getMapRect();
+                var dpr = window.devicePixelRatio || 1;
+                if (!_adminBakedCanvas) {
+                    _adminBakedCanvas = document.createElement('canvas');
+                    _adminBakedCtx = _adminBakedCanvas.getContext('2d');
+                }
+                var targetW = Math.max(1, Math.round(rect.width * dpr));
+                var targetH = Math.max(1, Math.round(rect.height * dpr));
+                if (_adminBakedCanvas.width !== targetW || _adminBakedCanvas.height !== targetH) {
+                    _adminBakedCanvas.width = targetW;
+                    _adminBakedCanvas.height = targetH;
+                }
+                var k = (currentTransform && currentTransform.k) || 1;
+                var tx = (currentTransform && currentTransform.x) || 0;
+                var ty = (currentTransform && currentTransform.y) || 0;
+                _adminBakedCtx.setTransform(k * dpr, 0, 0, k * dpr, tx * dpr, ty * dpr);
+                _adminBakedCtx.clearRect(-rect.width, -rect.height, rect.width * 3, rect.height * 3);
+                var rect2 = getMapRect();
+                var margin = 8 / k;
+                var vx0 = -tx / k - margin, vy0 = -ty / k - margin, vx1 = (rect2.width - tx) / k + margin, vy1 = (rect2.height - ty) / k + margin;
+                var bounds = _adminRingBoundsFor(features);
+                var visibleGeoms = [];
+                for (var bi = 0; bi < features.length; bi++) {
+                    var bb = bounds[bi];
+                    if (!bb) continue;
+                    if (bb[0] <= vx1 && bb[1] <= vy1 && bb[2] >= vx0 && bb[3] >= vy0) {
+                        visibleGeoms.push({ type: features[bi].type, coordinates: features[bi].coordinates });
+                    }
+                }
+                var merged = { type: 'GeometryCollection', geometries: visibleGeoms };
+                var proj = getActiveProjection();
+                var originalPrecision = proj.precision();
+                proj.precision(5);
+                var canvasPathGen = d3.geoPath(proj, _adminBakedCtx);
+                _adminBakedCtx.beginPath();
+                canvasPathGen(merged);
+                _adminBakedCtx.strokeStyle = MAP_COLORS.adminBoundaries.stroke;
+                _adminBakedCtx.lineWidth = (isMobile ? 0.4 : 0.6) / k;
+                _adminBakedCtx.globalAlpha = 0.5;
+                _adminBakedCtx.setLineDash([2 / k, 2 / k]);
+                _adminBakedCtx.stroke();
+                proj.precision(originalPrecision);
+                _adminBakedTransform = { k: k, tx: tx, ty: ty };
+                _adminBakeDirty = false;
+            }
             function drawAdminBoundariesCanvas2D(features) {
                 if (!adminBoundariesCtx) return;
                 var rect = getMapRect();
@@ -1721,23 +1827,22 @@
                 adminBoundariesCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
                 adminBoundariesCtx.clearRect(0, 0, rect.width, rect.height);
                 if (!adminBoundariesVisible) return;
+                if (_adminNeedsRebake()) bakeAdminBoundariesCanvas(features);
+                if (!_adminBakedCanvas) return;
                 var k = (currentTransform && currentTransform.k) || 1;
                 var tx = (currentTransform && currentTransform.x) || 0;
                 var ty = (currentTransform && currentTransform.y) || 0;
-                adminBoundariesCtx.setTransform(k * dpr, 0, 0, k * dpr, tx * dpr, ty * dpr);
-                var merged = getMergedAdminBoundaries(features);
-                var proj = getActiveProjection();
-                var originalPrecision = proj.precision();
-                proj.precision(5);
-                var canvasPathGen = d3.geoPath(proj, adminBoundariesCtx);
+                var b = _adminBakedTransform;
+                var s = k / b.k;
+                adminBoundariesCtx.save();
                 adminBoundariesCtx.beginPath();
-                canvasPathGen(merged);
-                adminBoundariesCtx.strokeStyle = MAP_COLORS.adminBoundaries.stroke;
-                adminBoundariesCtx.lineWidth = (isMobile ? 0.4 : 0.6) / k;
-                adminBoundariesCtx.globalAlpha = 0.5;
-                adminBoundariesCtx.setLineDash([2 / k, 2 / k]);
-                adminBoundariesCtx.stroke();
-                proj.precision(originalPrecision);
+                adminBoundariesCtx.rect(0, 0, rect.width, rect.height);
+                adminBoundariesCtx.clip();
+                adminBoundariesCtx.globalAlpha = 1;
+                adminBoundariesCtx.setTransform(s * dpr, 0, 0, s * dpr, (tx - s * b.tx) * dpr, (ty - s * b.ty) * dpr);
+                adminBoundariesCtx.drawImage(_adminBakedCanvas, 0, 0);
+                adminBoundariesCtx.restore();
+                adminBoundariesCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
             }
             function scheduleAdminBoundariesRedraw() {
                 if (!adminBoundariesVisible || globeModeActive) return;
@@ -2699,6 +2804,7 @@
 
             function toggleGlobeMode() {
                 resetLayersAndModes();
+                _adminBakeDirty = true;
                 globeModeActive = !globeModeActive;
                 if (globeViewBtn) globeViewBtn.classList.toggle('toggle-on', globeModeActive);
 
@@ -3564,16 +3670,26 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         updateOverlayPositions();
                         updateLabels();
                         drawPointLayersCanvas();
+                        _adminBakeDirty = true;
                         scheduleAdminBoundariesRedraw();
-                        if (corridorsVisible || additionalWaterwaysVisible) drawRoutes(true);
-                        if (borderDisputesVisible) drawBorderDisputes(true);
-                        if (desertsForestsVisible) drawDesertsForests(true);
-                        if (geopoliticalBlocsVisible) drawGeopoliticalBlocs(true);
-                        if (oceanCurrentsVisible) drawOceanCurrents(true);
-                        if (windsVisible) drawWinds(true);
-                        if (earthquakesVisible) drawEarthquakes(true);
-                        if (volcanoesVisible) drawVolcanoes(true);
-                        if (timezonesVisible) drawTimezones(true);
+                        var _pendingLayers = [
+                            [corridorsVisible || additionalWaterwaysVisible, function() { drawRoutes(true); }],
+                            [borderDisputesVisible, function() { drawBorderDisputes(true); }],
+                            [desertsForestsVisible, function() { drawDesertsForests(true); }],
+                            [geopoliticalBlocsVisible, function() { drawGeopoliticalBlocs(true); }],
+                            [oceanCurrentsVisible, function() { drawOceanCurrents(true); }],
+                            [windsVisible, function() { drawWinds(true); }],
+                            [earthquakesVisible, function() { drawEarthquakes(true); }],
+                            [volcanoesVisible, function() { drawVolcanoes(true); }],
+                            [timezonesVisible, function() { drawTimezones(true); }]
+                        ].filter(function(p) { return p[0]; });
+                        var _li = 0;
+                        (function runNextLayer() {
+                            if (_li >= _pendingLayers.length) return;
+                            _pendingLayers[_li][1]();
+                            _li++;
+                            requestAnimationFrame(runNextLayer);
+                        })();
                     }, 200);
                 });
                 svg.call(zoomBehavior);
@@ -4662,6 +4778,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 loadingMsg.remove();
 
                 renderCountries(features);
+                ensureAdminNameTranslationsLoaded();
                 try { loadFromHash(); } catch(e) {}
                 try { applyLanguage(); } catch(e) { console.error('applyLanguage error:', e); }
                 try { updateHash(); } catch(e) {}
@@ -7139,6 +7256,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         svgEl.setAttribute('width', width);
                         svgEl.setAttribute('height', height);
                         projection = setupProjection(width, height);
+                        _adminBakeDirty = true;
                         if (globeModeActive) {
                             initGlobeProjection();
                             projection = globeProjection;
