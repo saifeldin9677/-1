@@ -1,6 +1,6 @@
-const LEPIDOS_CACHE_VERSION = 'lepidos-v4';
-const LEPIDOS_CACHE_PRECACHE = 'lepidos-precache-v4';
-const LEPIDOS_CACHE_RUNTIME = 'lepidos-runtime-v4';
+const LEPIDOS_CACHE_VERSION = 'lepidos-v6';
+const LEPIDOS_CACHE_PRECACHE = 'lepidos-precache-v6';
+const LEPIDOS_CACHE_RUNTIME = 'lepidos-runtime-v6';
 
 const PRECACHE_URLS = [
     './',
@@ -15,39 +15,46 @@ const PRECACHE_URLS = [
     './countries-110m.json',
     './firebase.js',
     './boot.js',
+    './icons.js',
     './vendor/d3.min.js',
     './vendor/d3-geo-projection.min.js',
     './vendor/topojson-client.min.js',
     './vendor/html2canvas.min.js',
     './vendor/jspdf.umd.min.js',
-    './vendor/lucide.min.js',
     './icon-192.png',
     './icon-512.png'
 ];
 
 const RUNTIME_ORIGINS = [
-    'https://cdn.jsdelivr.net',
-    'https://cdnjs.cloudflare.com',
     'https://fonts.googleapis.com',
     'https://fonts.gstatic.com',
     'https://www.gstatic.com'
 ];
 
+// Best-effort install: a single missing URL must never stop the worker from
+// activating, otherwise the OLD worker (with stale/broken assets) stays in charge.
 self.addEventListener('install', function(event) {
     self.skipWaiting();
     event.waitUntil(
-        caches.open(LEPIDOS_CACHE_PRECACHE).then(function(cache) {
-            return cache.addAll(PRECACHE_URLS);
-        })
+        Promise.all(
+            PRECACHE_URLS.map(function(url) {
+                return caches.open(LEPIDOS_CACHE_PRECACHE).then(function(cache) {
+                    return cache.add(url).catch(function() {});
+                });
+            })
+        )
     );
 });
 
+// Wipe every lepidos cache from any previous version, then take control.
+// This guarantees the next load uses the freshly deployed files and can never
+// be served stale/broken copies from an old cache.
 self.addEventListener('activate', function(event) {
     event.waitUntil(
         caches.keys().then(function(keys) {
             return Promise.all(
                 keys.filter(function(key) {
-                    return key.startsWith('lepidos-') && key !== LEPIDOS_CACHE_PRECACHE && key !== LEPIDOS_CACHE_RUNTIME;
+                    return key.indexOf('lepidos-') === 0;
                 }).map(function(key) {
                     return caches.delete(key);
                 })
@@ -80,13 +87,32 @@ self.addEventListener('fetch', function(event) {
     var isRuntime = RUNTIME_ORIGINS.indexOf(url.origin) !== -1;
     if (!isSameOrigin && !isRuntime) return;
 
+    // Same-origin assets (js, css, geodata) are network-first: the app must always
+    // pick up the newest deployment instead of an old cached copy.
+    if (isSameOrigin) {
+        event.respondWith(
+            fetch(request).then(function(response) {
+                if (response && response.ok) {
+                    var copy = response.clone();
+                    caches.open(LEPIDOS_CACHE_RUNTIME).then(function(cache) {
+                        cache.put(request, copy);
+                    });
+                }
+                return response;
+            }).catch(function() {
+                return caches.match(request);
+            })
+        );
+        return;
+    }
+
+    // Cross-origin runtime dependencies (fonts, firebase): cache-first, revalidate.
     event.respondWith(
         caches.match(request).then(function(cached) {
             var refresh = fetch(request).then(function(response) {
                 if (response && response.ok) {
                     var copy = response.clone();
-                    var cacheName = isSameOrigin ? LEPIDOS_CACHE_PRECACHE : LEPIDOS_CACHE_RUNTIME;
-                    caches.open(cacheName).then(function(cache) {
+                    caches.open(LEPIDOS_CACHE_RUNTIME).then(function(cache) {
                         cache.put(request, copy);
                     });
                 }

@@ -1121,42 +1121,61 @@
             function drawTimezones(skipFadeIn) {
                 if (!gTimezones) return;
                 gTimezones.selectAll('*').remove();
+                gTimezones.on('.timezone', null);
                 if (!timezonesVisible || !timezoneData) return;
+                var items = [];
                 timezoneData.forEach(function(entry) {
-                    var color = getTimezoneColor(entry.zone);
                     entry.rings.forEach(function(ring) {
                         var geoFeature = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: { tz: entry.tz, zone: entry.zone, label: entry.label } };
-                        gTimezones.append('path')
-                            .datum(geoFeature)
-                            .attr('d', pathGen)
-                            .attr('fill', color)
-                            .attr('fill-opacity', 0.38)
-                            .attr('stroke', color)
-                            .attr('stroke-width', 1)
-                            .attr('stroke-opacity', 0.9)
-                            .attr('vector-effect', 'non-scaling-stroke')
-                            .style('fill-rule', 'evenodd')
-                            .style('cursor', 'pointer')
-                            .on('mouseenter', function() {
-                                var now = '';
-                                try {
-                                    now = new Intl.DateTimeFormat('en-US', { timeZone: entry.tz, hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date());
-                                } catch (e) {}
-                                tooltip.textContent = entry.label + ' \u2014 ' + formatUtcOffset(entry.zone) + (now ? ' (' + now + ')' : '');
-                                tooltip.classList.add('visible');
-                            })
-                            .on('mousemove', function(e) {
-                                _pendingTooltipEvent = e;
-                                if (!_tooltipRAFPending) {
-                                    _tooltipRAFPending = true;
-                                    requestAnimationFrame(_flushTooltipPosition);
-                                }
-                            })
-                            .on('mouseleave', function() {
-                                tooltip.classList.remove('visible');
-                            })
-                            .on('click', function() { showFeatureDetail('timezone', entry); });
+                        geoFeature._entry = entry;
+                        items.push(geoFeature);
                     });
+                });
+                var sel = gTimezones.selectAll('path').data(items).enter().append('path')
+                    .attr('d', pathGen)
+                    .attr('fill', function(d) { return getTimezoneColor(d.properties.zone); })
+                    .attr('fill-opacity', 0.38)
+                    .attr('stroke', function(d) { return getTimezoneColor(d.properties.zone); })
+                    .attr('stroke-width', 1)
+                    .attr('stroke-opacity', 0.9)
+                    .attr('vector-effect', 'non-scaling-stroke')
+                    .style('fill-rule', 'evenodd')
+                    .style('cursor', 'pointer');
+                if (skipFadeIn) sel.attr('opacity', 1);
+                else sel.attr('opacity', 0).transition().duration(prefersReducedMotion() ? 0 : 300).attr('opacity', 1);
+
+                function entryFromEvent(event) {
+                    if (!event || !event.target || !event.target.closest) return null;
+                    var el = event.target.closest('path');
+                    return el && el.__data__ ? (el.__data__._entry || el.__data__.properties) : null;
+                }
+                gTimezones.on('mouseover.timezone', function(event) {
+                    var props = entryFromEvent(event);
+                    if (!props) return;
+                    var tz = props.tz || props.properties.tz;
+                    var zone = props.zone || props.properties.zone;
+                    var label = props.label || props.properties.label;
+                    var now = '';
+                    try {
+                        now = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date());
+                    } catch (e) {}
+                    tooltip.textContent = label + ' \u2014 ' + formatUtcOffset(zone) + (now ? ' (' + now + ')' : '');
+                    tooltip.classList.add('visible');
+                });
+                gTimezones.on('mousemove.timezone', function(event) {
+                    if (!entryFromEvent(event)) return;
+                    _pendingTooltipEvent = event;
+                    if (!_tooltipRAFPending) {
+                        _tooltipRAFPending = true;
+                        requestAnimationFrame(_flushTooltipPosition);
+                    }
+                });
+                gTimezones.on('mouseout.timezone', function() {
+                    tooltip.classList.remove('visible');
+                });
+                gTimezones.on('click.timezone', function(event) {
+                    var entry = entryFromEvent(event);
+                    if (entry) showFeatureDetail('timezone', entry._entry || entry);
                 });
             }
 
@@ -2213,6 +2232,7 @@
 
                 // ── Admin boundary labels ──
                 if (adminBoundariesVisible && adminBoundariesData && currentTransform.k >= 4) {
+                    if (!adminNameTranslations) ensureAdminNameTranslationsLoaded();
                     hasAny = true;
                     if (!_isZooming) {
                         const meta = getAdminLabelMeta(adminBoundariesData);
@@ -4897,7 +4917,6 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 loadingMsg.remove();
 
                 renderCountries(features);
-                ensureAdminNameTranslationsLoaded();
                 try { loadFromHash(); } catch(e) {}
                 try { applyLanguage(); } catch(e) { console.error('applyLanguage error:', e); }
                 try { updateHash(); } catch(e) {}
@@ -7478,7 +7497,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
             }
 
             // ── Export Map to PDF ──
-            function exportMapPDF() {
+            function exportMapPDFCore() {
                 if (exportInProgress) return;
                 exportInProgress = true;
                 const exportOverlay = document.getElementById('exportBlockingOverlay');
@@ -7665,6 +7684,26 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     exportInProgress = false;
                     if (exportOverlay) exportOverlay.style.display = 'none';
                 });
+            }
+
+            function exportMapPDF() {
+                if (exportInProgress) return;
+                var basePath = window.location.pathname.replace(/\/[^\/]*$/, '/');
+                var needs = [];
+                if (typeof html2canvas !== 'function') needs.push(basePath + 'vendor/html2canvas.min.js');
+                if (!window.jspdf) needs.push(basePath + 'vendor/jspdf.umd.min.js');
+                function loadScript(src) {
+                    return new Promise(function(res, rej) {
+                        var el = document.createElement('script');
+                        el.src = src;
+                        el.onload = res;
+                        el.onerror = function() { rej(new Error('Failed to load ' + src)); };
+                        document.head.appendChild(el);
+                    });
+                }
+                var chain = Promise.resolve();
+                needs.forEach(function(src) { chain = chain.then(function() { return loadScript(src); }); });
+                chain.then(exportMapPDFCore).catch(function(err) { console.error('PDF export library load failed:', err); });
             }
 
             // ── Event wiring & button listeners ──

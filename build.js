@@ -45,6 +45,8 @@ fs.copyFileSync(path.join(SRC, 'firebase.js'), path.join(DIST, 'firebase.js'));
 console.log('  Copied firebase.js');
 fs.copyFileSync(path.join(SRC, 'boot.js'), path.join(DIST, 'boot.js'));
 console.log('  Copied boot.js');
+fs.copyFileSync(path.join(SRC, 'icons.js'), path.join(DIST, 'icons.js'));
+console.log('  Copied icons.js');
 ['manifest.json', 'sw.js', 'icon-192.png', 'icon-512.png'].forEach(function(f) {
     var srcPath = path.join(SRC, f);
     if (fs.existsSync(srcPath)) {
