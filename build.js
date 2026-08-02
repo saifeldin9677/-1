@@ -41,6 +41,10 @@ fs.copyFileSync(path.join(SRC, 'timezone-data.json'), path.join(DIST, 'timezone-
 console.log('  Copied timezone-data.json');
 fs.copyFileSync(path.join(SRC, 'countries-110m.json'), path.join(DIST, 'countries-110m.json'));
 console.log('  Copied countries-110m.json');
+fs.copyFileSync(path.join(SRC, 'firebase.js'), path.join(DIST, 'firebase.js'));
+console.log('  Copied firebase.js');
+fs.copyFileSync(path.join(SRC, 'boot.js'), path.join(DIST, 'boot.js'));
+console.log('  Copied boot.js');
 ['manifest.json', 'sw.js', 'icon-192.png', 'icon-512.png'].forEach(function(f) {
     var srcPath = path.join(SRC, f);
     if (fs.existsSync(srcPath)) {

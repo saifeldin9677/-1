@@ -1,6 +1,6 @@
-const LEPIDOS_CACHE_VERSION = 'lepidos-v3';
-const LEPIDOS_CACHE_PRECACHE = 'lepidos-precache-v3';
-const LEPIDOS_CACHE_RUNTIME = 'lepidos-runtime-v3';
+const LEPIDOS_CACHE_VERSION = 'lepidos-v4';
+const LEPIDOS_CACHE_PRECACHE = 'lepidos-precache-v4';
+const LEPIDOS_CACHE_RUNTIME = 'lepidos-runtime-v4';
 
 const PRECACHE_URLS = [
     './',
@@ -13,6 +13,8 @@ const PRECACHE_URLS = [
     './admin-name-translations.json',
     './timezone-data.json',
     './countries-110m.json',
+    './firebase.js',
+    './boot.js',
     './vendor/d3.min.js',
     './vendor/d3-geo-projection.min.js',
     './vendor/topojson-client.min.js',
