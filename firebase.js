@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, addDoc, collection, query, where, getDocs, serverTimestamp, orderBy } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, addDoc, collection, query, orderBy, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC_o_-C7NFeTQwFb-kZRCI59HnTc2DDTUA",
@@ -33,7 +33,7 @@ window.firebaseCreateSession = async function(sessionCode, config) {
 
 window.firebaseSaveQuizResult = async function(sessionCode, studentName, score, total, timeTaken, answers) {
     try {
-        await addDoc(collection(db, 'quizResults'), {
+        await addDoc(collection(db, 'quizSessions', sessionCode.toUpperCase(), 'results'), {
             sessionCode: sessionCode.toUpperCase(),
             studentName: studentName,
             score: score,
@@ -48,7 +48,7 @@ window.firebaseSaveQuizResult = async function(sessionCode, studentName, score, 
 
 window.firebaseGetResultsForSession = async function(sessionCode) {
     try {
-        const q = query(collection(db, 'quizResults'), where('sessionCode', '==', sessionCode.toUpperCase()), orderBy('completedAt', 'asc'));
+        const q = query(collection(db, 'quizSessions', sessionCode.toUpperCase(), 'results'), orderBy('completedAt', 'asc'));
         const snapshot = await getDocs(q);
         return snapshot.docs.map(function(d) { return { id: d.id, ...d.data() }; });
     } catch(e) { console.error('Failed to fetch results:', e); return []; }

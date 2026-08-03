@@ -23,6 +23,8 @@
     --tooltip-bg: rgba(20, 24, 32, 0.95);
     --tooltip-color: #fff;
     --tooltip-border: rgba(255, 255, 255, 0.2);
+    --hover-text: #fff; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
+    --overlay-text: #fff; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
     --legend-bg: rgba(20, 24, 32, 0.96);
     --shortcuts-bg: #1e2330;
     --onboarding-bg: rgba(30,40,60,0.96);
@@ -46,6 +48,34 @@
     --glass-blur-lg: 16px;
     --glass-bg: rgba(17, 24, 32, 0.72);
     --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+
+    /* ── Z-index scale ──
+       One tier per distinct stacking value currently in use. Each selector
+       references a --z-* custom property instead of a raw number so the
+       intended stacking slot is readable and stays consistent. The two
+       `!important` entries below are flagged inline; do not renumber. */
+    --z-table-header: 1;
+    --z-header: 10;
+    --z-mobile-nav: 15;
+    --z-controls-important: 20; /* !important inside @media(min-width:1024px) */
+    --z-country-panel: 30;
+    --z-suggestions-list: 50;
+    --z-popover: 100;
+    --z-copy-notification: 200;
+    --z-measure-result-label: 500;
+    --z-toolbar: 999;
+    --z-coordinates-display: 1000;
+    --z-controls-bar: 1000;
+    --z-menu-toggle: 1001;
+    --z-country-panel-mobile: 1100; /* !important inside @media(max-width:768px) */
+    --z-onboarding-hint: 1500;
+    --z-sheet: 2000;
+    --z-modal: 3000;
+    --z-quiz-feedback: 3100;
+    --z-exit-btn: 5000;
+    --z-lang-overlay: 9998;
+    --z-top-overlay: 9999;
+    --z-highest: 10000;
 }
 
 path:focus-visible {
@@ -89,6 +119,10 @@ path:focus-visible {
         --tooltip-bg: rgba(255, 255, 255, 0.95);
         --tooltip-color: #1a1d23;
         --tooltip-border: rgba(0, 0, 0, 0.15);
+        --hover-text: #fff; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
+        --overlay-text: #fff; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
+        --title-gradient-end: #b0c4de; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
+    --title-gradient-end: #b0c4de; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
         --legend-bg: rgba(255, 255, 255, 0.96);
         --shortcuts-bg: #ffffff;
         --onboarding-bg: rgba(240, 245, 255, 0.96);
@@ -125,6 +159,9 @@ path:focus-visible {
     --tooltip-bg: rgba(255, 255, 255, 0.95);
     --tooltip-color: #1a1d23;
     --tooltip-border: rgba(0, 0, 0, 0.15);
+    --hover-text: #fff; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
+    --overlay-text: #fff; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
+    --title-gradient-end: #b0c4de; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
     --legend-bg: rgba(255, 255, 255, 0.96);
     --shortcuts-bg: #ffffff;
     --onboarding-bg: rgba(240, 245, 255, 0.96);
@@ -164,7 +201,7 @@ body {
     grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: 8px;
-    z-index: 10;
+    z-index: var(--z-header);
     box-shadow: var(--shadow-md);
 }
 .header .title-group {
@@ -235,7 +272,7 @@ body {
 .header h1 {
     font-size: 0.9em;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--text), #b0c4de);
+    background: linear-gradient(135deg, var(--text), var(--title-gradient-end));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     white-space: nowrap;
@@ -269,7 +306,7 @@ body {
     font-size: 0.7em;
     box-shadow: var(--shadow-md);
     backdrop-filter: blur(var(--glass-blur-sm));
-    z-index: 100;
+    z-index: var(--z-popover);
     opacity: 0;
     transition: opacity var(--dur-fast) var(--ease);
     will-change: left, top;
@@ -288,7 +325,7 @@ body {
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: 10px 14px;
-    z-index: 999;
+    z-index: var(--z-toolbar);
     font-size: 0.7em;
     display: flex;
     flex-direction: column;
@@ -310,7 +347,7 @@ body {
     font-size: 0.75em;
     font-weight: bold;
     color: rgba(255,255,255,0.7);
-    z-index: 999;
+    z-index: var(--z-toolbar);
     pointer-events: none;
 }
 .legend-color {
@@ -336,7 +373,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    z-index: 999;
+    z-index: var(--z-toolbar);
     transition: opacity var(--dur-slow) var(--ease);
 }
 .zoom-btn {
@@ -388,14 +425,12 @@ body {
 }
 .suggestions-list {
     position: absolute;
-    top: 100%;
-    right: 0;
     background: var(--panel-bg);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     max-height: 150px;
     overflow-y: auto;
-    z-index: 50;
+    z-index: var(--z-suggestions-list);
     list-style: none;
     display: none;
     width: 150px;
@@ -425,7 +460,7 @@ body {
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: 10px 14px;
-    z-index: 30;
+    z-index: var(--z-country-panel);
     color: var(--text);
     font-size: 0.7em;
     backdrop-filter: blur(var(--glass-blur-md));
@@ -474,6 +509,7 @@ body {
     border-bottom: 1px solid var(--border);
 }
 .compare-bar {
+    /* fixed gold comparison-bar color; not theme-dependent */
     display: inline-block;
     height: 8px;
     border-radius: 4px;
@@ -492,7 +528,7 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.12);
     font-size: 0.6em;
     color: var(--text-secondary);
-    z-index: 1000;
+    z-index: var(--z-coordinates-display);
     white-space: nowrap;
     font-family: monospace;
     letter-spacing: 0.3px;
@@ -508,11 +544,12 @@ body {
     left: 50%;
     transform: translateX(-50%);
     background: rgba(46, 125, 50, 0.9);
+    /* fixed white on success-green toast; not theme-dependent */
     color: #fff;
     padding: 4px 14px;
     border-radius: var(--radius-pill);
     font-size: 0.7em;
-    z-index: 200;
+    z-index: var(--z-copy-notification);
     opacity: 0;
     transition: opacity var(--dur-slow) var(--ease);
     pointer-events: none;
@@ -533,7 +570,7 @@ body {
     font-size: 1.8em;
     font-weight: bold;
     cursor: pointer;
-    z-index: 1001;
+    z-index: var(--z-menu-toggle);
     box-shadow: var(--shadow-sm);
     display: flex;
     align-items: center;
@@ -560,7 +597,7 @@ body {
     color: var(--text);
     font-size: 1.4em;
     cursor: pointer;
-    z-index: 1001;
+    z-index: var(--z-menu-toggle);
     box-shadow: var(--shadow-sm);
     display: flex;
     align-items: center;
@@ -575,6 +612,7 @@ body {
     position: absolute;
     top: -4px;
     right: -4px;
+    /* fixed accent badge; not theme-dependent */
     background: #ff5722;
     color: #fff;
     font-size: 0.5em;
@@ -599,7 +637,7 @@ body {
     backdrop-filter: none;
     border-radius: var(--radius-md);
     padding: 12px 16px;
-    z-index: 1000;
+    z-index: var(--z-controls-bar);
     display: none;
     flex-direction: column;
     gap: 6px;
@@ -665,6 +703,7 @@ body {
     text-shadow: 0 0 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6);
 }
 .capital-label {
+    /* fixed map-marker text, white with dark halo; not theme-dependent */
     fill: #fff;
     text-anchor: start;
     dominant-baseline: central;
@@ -672,24 +711,30 @@ body {
     font-weight: 500;
 }
 .corridor-dot {
+    /* fixed data-viz corridor color; not theme-dependent */
     fill: #ff9100;
     stroke: #fff;
     stroke-width: 0.5;
     vector-effect: non-scaling-stroke;
 }
 .capital-dot {
+    /* fixed gold capital marker; not theme-dependent */
     fill: #ffd700;
     stroke: #000;
     stroke-width: 0.5;
     vector-effect: non-scaling-stroke;
 }
 .capital-halo {
+    /* fixed gold capital glow; not theme-dependent */
     fill: #ffd700;
     opacity: 0.25;
     vector-effect: non-scaling-stroke;
 }
 .highlighted-country {
-    filter: drop-shadow(0 0 8px #ffd700);
+    /* fixed gold highlight for selected country; not theme-dependent.
+       Glow is rendered as an SVG duplicate stroke layer (see app.js syncCountryGlow),
+       NOT a CSS filter, because drop-shadow() bounding-box computation is
+       browser/GPU dependent and can paint a visible rectangle artifact. */
     stroke: #ffd700;
     stroke-width: 2;
 }
@@ -702,7 +747,6 @@ body {
     fill: none;
     stroke-linecap: round;
     vector-effect: non-scaling-stroke;
-    filter: drop-shadow(0 0 6px currentColor);
 }
 #mapSvg {
     touch-action: none;
@@ -728,12 +772,14 @@ body {
     shape-rendering: optimizeSpeed;
 }
 .major-city-dot {
+    /* fixed white map-marker dot; visible against map halo outline; not theme-dependent */
     stroke: #fff;
     stroke-width: 0.8;
     vector-effect: non-scaling-stroke;
     pointer-events: none;
 }
 .major-city-label {
+    /* fixed white map label with dark outline; not theme-dependent */
     fill: #fff;
     text-anchor: start;
     dominant-baseline: central;
@@ -755,7 +801,7 @@ body {
     background: var(--panel-overlay);
     backdrop-filter: blur(var(--glass-blur-md));
     border-bottom: 1px solid var(--border);
-    z-index: 15;
+    z-index: var(--z-mobile-nav);
     padding: 0 8px;
     align-items: center;
 }
@@ -811,7 +857,7 @@ body {
     border-radius: var(--radius-sm);
     box-shadow: var(--shadow-md);
     min-width: 160px;
-    z-index: 100;
+    z-index: var(--z-popover);
     overflow: hidden;
 }
 .mobile-tools-menu.open { display: block; }
@@ -841,7 +887,7 @@ body {
     background: var(--panel-overlay);
     backdrop-filter: blur(var(--glass-blur-md));
     border-top: 1px solid var(--border);
-    z-index: 15;
+    z-index: var(--z-mobile-nav);
     flex-direction: row;
     align-items: center;
     justify-content: space-around;
@@ -867,7 +913,7 @@ body {
 .mobile-mode-sheet {
     position: fixed;
     inset: 0;
-    z-index: 2000;
+    z-index: var(--z-sheet);
     display: none;
     align-items: flex-end;
     justify-content: center;
@@ -913,7 +959,7 @@ body {
 .mobile-mode-sheet-close {
     background: none;
     border: none;
-    color: #889;
+    color: var(--text-secondary);
     font-size: 1.5em;
     cursor: pointer;
     padding: 0 4px;
@@ -958,7 +1004,7 @@ body {
     }
     .menu-toggle,
     .layers-toggle {
-        display: none !important;
+        display: none;
     }
     .controls-bar {
         display: none !important;
@@ -1019,27 +1065,30 @@ body {
         height: 8px;
     }
     .copy-notification {
-        bottom: calc(var(--mobile-nav-height) + 10px) !important;
+        bottom: calc(var(--mobile-nav-height) + 10px);
     }
     .country-panel {
-        position: fixed !important;
-        top: auto !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        transform: translateY(20px) !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        width: 100% !important;
-        border-radius: 20px 20px 0 0 !important;
-        padding: 8px 18px 28px !important;
-        font-size: 0.65em !important;
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        transform: translateY(20px);
+        max-width: 100%;
+        min-width: 0;
+        width: 100%;
+        border-radius: 20px 20px 0 0;
+        padding: 8px 18px 28px;
+        font-size: 0.65em;
         max-height: 62vh;
         overflow-y: auto;
-        z-index: 1100 !important;
+        /* FLAG: overrides .country-panel's base var(--z-country-panel) (30) with
+           1100 !important inside the mobile media query. The huge gap may indicate
+           an unresolved stacking-context bug; revisit in the !important task. */
+        z-index: var(--z-country-panel-mobile) !important;
     }
     .country-panel.visible {
-        transform: translateY(0) !important;
+        transform: translateY(0);
     }
     .country-panel::before {
         content: '';
@@ -1056,23 +1105,22 @@ body {
         padding: 4px 8px;
     }
     .country-highlight {
-        filter: none !important;
+        filter: none;
     }
     .highlighted-country {
-        filter: drop-shadow(0 0 4px #ffd700) !important;
-        stroke-width: 1.5 !important;
+        stroke-width: 1.5;
     }
     #shortcutsBtn {
-        display: none !important;
+        display: none;
     }
     .header-line {
-        display: none !important;
+        display: none;
     }
 }
 @media (min-width: 1024px) {
     .menu-toggle,
     .layers-toggle {
-        display: none !important;
+        display: none;
     }
     #toolsRow {
         grid-column: 2;
@@ -1110,67 +1158,71 @@ body {
         padding: 3px 8px;
     }
     .controls-bar {
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        right: 0 !important;
-        bottom: auto !important;
-        transform: none !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        background: var(--panel-overlay-96) !important;
-        backdrop-filter: none !important;
-        border-radius: 0 !important;
-        padding: 6px 16px !important;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
-        border: none !important;
-        border-bottom: 1px solid var(--border) !important;
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: wrap !important;
-        justify-content: center !important;
-        align-items: center !important;
-        gap: 6px 16px !important;
-        max-height: none !important;
-        overflow-y: visible !important;
-        z-index: 20 !important;
-        margin: 0 !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: auto;
+        transform: none;
+        width: 100%;
+        max-width: 100%;
+        background: var(--panel-overlay-96);
+        backdrop-filter: none;
+        border-radius: 0;
+        padding: 6px 16px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+        border: none;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 6px 16px;
+        max-height: none;
+        overflow-y: visible;
+        /* FLAG: overrides .controls-bar's base var(--z-controls-bar) (1000) with
+           20 !important inside the desktop media query — a downward override that
+           may indicate an unresolved stacking-context bug; revisit in the
+           !important task. */
+        z-index: var(--z-controls-important) !important;
+        margin: 0;
     }
     .controls-bar .row {
-        flex-wrap: wrap !important;
-        gap: 6px 12px !important;
+        flex-wrap: wrap;
+        gap: 6px 12px;
     }
     .controls-bar .row-label {
-        display: inline-block !important;
-        font-size: 0.7em !important;
-        color: var(--text-secondary) !important;
+        display: inline-block;
+        font-size: 0.7em;
+        color: var(--text-secondary);
         margin-left: 4px;
     }
     .controls-bar .btn {
-        font-size: 0.7em !important;
-        padding: 4px 10px !important;
-        min-height: 28px !important;
-        border-radius: var(--radius-sm) !important;
+        font-size: 0.7em;
+        padding: 4px 10px;
+        min-height: 28px;
+        border-radius: var(--radius-sm);
     }
     .controls-bar .layers-row {
-        flex-wrap: wrap !important;
+        flex-wrap: wrap;
         justify-content: center;
-        gap: 6px 8px !important;
+        gap: 6px 8px;
     }
     .controls-bar .search-box input {
-        width: 160px !important;
-        font-size: 0.8em !important;
-        padding: 5px 10px !important;
-        padding-inline-start: 28px !important;
+        width: 160px;
+        font-size: 0.8em;
+        padding: 5px 10px;
+        padding-inline-start: 28px;
     }
     .controls-bar .control-label {
-        font-size: 0.7em !important;
+        font-size: 0.7em;
         font-weight: 600;
         color: var(--brand-accent);
         text-transform: uppercase;
         letter-spacing: 0.4px;
         white-space: nowrap;
-        padding: 0 4px !important;
+        padding: 0 4px;
     }
     .controls-bar .divider {
         width: 1px;
@@ -1181,78 +1233,87 @@ body {
         display: inline-block;
     }
     .zoom-controls {
-        bottom: 40px !important;
-        right: 30px !important;
-        gap: 10px !important;
+        bottom: 40px;
+        right: 30px;
+        gap: 10px;
     }
     .zoom-btn {
-        width: 44px !important;
-        height: 44px !important;
-        font-size: 1.6em !important;
-        border-radius: var(--radius-sm) !important;
-        background: var(--panel-overlay-96) !important;
-        backdrop-filter: none !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        width: 44px;
+        height: 44px;
+        font-size: 1.6em;
+        border-radius: var(--radius-sm);
+        background: var(--panel-overlay-96);
+        backdrop-filter: none;
+        border: 1px solid rgba(255, 255, 255, 0.15);
     }
     .zoom-btn:hover {
-        background: rgba(50, 56, 70, 0.95) !important;
-        transform: scale(1.08) !important;
+        background: rgba(50, 56, 70, 0.95);
+        transform: scale(1.08);
     }
     .legend {
-        bottom: 40px !important;
-        left: 30px !important;
-        font-size: 0.85em !important;
-        padding: 14px 20px !important;
-        border-radius: var(--radius-md) !important;
-        min-width: 160px !important;
-        background: var(--legend-bg) !important;
-        backdrop-filter: none !important;
+        bottom: 40px;
+        left: 30px;
+        font-size: 0.85em;
+        padding: 14px 20px;
+        border-radius: var(--radius-md);
+        min-width: 160px;
+        background: var(--legend-bg);
+        backdrop-filter: none;
     }
     .legend-color {
-        width: 14px !important;
-        height: 14px !important;
-        border-radius: 4px !important;
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
     }
     .legend-item {
-        gap: 8px !important;
-        padding: 2px 0 !important;
+        gap: 8px;
+        padding: 2px 0;
     }
     .header {
-        padding: 6px 20px !important;
+        padding: 6px 20px;
     }
     .header h1 {
-        font-size: 1.1em !important;
+        font-size: 1.1em;
     }
     .header-line {
-        display: block !important;
+        display: block;
     }
     .country-panel {
-        font-size: 0.9em !important;
-        max-width: 360px !important;
-        padding: 16px 20px !important;
-        top: 80px !important;
+        font-size: 0.9em;
+        max-width: 360px;
+        padding: 16px 20px;
+        top: 80px;
     }
     .tooltip {
-        font-size: 0.85em !important;
-        padding: 8px 14px !important;
-        max-width: 260px !important;
+        font-size: 0.85em;
+        padding: 8px 14px;
+        max-width: 260px;
     }
     .coordinates-display {
-        font-size: 0.7em !important;
-        padding: 6px 20px !important;
-        bottom: 16px !important;
-    }
-    .quiz-authoring-banner {
-        top: auto !important;
-        bottom: 20px !important;
+        font-size: 0.7em;
+        padding: 6px 20px;
+        bottom: 16px;
     }
 }
-@media (min-width: 1024px) and (max-width: 1439px) {
+@media (min-width: 1024px) and (max-width: 1279px) {
     .controls-bar .btn .btn-text {
-        display: none !important;
+        display: none;
     }
     .controls-bar {
-        gap: 4px 8px !important;
+        gap: 4px 8px;
+    }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+    .tools-row-middle {
+        scrollbar-width: thin;
+    }
+    .tools-row-middle::-webkit-scrollbar {
+        display: block;
+        height: 6px;
+    }
+    .tools-row-middle::-webkit-scrollbar-thumb {
+        background: rgba(128, 128, 128, 0.5);
+        border-radius: 3px;
     }
 }
 @media (min-width: 769px) and (max-width: 1023px) {
@@ -1295,7 +1356,7 @@ body {
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     padding: 4px;
-    z-index: 9999;
+    z-index: var(--z-top-overlay);
     display: none;
 
     box-shadow: var(--shadow-md);
@@ -1366,15 +1427,17 @@ body {
     position: relative;
 }
 .btn:hover {
+    /* neutral hover border; same in both themes */
     background: var(--btn-hover);
     border-color: #555;
     transform: translateY(-1px);
     box-shadow: var(--shadow-sm);
 }
 .btn[title]:hover {
-    z-index: 9999;
+    z-index: var(--z-top-overlay);
 }
 .btn.active, .mode-btn.active, .toggle-on {
+    /* fixed accent active-state; brand-accent is identical in both themes */
     background: #1a3a38;
     border-color: var(--brand-accent);
     color: #80e0d0;
@@ -1390,6 +1453,7 @@ body {
     box-shadow: 0 0 0 1px rgba(20, 184, 166, 0.3);
 }
 .bloc-select {
+    /* hidden legacy dark control; fixed palette, not theme-dependent */
     background: #1e2a36;
     color: #c0d0e0;
     border: 1px solid #3a4a5a;
@@ -1408,7 +1472,7 @@ body {
 .lang-overlay {
     position: fixed;
     inset: 0;
-    z-index: 9998;
+    z-index: var(--z-lang-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1421,11 +1485,11 @@ body {
     opacity: 0;
     pointer-events: none;
     visibility: hidden;
-    display: none !important;
+    display: none;
 }
 .lang-overlay-content {
     text-align: center;
-    color: #fff;
+    color: var(--text);
     animation: langOverlayIn 0.5s ease both;
 }
 @keyframes langOverlayIn {
@@ -1441,13 +1505,13 @@ body {
     font-size: 1.4em;
     font-weight: 700;
     margin: 0 0 4px;
-    background: linear-gradient(135deg, #fff, #b0c4de);
+    background: linear-gradient(135deg, var(--text), var(--title-gradient-end));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 .lang-overlay-subtitle {
     font-size: 0.85em;
-    color: #a0b0c0;
+    color: var(--text-secondary);
     margin: 0 0 24px;
 }
 .lang-overlay-buttons {
@@ -1465,7 +1529,7 @@ body {
     border-radius: var(--radius-sm);
     border: 2px solid rgba(255, 255, 255, 0.15);
     background: rgba(255, 255, 255, 0.06);
-    color: #fff;
+    color: var(--text);
     cursor: pointer;
     font-family: inherit;
     font-size: 1em;
@@ -1521,7 +1585,7 @@ body {
 .layers-modal {
     position: fixed;
     inset: 0;
-    z-index: 3000;
+    z-index: var(--z-modal);
     display: none;
     align-items: center;
     justify-content: center;
@@ -1563,7 +1627,7 @@ body {
 .layers-modal-close {
     background: none;
     border: none;
-    color: #889;
+    color: var(--text-secondary);
     font-size: 1.4em;
     cursor: pointer;
     padding: 0 4px;
@@ -1579,7 +1643,7 @@ body {
     margin: 0 0 6px 0;
     font-size: 0.75em;
     font-weight: 600;
-    color: #8899aa;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -1609,7 +1673,7 @@ body {
     position: fixed;
     inset: 0;
     background: var(--glass-bg);
-    z-index: 2000;
+    z-index: var(--z-sheet);
     display: none;
     align-items: center;
     justify-content: center;
@@ -1644,6 +1708,7 @@ body {
 }
 .shortcut-key {
     display: inline-block;
+    /* fixed keyboard-capsule style on dark shortcuts overlay; not theme-dependent */
     background: #2e3545;
     border: 1px solid #4a5068;
     border-radius: var(--radius-sm);
@@ -1680,7 +1745,7 @@ body {
     padding: 10px 18px;
     color: var(--text);
     font-size: 0.7em;
-    z-index: 1500;
+    z-index: var(--z-onboarding-hint);
     text-align: center;
     pointer-events: none;
     opacity: 1;
@@ -1744,13 +1809,14 @@ body {
     left: 50%;
     transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.85);
+    /* fixed white on fixed dark tooltip; not theme-dependent */
     color: #fff;
     padding: 4px 10px;
     border-radius: var(--radius-sm);
     font-size: 12px;
     white-space: nowrap;
     pointer-events: none;
-    z-index: 9999;
+    z-index: var(--z-top-overlay);
 }
 @media (min-width: 1024px) {
     .btn[data-tooltip]:hover::after {
@@ -1763,7 +1829,7 @@ body {
 .onboard-overlay {
     position: fixed;
     inset: 0;
-    z-index: 9999;
+    z-index: var(--z-top-overlay);
     display: none;
     pointer-events: none;
 }
@@ -1777,7 +1843,7 @@ body {
     box-shadow: 0 0 0 9999px rgba(0,0,0,0.7);
     transition: all var(--dur-slow) var(--ease);
     pointer-events: none;
-    z-index: 9999;
+    z-index: var(--z-top-overlay);
 }
 .onboard-glow::after {
     content: '';
@@ -1793,7 +1859,7 @@ body {
 }
 .onboard-card {
     position: fixed;
-    z-index: 10000;
+    z-index: var(--z-highest);
     background: var(--panel-bg, #1a1d25);
     border: 1px solid rgba(20,184,166,0.4);
     border-radius: var(--radius-md);
@@ -1821,7 +1887,7 @@ body {
     margin: 0 0 6px;
     font-size: 1.05em;
     font-weight: 700;
-    color: #14b8a6;
+    color: var(--brand-accent);
 }
 .onboard-card-text {
     margin: 0 0 14px;
@@ -1843,7 +1909,7 @@ body {
     transition: all var(--dur-base) var(--ease);
 }
 .onboard-dot.active {
-    background: #14b8a6;
+    background: var(--brand-accent);
     box-shadow: 0 0 6px rgba(20,184,166,0.6);
     width: 20px;
     border-radius: var(--radius-sm);
@@ -1871,10 +1937,11 @@ body {
 }
 .onboard-skip:hover {
     background: rgba(255,255,255,0.15);
-    color: #fff;
+    color: var(--hover-text);
 }
 .onboard-next {
-    background: linear-gradient(135deg, #14b8a6, #0d9488);
+    /* fixed brand-accent gradient (brand colors identical in both themes); not theme-dependent */
+    background: linear-gradient(135deg, var(--brand-accent), #0d9488);
     color: #fff;
     box-shadow: 0 4px 12px rgba(20,184,166,0.3);
 }
@@ -1896,7 +1963,7 @@ body {
 /* ── Projection Explainer Card ── */
 .projection-card {
     position: fixed;
-    z-index: 10000;
+    z-index: var(--z-highest);
     background: var(--panel-bg, #1a1d25);
     border: 1px solid rgba(20,184,166,0.4);
     border-radius: var(--radius-md);
@@ -1917,7 +1984,7 @@ body {
     margin: 0 0 12px;
     font-size: 1.25em;
     font-weight: 700;
-    color: #14b8a6;
+    color: var(--brand-accent);
     text-align: center;
     flex-shrink: 0;
 }
@@ -1943,18 +2010,20 @@ body {
 /* ── Quiz Mode ── */
 .quiz-overlay .quiz-btn {
     background: var(--brand-accent);
+    /* fixed white on brand-accent (same in both themes); not theme-dependent */
     color: #fff;
     border-color: var(--brand-accent);
     font-weight: 700;
 }
 .quiz-overlay .quiz-btn:hover {
+    /* fixed darker brand-accent hover (brand family, identical in both themes); not theme-dependent */
     background: #0d9488;
     border-color: #0d9488;
 }
 .quiz-overlay {
     position: fixed;
     inset: 0;
-    z-index: 3000;
+    z-index: var(--z-modal);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1963,7 +2032,7 @@ body {
 }
 .quiz-overlay[style*="display: none"],
 .quiz-overlay[style*="display:none"] {
-    display: none !important;
+    display: none;
 }
 .quiz-panel {
     position: relative;
@@ -2136,7 +2205,7 @@ body {
     cursor: pointer;
 }
 .quiz-scope-item:hover {
-    color: #fff;
+    color: var(--hover-text);
 }
 .quiz-scope-item input[type="checkbox"],
 .quiz-scope-item input[type="radio"] {
@@ -2161,6 +2230,7 @@ body {
 }
 .quiz-overlay .quiz-start-btn {
     background: var(--brand-accent);
+    /* fixed white on brand-accent (same in both themes); not theme-dependent */
     color: #fff;
     border-color: var(--brand-accent);
     padding: 8px 28px;
@@ -2169,6 +2239,7 @@ body {
     border-radius: var(--radius-sm);
 }
 .quiz-overlay .quiz-start-btn:hover {
+    /* fixed darker brand-accent hover (brand family, identical in both themes); not theme-dependent */
     background: #0d9488;
     border-color: #0d9488;
 }
@@ -2206,6 +2277,7 @@ body {
     padding: 6px 16px;
     font-size: 0.75em;
     font-weight: 600;
+    /* fixed text on fixed dark translucent badge; not theme-dependent */
     color: #e0e8f0;
 }
 .quiz-feedback {
@@ -2213,11 +2285,12 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 3100;
+    z-index: var(--z-quiz-feedback);
     padding: 14px 32px;
     border-radius: var(--radius-sm);
     font-size: 1.2em;
     font-weight: 700;
+    /* white on fixed translucent status badge (correct/incorrect/pending) */
     color: #fff;
     text-align: center;
     pointer-events: none;
@@ -2272,6 +2345,7 @@ body {
     pointer-events: auto;
     background: rgba(180, 60, 40, 0.85);
     border: 1px solid rgba(255,120,80,0.35);
+    /* fixed light-red text on fixed red badge; not theme-dependent */
     color: #ffe8e0;
     border-radius: var(--radius-sm);
     padding: 4px 12px;
@@ -2306,12 +2380,14 @@ body {
 }
 .quiz-tf-true {
     background: rgba(34, 180, 80, 0.9);
+    /* fixed white on fixed green true-answer button; not theme-dependent */
     color: #fff;
     border-color: rgba(34, 180, 80, 1);
     box-shadow: 0 2px 12px rgba(34, 180, 80, 0.4);
 }
 .quiz-tf-false {
     background: rgba(210, 70, 45, 0.9);
+    /* fixed white on fixed red false-answer button; not theme-dependent */
     color: #fff;
     border-color: rgba(210, 70, 45, 1);
     box-shadow: 0 2px 12px rgba(210, 70, 45, 0.4);
@@ -2352,6 +2428,7 @@ body {
     cursor: pointer;
     border: 2px solid transparent;
     background: rgba(100, 140, 220, 0.85);
+    /* fixed white on fixed blue option button; not theme-dependent */
     color: #fff;
     box-shadow: 0 2px 10px rgba(100, 140, 220, 0.3);
     transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
@@ -2393,6 +2470,7 @@ body {
     font-size: 0.9em;
     cursor: pointer;
     background: rgba(210, 70, 45, 0.8);
+    /* fixed white on fixed red remove button; not theme-dependent */
     color: #fff;
     border: none;
 }
@@ -2403,21 +2481,22 @@ body {
     font-size: 0.9em;
     cursor: pointer;
     background: rgba(100, 140, 220, 0.7);
+    /* fixed white on fixed blue add button; not theme-dependent */
     color: #fff;
     border: none;
 }
 .quiz-active .zooming-active text,
 .quiz-active text {
-    display: none !important;
+    display: none;
 }
 .quiz-active .controls-bar,
 .quiz-active .legend-container,
 .quiz-active .info-overlay,
 .quiz-active #toolsRow {
-    display: none !important;
+    display: none;
 }
 .quiz-active #tooltip {
-    display: none !important;
+    display: none;
 }
 .btn.quiz-disabled {
     opacity: 0.4;
@@ -2428,7 +2507,6 @@ body {
     .quiz-panel { padding: 16px 18px; }
     .quiz-hud-prompt-banner { font-size: 1.2em; padding: 12px 20px; }
     .quiz-hud-meta-row { font-size: 0.65em; gap: 10px; padding: 6px 12px; }
-    .quiz-custom-panels { flex-direction: column !important; gap: 10px; }
     .quiz-custom-main { width: 92vw; max-width: 92vw; max-height: 50vh; }
     .quiz-custom-sidebar { width: 92vw; max-width: 92vw; max-height: 40vh; }
 }
@@ -2470,7 +2548,7 @@ body {
 .quiz-custom-panels {
     position: fixed;
     inset: 0;
-    z-index: 3000;
+    z-index: var(--z-modal);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2480,13 +2558,17 @@ body {
 }
 .quiz-custom-panels[style*="display: none"],
 .quiz-custom-panels[style*="display:none"] {
-    display: none !important;
+    display: none;
 }
 [dir="rtl"] .quiz-custom-panels {
     flex-direction: row;
 }
 [dir="ltr"] .quiz-custom-panels {
     flex-direction: row-reverse;
+}
+@media (max-width: 500px) {
+    [dir="ltr"] .quiz-custom-panels,
+    [dir="rtl"] .quiz-custom-panels { flex-direction: column; }
 }
 
 /* Main Panel */
@@ -2679,7 +2761,7 @@ body {
     flex-shrink: 0;
     transition: color var(--dur-fast) var(--ease);
 }
-.quiz-sidebar-close-btn:hover { color: #fff; }
+.quiz-sidebar-close-btn:hover { color: var(--hover-text); }
 .quiz-custom-list-wrap {
     max-height: 280px;
     overflow-y: auto;
@@ -2720,6 +2802,7 @@ body {
 .quiz-custom-item-delete {
     background: none;
     border: none;
+    /* fixed soft-danger delete color; not theme-dependent */
     color: #e06060;
     cursor: pointer;
     font-size: 1.1em;
@@ -2745,6 +2828,7 @@ body {
     border-color: var(--brand-accent, #14b8a6);
 }
 .quiz-custom-item-check-mark {
+    /* white check on brand-accent (same in both themes) */
     color: #fff;
     font-size: 0.7em;
     font-weight: 700;
@@ -2769,7 +2853,7 @@ body {
     top: calc(var(--header-height) + 8px);
     left: 50%;
     transform: translateX(-50%);
-    z-index: 3100;
+    z-index: var(--z-quiz-feedback);
     display: flex;
     align-items: center;
     gap: 12px;
@@ -2784,26 +2868,33 @@ body {
     font-size: 0.85em;
     animation: quizFeedbackPulse 0.6s ease-out;
 }
+@media (min-width: 1024px) {
+    .quiz-authoring-banner {
+        top: auto;
+        bottom: 20px;
+    }
+}
 .quiz-cancel-authoring-btn {
     padding: 4px 12px;
     font-size: 0.85em;
     background: rgba(180,60,40,0.3);
     border-color: rgba(255,120,80,0.3);
+    /* fixed light-red text on fixed red badge; not theme-dependent */
     color: #ffe8e0;
 }
 
 /* ── Authoring Overlay (bottom form) ── */
 .quiz-authoring-overlay {
-    background: none !important;
-    backdrop-filter: none !important;
-    pointer-events: none !important;
-    align-items: flex-end !important;
-    justify-content: center !important;
+    background: none;
+    backdrop-filter: none;
+    pointer-events: none;
+    align-items: flex-end;
+    justify-content: center;
     padding-bottom: 80px;
 }
 .quiz-authoring-overlay[style*="display: none"],
 .quiz-authoring-overlay[style*="display:none"] {
-    display: none !important;
+    display: none;
 }
 .quiz-authoring-overlay .quiz-authoring-panel {
     pointer-events: auto;
@@ -2836,6 +2927,7 @@ body {
 .quiz-review-panel { max-width: 520px; }
 .quiz-review-disclaimer {
     font-size: 0.75em;
+    /* fixed warning-amber disclaimer text; not theme-dependent */
     color: #e08040;
     text-align: center;
     margin: 0 0 14px;
@@ -2883,6 +2975,7 @@ body {
 .quiz-review-correct {
     background: rgba(34,197,94,0.2);
     border-color: rgba(34,197,94,0.4);
+    /* semantic success status color; applies in both themes */
     color: #4ade80;
 }
 .quiz-review-correct:hover {
@@ -2891,6 +2984,7 @@ body {
 .quiz-review-incorrect {
     background: rgba(239,68,68,0.2);
     border-color: rgba(239,68,68,0.4);
+    /* fixed semantic danger text; not theme-dependent */
     color: #f87171;
 }
 .quiz-review-incorrect:hover {
@@ -2999,7 +3093,7 @@ body {
     position: sticky;
     top: 0;
     background: var(--panel-bg);
-    z-index: 1;
+    z-index: var(--z-table-header);
 }
 .quiz-results-table td {
     color: var(--text);
@@ -3074,20 +3168,20 @@ body {
 
 /* ── Quiz Active: hide authoring banner ── */
 .quiz-active .quiz-authoring-banner {
-    display: none !important;
+    display: none;
 }
 
 /* ── Lucide icon sizing (overrides inline width/height attributes) ── */
-svg[class*="lucide"] { width: 14px !important; height: 14px !important; }
-.zoom-btn svg[class*="lucide"] { width: 16px !important; height: 16px !important; }
-.logo-icon svg[class*="lucide"] { width: 20px !important; height: 20px !important; }
-.menu-toggle svg[class*="lucide"], .layers-toggle svg[class*="lucide"] { width: 20px !important; height: 20px !important; }
-.mobile-nav-btn svg[class*="lucide"] { width: 18px !important; height: 18px !important; }
-.onboarding-hint svg[class*="lucide"] { width: 14px !important; height: 14px !important; }
+svg[class*="lucide"] { width: 14px; height: 14px; }
+.zoom-btn svg[class*="lucide"] { width: 16px; height: 16px; }
+.logo-icon svg[class*="lucide"] { width: 20px; height: 20px; }
+.menu-toggle svg[class*="lucide"], .layers-toggle svg[class*="lucide"] { width: 20px; height: 20px; }
+.mobile-nav-btn svg[class*="lucide"] { width: 18px; height: 18px; }
+.onboarding-hint svg[class*="lucide"] { width: 14px; height: 14px; }
 
 .measure-result-label {
     position: fixed;
-    z-index: 500;
+    z-index: var(--z-measure-result-label);
     padding: 6px 12px;
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur-sm));
@@ -3117,7 +3211,7 @@ body.presentation-mode .mobile-bottom-nav,
 body.presentation-mode .onboarding-hint,
 body.presentation-mode .measure-result-label,
 body.presentation-mode .copy-notification {
-    display: none !important;
+    display: none;
 }
 body.presentation-mode .map-container {
     position: fixed;
@@ -3128,7 +3222,7 @@ body.presentation-mode .map-container {
     position: fixed;
     top: 12px;
     right: 12px;
-    z-index: 5000;
+    z-index: var(--z-exit-btn);
     display: none;
     align-items: center;
     gap: 4px;
@@ -3136,6 +3230,7 @@ body.presentation-mode .map-container {
     border-radius: var(--radius-sm);
     background: rgba(10, 14, 20, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.15);
+    /* fixed white on fixed dark exit button; not theme-dependent */
     color: #fff;
     font-size: 0.75em;
     font-weight: 600;
@@ -3162,7 +3257,7 @@ body.presentation-mode .presentation-exit-btn {
 .export-blocking-overlay {
     position: absolute;
     inset: 0;
-    z-index: 9999;
+    z-index: var(--z-top-overlay);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -3170,7 +3265,7 @@ body.presentation-mode .presentation-exit-btn {
     gap: 12px;
     background: var(--glass-bg, rgba(0,0,0,0.35));
     backdrop-filter: blur(var(--glass-blur-sm, 4px));
-    color: #fff;
+    color: var(--overlay-text);
     font-size: 0.95rem;
     pointer-events: all;
 }
@@ -3179,7 +3274,7 @@ body.presentation-mode .presentation-exit-btn {
     height: 32px;
     border-radius: 50%;
     border: 3px solid rgba(255,255,255,0.3);
-    border-top-color: #fff;
+    border-top-color: var(--overlay-text);
     animation: export-spin 0.8s linear infinite;
 }
 @keyframes export-spin {
@@ -3188,7 +3283,7 @@ body.presentation-mode .presentation-exit-btn {
 .data-table-overlay {
     position: fixed;
     inset: 0;
-    z-index: 2000;
+    z-index: var(--z-sheet);
     display: none;
     align-items: center;
     justify-content: center;
@@ -3336,6 +3431,7 @@ th[data-sort-key][aria-sort="descending"]::after {
 }
 .projection-compare-tab.active {
     background: var(--brand-accent);
+    /* fixed white on brand-accent (same in both themes); not theme-dependent */
     color: #fff;
     border-color: var(--brand-accent);
 }
@@ -3344,6 +3440,7 @@ th[data-sort-key][aria-sort="descending"]::after {
     min-height: 0;
     overflow: hidden;
     border-radius: var(--radius-sm);
+    /* fixed dark map canvas (SVG draws its own light strokes); not theme-dependent */
     background: #0b1a27;
 }
 #projectionCompareSvg {

@@ -33,6 +33,10 @@ if (fs.existsSync(path.join(SRC, 'vendor'))) {
     fs.cpSync(path.join(SRC, 'vendor'), path.join(DIST, 'vendor'), { recursive: true });
     console.log('  Copied vendor/');
 }
+if (fs.existsSync(path.join(SRC, 'fonts'))) {
+    fs.cpSync(path.join(SRC, 'fonts'), path.join(DIST, 'fonts'), { recursive: true });
+    console.log('  Copied fonts/');
+}
 fs.copyFileSync(path.join(SRC, 'admin-boundaries-data.json'), path.join(DIST, 'admin-boundaries-data.json'));
 console.log('  Copied admin-boundaries-data.json');
 fs.copyFileSync(path.join(SRC, 'admin-name-translations.json'), path.join(DIST, 'admin-name-translations.json'));

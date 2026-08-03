@@ -1,6 +1,40 @@
         (function() {
             const BASE = window.__BASE_PATH || './';
 
+            // ── Global error safety net ─────────────────────────────────
+            // Catches anything that escapes the app's specific try/catch and
+            // .catch(...) paths and surfaces a single non-blocking, dismissible
+            // strip per session. Never a modal/full-page takeover, and it does
+            // not replace the existing per-feature error states. Anchored above
+            // the bottom-centre copy-notification (bottom:20px) and the
+            // toolbar/menu-toggle (bottom:30px) so it does not overlap them.
+            var _globalErrorNoticeShown = false;
+            function showGlobalErrorNotice() {
+                if (_globalErrorNoticeShown) return;
+                _globalErrorNoticeShown = true;
+                try {
+                    var notice = document.createElement('div');
+                    notice.style.cssText = 'position:fixed;bottom:96px;left:50%;transform:translateX(-50%);z-index:10000;background:rgba(20,20,25,0.95);color:#fff;padding:12px 20px;border-radius:12px;font-size:0.9em;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.4);border:1px solid rgba(255,90,90,0.4);max-width:90vw;';
+                    var text = document.createElement('span');
+                    text.textContent = t('unexpectedErrorNotice');
+                    var dismissBtn = document.createElement('button');
+                    dismissBtn.textContent = '✕';
+                    dismissBtn.style.cssText = 'background:none;border:none;color:#9dd0ff;cursor:pointer;font-size:1em;padding:0 4px;';
+                    dismissBtn.addEventListener('click', function() { notice.remove(); });
+                    notice.appendChild(text);
+                    notice.appendChild(dismissBtn);
+                    document.body.appendChild(notice);
+                } catch (err) {}
+            }
+            window.addEventListener('error', function(e) {
+                console.error('Unhandled error:', e.error || e.message);
+                showGlobalErrorNotice();
+            });
+            window.addEventListener('unhandledrejection', function(e) {
+                console.error('Unhandled promise rejection:', e.reason);
+                showGlobalErrorNotice();
+            });
+
             // ──────────────────────────────────────────────────────────
             //  TABLE OF CONTENTS — app.js
             //
@@ -94,6 +128,19 @@
                 document.body.appendChild(langDropdownMenu);
                 langDropdownMenu.style.position = 'fixed';
             }
+            var _resizeCallbacks = [];
+            var _resizeTimer = null;
+            function onWindowResize(callback) {
+                _resizeCallbacks.push(callback);
+            }
+            function _runResizeHandlers() {
+                _resizeCallbacks.forEach(function(fn) { try { fn(); } catch(e) {} });
+            }
+            function _scheduleResizeDispatch() {
+                clearTimeout(_resizeTimer);
+                _resizeTimer = setTimeout(_runResizeHandlers, 80);
+            }
+            window.addEventListener('resize', _scheduleResizeDispatch);
             function positionLangDropdown() {
                 if (!langToggle || !langDropdownMenu) return;
                 var rect = langToggle.getBoundingClientRect();
@@ -233,7 +280,7 @@
             let selectedFeatureType = null; // 'mountain' | 'river' | null
             let gCapitals, gTimezones, gMajorCities, gNaturalResources, gEthnicGroups, gOceanCurrents, gWinds, gEarthquakes, gVolcanoes, gBorderDisputes, gAdminBoundaries, gGeopoliticalBlocs, gDesertsForests;
             let projection, pathGen;
-            let svg, gMap, gCountries, gCountryLabels, gGraticule, gOcean, gCorridors, gPhysical, gTemperature, gAuthoringMarkers, gQuizMarkers;
+            let svg, gMap, gCountries, gCountryGlow, gCountryLabels, gGraticule, gOcean, gCorridors, gPhysical, gTemperature, gAuthoringMarkers, gQuizMarkers;
             let currentTransform = d3.zoomIdentity;
             let _tooltipSize = { w: 180, h: 60 };
             let lastCanvasTransform = d3.zoomIdentity;
@@ -328,6 +375,44 @@
                 if (def.drawFn) def.drawFn();
                 if (def.postDrawFn) def.postDrawFn();
                 if (def.on) def.on(state, btn);
+                updateLegend();
+                updateHash();
+                updateActiveLayerCount();
+            }
+
+            var _layerLoadingChips = {};
+            var _layerNoticeTimer = null;
+            function showDataLayerLoading(name) {
+                hideDataLayerLoading(name);
+                var chip = document.createElement('div');
+                chip.style.cssText = 'position:fixed;bottom:64px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:rgba(15,20,30,0.92);color:#e8f1ff;padding:6px 16px;border-radius:999px;font-size:0.75em;z-index:200;pointer-events:none;border:1px solid rgba(128,200,255,0.35);box-shadow:0 4px 16px rgba(0,0,0,0.4);';
+                var spinner = document.createElement('span');
+                spinner.style.cssText = 'width:14px;height:14px;border:2px solid rgba(255,255,255,0.25);border-top-color:#80c8ff;border-radius:50%;animation:export-spin 0.8s linear infinite;flex:none;';
+                var label = document.createElement('span');
+                label.textContent = t('dataLayerLoading');
+                chip.appendChild(spinner);
+                chip.appendChild(label);
+                document.body.appendChild(chip);
+                _layerLoadingChips[name] = chip;
+            }
+            function hideDataLayerLoading(name) {
+                var chip = _layerLoadingChips[name];
+                if (chip) { chip.remove(); delete _layerLoadingChips[name]; }
+            }
+            function failLayerData(name, msgText) {
+                hideDataLayerLoading(name);
+                var def = LAYER_DEFS[name];
+                if (def) {
+                    if (def.getFlag() === true) def.setFlag(false);
+                    var btn = document.getElementById(def.btnId);
+                    if (btn) btn.classList.remove('toggle-on');
+                }
+                if (copyNotification) {
+                    copyNotification.textContent = msgText;
+                    copyNotification.classList.add('show');
+                    clearTimeout(_layerNoticeTimer);
+                    _layerNoticeTimer = setTimeout(function() { copyNotification.classList.remove('show'); }, 3000);
+                }
                 updateLegend();
                 updateHash();
                 updateActiveLayerCount();
@@ -835,6 +920,7 @@
 
                 gGraticule = svg.append('g');
                 gCountries = svg.append('g');
+                gCountryGlow = svg.append('g').attr('class', 'country-glow-layer');
                 gCountryLabels = svg.append('g');
                 gPhysical = svg.append('g');
                 gCorridors = svg.append('g');
@@ -856,7 +942,7 @@
                 gQuizMarkers = svg.append('g');
 
                 gMap = svg.append('g').attr('class', 'map-transform-group');
-                [gOcean, gGraticule, gCountries, gAdminBoundaries, gCountryLabels, gPhysical, gCorridors, gTemperature, gCapitals, gTimezones, gMajorCities, gNaturalResources, gEthnicGroups, gOceanCurrents, gWinds, gEarthquakes, gVolcanoes, gGeopoliticalBlocs, gDesertsForests, gBorderDisputes, gAuthoringMarkers, gQuizMarkers]
+                [gOcean, gGraticule, gCountries, gCountryGlow, gAdminBoundaries, gCountryLabels, gPhysical, gCorridors, gTemperature, gCapitals, gTimezones, gMajorCities, gNaturalResources, gEthnicGroups, gOceanCurrents, gWinds, gEarthquakes, gVolcanoes, gGeopoliticalBlocs, gDesertsForests, gBorderDisputes, gAuthoringMarkers, gQuizMarkers]
                     .forEach(g => gMap.append(() => g.node()));
 
                 projection = setupProjection(width, height);
@@ -1082,6 +1168,7 @@
                     .catch(function(err) {
                         console.error('Failed to load timezone data:', err);
                         timezoneDataLoading = null;
+                        failLayerData('timezones', t('timezoneLoadError'));
                         return [];
                     });
                 return timezoneDataLoading;
@@ -1621,8 +1708,8 @@
                         var expanded = [];
                         coords.forEach(function(c){expanded.push(c);});
                         expanded.push(coords[0]);
-                        gDesertsForests.append('path').datum({type:'Polygon', coordinates:[expanded], _data:d}).attr('d', pathGen).attr('fill','none').attr('stroke',haloColor).attr('stroke-width',(isMobile?4:7)).attr('vector-effect','non-scaling-stroke').style('pointer-events','none');
-                        gDesertsForests.append('path').datum({type:'Polygon', coordinates:[expanded], _data:d}).attr('d', pathGen).attr('fill','none').attr('stroke',color).attr('stroke-width',isMobile?2:4).attr('stroke-opacity',1).attr('stroke-dasharray','6,3').attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(e,dd){showDesertForestDetail(dd._data);});
+                        gDesertsForests.append('path').datum({type:'LineString', coordinates:expanded, _data:d}).attr('d', pathGen).attr('fill','none').attr('stroke',haloColor).attr('stroke-width',(isMobile?4:7)).attr('vector-effect','non-scaling-stroke').style('pointer-events','none');
+                        gDesertsForests.append('path').datum({type:'LineString', coordinates:expanded, _data:d}).attr('d', pathGen).attr('fill','none').attr('stroke',color).attr('stroke-width',isMobile?2:4).attr('stroke-opacity',1).attr('stroke-dasharray','6,3').attr('vector-effect','non-scaling-stroke').style('cursor','pointer').on('click',function(e,dd){showDesertForestDetail(dd._data);});
                         var mid = d.coords[Math.floor(d.coords.length/2)];
                         var mxy = proj(mid);
                         if (mxy && !isNaN(mxy[0])) {
@@ -1693,13 +1780,11 @@
                 var basePath = window.location.pathname.replace(/\/[^\/]*$/, '/');
                 adminBoundariesLoading = fetch(basePath + 'admin-boundaries-data.json')
                     .then(function(r) { return r.json(); })
-                    .then(function(data) { adminBoundariesData = data; try { getAdminLabelMeta(data); } catch(e) {} return data; })
+                    .then(function(data) { adminBoundariesData = data; hideDataLayerLoading('adminBoundaries'); try { getAdminLabelMeta(data); } catch(e) {} return data; })
                     .catch(function(err) {
                         console.error('Failed to load admin boundaries:', err);
                         adminBoundariesLoading = null;
-                        copyNotification.textContent = t('adminBoundariesLoadError');
-                        copyNotification.classList.add('show');
-                        setTimeout(function() { copyNotification.classList.remove('show'); }, 3000);
+                        failLayerData('adminBoundaries', t('adminBoundariesLoadError'));
                         return [];
                     });
                 return adminBoundariesLoading;
@@ -1835,6 +1920,74 @@
                 if (!_adminBakedCanvas || !_adminBakedTransform) return true;
                 return false;
             }
+            // Waterman butterfly renders the South Pole across several face
+            // pieces; a ring that wraps the pole gets bridged with long chords
+            // that look like boundaries stretching across the ocean. Pre-split
+            // such rings at the projected seam so each piece stays within its
+            // own polyhedral face piece. Returns an array of geometries to
+            // stroke (same geometry if no seam is crossed).
+            function _adminSeamSplitGeometries(geom, proj, jumpPx) {
+                var split = function(ring) {
+                    var pieces = [];
+                    var cur = [];
+                    var prevP = null;
+                    var prevGeo = null;
+                    for (var i = 0; i < ring.length; i++) {
+                        var p = proj(ring[i]);
+                        if (prevGeo && Math.sqrt(Math.pow(p[0] - prevP[0], 2) + Math.pow(p[1] - prevP[1], 2)) > jumpPx) {
+                            if (cur.length >= 2) pieces.push(cur);
+                            cur = [ring[i]];
+                        } else {
+                            cur.push(ring[i]);
+                        }
+                        prevGeo = ring[i];
+                        prevP = p;
+                    }
+                    if (cur.length >= 2) pieces.push(cur);
+                    return pieces;
+                };
+                var results = [];
+                var anyJump = false;
+                var forEachRing = function(rings) {
+                    for (var r = 0; r < rings.length; r++) {
+                        var pieces = split(rings[r]);
+                        if (pieces.length > 1) {
+                            anyJump = true;
+                            for (var q = 0; q < pieces.length; q++) results.push({ type: 'LineString', coordinates: pieces[q] });
+                        } else {
+                            results.push({ type: 'LineString', coordinates: rings[r] });
+                        }
+                    }
+                };
+                if (geom.type === 'Polygon') {
+                    forEachRing(geom.coordinates);
+                    return anyJump ? results : geom;
+                }
+                if (geom.type === 'MultiPolygon') {
+                    var keepPieces = [];
+                    for (var m = 0; m < geom.coordinates.length; m++) {
+                        var polyRings = geom.coordinates[m];
+                        var localOut = [];
+                        var localJump = false;
+                        for (var rr = 0; rr < polyRings.length; rr++) {
+                            var pieces2 = split(polyRings[rr]);
+                            if (pieces2.length > 1) {
+                                localJump = true;
+                                for (var q2 = 0; q2 < pieces2.length; q2++) localOut.push({ type: 'LineString', coordinates: pieces2[q2] });
+                            } else {
+                                localOut.push({ type: 'LineString', coordinates: polyRings[rr] });
+                            }
+                        }
+                        if (localJump) {
+                            for (var qq = 0; qq < localOut.length; qq++) keepPieces.push(localOut[qq]);
+                        } else {
+                            keepPieces.push({ type: 'MultiPolygon', coordinates: [polyRings] });
+                        }
+                    }
+                    return geom.coordinates.length === keepPieces.length ? (keepPieces.length && keepPieces[0].type === 'MultiPolygon' ? geom : keepPieces) : keepPieces;
+                }
+                return geom;
+            }
             function bakeAdminBoundariesCanvas(features) {
                 var rect = getMapRect();
                 var dpr = window.devicePixelRatio || 1;
@@ -1857,16 +2010,29 @@
                 var margin = 8 / k;
                 var vx0 = -tx / k - margin, vy0 = -ty / k - margin, vx1 = (rect2.width - tx) / k + margin, vy1 = (rect2.height - ty) / k + margin;
                 var bounds = _adminRingBoundsFor(features);
+                var proj = getActiveProjection();
+                var seamJumpPx = Math.min(rect.width, rect.height) * 0.55;
+                var mapDiag = Math.max(rect.width, rect.height);
                 var visibleGeoms = [];
                 for (var bi = 0; bi < features.length; bi++) {
                     var bb = bounds[bi];
                     if (!bb) continue;
                     if (bb[0] <= vx1 && bb[1] <= vy1 && bb[2] >= vx0 && bb[3] >= vy0) {
-                        visibleGeoms.push({ type: features[bi].type, coordinates: features[bi].coordinates });
+                        var g = { type: features[bi].type, coordinates: features[bi].coordinates };
+                        var bw = bb[2] - bb[0], bh = bb[3] - bb[1];
+                        if (bw > mapDiag * 0.15 || bh > mapDiag * 0.15) {
+                            var splitG = _adminSeamSplitGeometries(g, proj, seamJumpPx);
+                            if (Array.isArray(splitG)) {
+                                visibleGeoms.push.apply(visibleGeoms, splitG);
+                            } else {
+                                visibleGeoms.push(splitG || g);
+                            }
+                        } else {
+                            visibleGeoms.push(g);
+                        }
                     }
                 }
                 var merged = { type: 'GeometryCollection', geometries: visibleGeoms };
-                var proj = getActiveProjection();
                 var originalPrecision = proj.precision();
                 proj.precision(5);
                 var canvasPathGen = d3.geoPath(proj, _adminBakedCtx);
@@ -1964,7 +2130,11 @@
             function toggleVolcanoes()        { toggleLayer('volcanoes'); }
             function toggleDesertsForests()   { toggleLayer('desertsForests'); }
             function toggleBorderDisputes()   { toggleLayer('borderDisputes'); }
-            function toggleAdminBoundaries() { toggleLayer('adminBoundaries'); }
+            function toggleAdminBoundaries() {
+                var turningOn = !adminBoundariesVisible;
+                toggleLayer('adminBoundaries');
+                if (turningOn && !adminBoundariesData && !adminBoundariesLoading) showDataLayerLoading('adminBoundaries');
+            }
             function toggleRivers()           { toggleLayer('rivers'); }
 
             function toggleGeopoliticalBlocs() { toggleLayer('geopoliticalBlocs'); }
@@ -2529,6 +2699,7 @@
                 if (d) {
                     countryPaths.filter(p => p === d).classed('highlighted-country', true);
                 }
+                syncCountryGlow();
             }
 
             function updateActiveLayerCount() {
@@ -2746,7 +2917,9 @@
                 var turningOn = !timezonesVisible;
                 toggleLayer('timezones');
                 if (turningOn) {
+                    if (!timezoneData && !timezoneDataLoading) showDataLayerLoading('timezones');
                     ensureTimezoneDataLoaded().then(function() {
+                        hideDataLayerLoading('timezones');
                         if (timezonesVisible) drawTimezones(true);
                     });
                 }
@@ -2903,6 +3076,7 @@
 
                 if (!isDragging) {
                     if (countryLabelSelection) { countryLabelSelection.remove(); countryLabelSelection = null; }
+                    syncCountryGlow();
                     drawCountryLabels(allCountryFeatures);
                     drawPhysicalFeatures();
                     drawCorridors();
@@ -2986,6 +3160,7 @@
                             .on('click', handleCountryActivate);
                     }
                     if (measurePoints.length > 0) { if (!gMeasure) gMeasure = gMap.append('g').attr('class', 'measure-layer'); redrawMeasureLayer(); }
+                    syncCountryGlow();
                     fullGlobeRedraw();
                 } else {
                     var quizBtnEl2 = document.getElementById('quizBtn');
@@ -3051,6 +3226,7 @@
                     }
                     if (countryLabelSelection) { countryLabelSelection.remove(); countryLabelSelection = null; }
                     drawCountryLabels(allCountryFeatures);
+                    syncCountryGlow();
                     updateHashDebounced();
                 }
             }
@@ -3153,6 +3329,14 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
             }
 
             // ── Search & autocomplete ──
+            function positionSuggestionsList() {
+                var rect = searchInput.getBoundingClientRect();
+                suggestionsList.style.position = 'fixed';
+                suggestionsList.style.top = rect.bottom + 'px';
+                suggestionsList.style.left = rect.left + 'px';
+                suggestionsList.style.width = rect.width + 'px';
+                suggestionsList.style.right = 'auto';
+            }
             function setupSearch() {
                 searchInput.addEventListener('input', function() {
                     const val = this.value.trim().toLowerCase();
@@ -3189,6 +3373,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
 
                             suggestionsList.appendChild(li);
                         });
+                        positionSuggestionsList();
                         suggestionsList.style.display = 'block';
                     } else {
                         suggestionsList.style.display = 'none';
@@ -3196,6 +3381,9 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 });
                 searchInput.addEventListener('blur', () => setTimeout(() => suggestionsList.style.display = 'none',
                 200));
+                onWindowResize(() => {
+                    if (suggestionsList.style.display === 'block') positionSuggestionsList();
+                });
             }
 
             // ── Country flag emoji map ──
@@ -3426,10 +3614,39 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 countryPaths.classed('highlighted-country', false);
                 const path = countryPaths.filter(d => d === feature);
                 path.classed('highlighted-country', true);
+                syncCountryGlow();
                 if (highlightTimeout) clearTimeout(highlightTimeout);
                 highlightTimeout = setTimeout(() => {
                     countryPaths.classed('highlighted-country', false);
+                    syncCountryGlow();
                 }, 3000);
+            }
+
+            // SVG-native country glow, drawn as a duplicated wider stroke inside
+            // gCountryGlow (a dedicated <g> rendered just above gCountries).
+            // Replaces the previous CSS `filter: drop-shadow(...)` on the path:
+            // drop-shadow's implicit bounding-box region is browser/GPU dependent
+            // and can paint a sharp-edged rectangle around the element on some
+            // drivers. A plain SVG stroke has no filter region, so it can never
+            // produce that artifact.
+            function syncCountryGlow() {
+                if (!gCountryGlow || !countryPaths) return;
+                gCountryGlow.selectAll('*').remove();
+                const highlighted = countryPaths.filter('.highlighted-country');
+                if (highlighted.empty()) return;
+                const node = highlighted.node();
+                const dAttr = node ? node.getAttribute('d') : null;
+                if (!dAttr) return;
+                gCountryGlow.append('path')
+                    .attr('d', dAttr)
+                    .attr('fill', 'none')
+                    .attr('stroke', '#ffd700')
+                    .attr('stroke-width', isMobile ? 7 : 9)
+                    .attr('stroke-opacity', 0.35)
+                    .attr('vector-effect', 'non-scaling-stroke')
+                    .attr('stroke-linecap', 'round')
+                    .attr('stroke-linejoin', 'round')
+                    .attr('pointer-events', 'none');
             }
 
             // ── Country info panel ──
@@ -3837,10 +4054,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 try {
                     var basePath = window.location.pathname.replace(/\/[^\/]*$/, '/');
                     const localUrl = basePath + 'countries-110m.json';
-                    let response = await fetch(localUrl, { signal: controller.signal });
-                    if (!response.ok) {
-                        response = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json', { signal: controller.signal });
-                    }
+                    const response = await fetch(localUrl, { signal: controller.signal });
                     if (!response.ok) throw new Error('HTTP ' + response.status);
                     const data = await response.json();
                     return topojson.feature(data, data.objects.countries).features;
@@ -4036,7 +4250,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
 
                 function escapeHtml(str) {
                     if (!str) return '';
-                    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+                    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
                 }
                 function handleMeasureClick(e) {
                     if (!measureActive) return;
@@ -4313,6 +4527,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 drawMajorCities();
                 updateLegend();
                 updateCoordinatesDisplay({ clientX: 0, clientY: 0 });
+                syncCountryGlow();
             }
 
             // ── URL hash state management ──
@@ -4597,10 +4812,33 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 });
             }
 
+            function isAnyOverlayOpen() {
+                // Reuses the same state checks as the Escape-key close logic.
+                if (dataTableOverlay && dataTableOverlay.classList.contains('visible')) return true;
+                if (shortcutsOverlay && shortcutsOverlay.classList.contains('visible')) return true;
+                if (layersModal && layersModal.classList.contains('visible')) return true;
+                var overlayCompareEl = document.getElementById('projectionCompareOverlay');
+                if (overlayCompareEl && overlayCompareEl.style.display === 'flex') return true;
+                if (countryPanel && countryPanel.classList.contains('visible')) return true;
+                var overlayOnboardEl = document.getElementById('onboardOverlay');
+                if (overlayOnboardEl && overlayOnboardEl.classList.contains('active')) return true;
+                // Quiz setup / builder / review / results screens (quizActive is guarded separately).
+                var overlayQuizIds = ['quizModeChoiceOverlay', 'quizSetupOverlay', 'quizCustomSetupOverlay', 'quizAuthoringOverlay', 'quizReviewOverlay', 'quizEndOverlay', 'quizResultsOverlay'];
+                for (var overlayQi = 0; overlayQi < overlayQuizIds.length; overlayQi++) {
+                    var overlayQEl = document.getElementById(overlayQuizIds[overlayQi]);
+                    if (overlayQEl && overlayQEl.style.display !== 'none') return true;
+                }
+                return false;
+            }
+
             function setupKeyboard() {
                 document.addEventListener('keydown', function(e) {
-                    if (e.target.tagName === 'INPUT') return;
+                    var tag = e.target.tagName;
+                    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
                     if (quizActive) return;
+                    // Don't fire map shortcuts while any overlay/panel is open.
+                    // Exempt Escape so it can still close the open overlay (see Escape branch below).
+                    if (isAnyOverlayOpen() && e.code !== 'Escape') return;
                     if ((e.ctrlKey || e.metaKey || e.altKey) && !(e.ctrlKey && e.code === 'KeyS')) return;
                     const code = e.code;
                     if (code === 'KeyR') setMode('religion');
@@ -4637,12 +4875,34 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         updateAllStyles(); } else if (code === 'Digit7') { currentReligionFilter = 'other';
                         updateReligionButtons();
                         updateAllStyles();                         } else if (code === 'Escape') {
-                            if (dataTableOverlay && dataTableOverlay.classList.contains('visible')) {
+                            // Close the topmost open overlay/panel only. If nothing is open,
+                            // Escape is a no-op — it must never trigger a full reset.
+                            var escapeQuizOverlays = ['quizModeChoiceOverlay', 'quizSetupOverlay', 'quizCustomSetupOverlay', 'quizAuthoringOverlay', 'quizReviewOverlay', 'quizEndOverlay', 'quizResultsOverlay'];
+                            var escapeQuizOpen = null;
+                            for (var escapeQi = 0; escapeQi < escapeQuizOverlays.length && !escapeQuizOpen; escapeQi++) {
+                                var escapeQEl = document.getElementById(escapeQuizOverlays[escapeQi]);
+                                if (escapeQEl && escapeQEl.style.display !== 'none') escapeQuizOpen = escapeQEl;
+                            }
+                            if (escapeQuizOpen) {
+                                escapeQuizOpen.style.display = 'none';
+                            } else if (layersModal && layersModal.classList.contains('visible')) {
+                                closeLayersModal();
+                            } else if (dataTableOverlay && dataTableOverlay.classList.contains('visible')) {
                                 closeDataTable();
                             } else if (shortcutsOverlay.classList.contains('visible')) {
                                 shortcutsOverlay.classList.remove('visible');
                             } else {
-                                resetBtn.click();
+                                var escapeCompareEl = document.getElementById('projectionCompareOverlay');
+                                if (escapeCompareEl && escapeCompareEl.style.display === 'flex') {
+                                    if (window.closeProjectionCompare) window.closeProjectionCompare();
+                                } else if (countryPanel.classList.contains('visible')) {
+                                    closeCountryPanel();
+                                } else {
+                                    var escapeOnboardEl = document.getElementById('onboardOverlay');
+                                    if (escapeOnboardEl && escapeOnboardEl.classList.contains('active') && window.closeOnboarding) {
+                                        window.closeOnboarding();
+                                    }
+                                }
                             }
                         } else if (code ===
                         'Equal' || code === 'NumpadAdd') { svg.transition().duration(prefersReducedMotion() ? 0 : 300).ease(d3.easeCubicOut).call(zoomBehavior
@@ -5170,6 +5430,8 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
 
                     // Expose for replay button
                     window.startOnboarding = openTutorial;
+                    // Expose so the Escape key handler can close the tutorial too
+                    window.closeOnboarding = closeTutorial;
 
                     // Auto-show on first visit
                     var alreadyDone = false;
@@ -5179,7 +5441,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     }
 
                     // Reposition on resize
-                    window.addEventListener('resize', function() {
+                    onWindowResize(function() {
                         if (isOpen && steps[currentStep]) {
                             var el = steps[currentStep].getEl ? steps[currentStep].getEl() : null;
                             if (el) { positionGlow(el); positionCard(el); }
@@ -7339,6 +7601,8 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 function closeProjectionCompare() {
                     projectionCompareOverlay.style.display = 'none';
                 }
+                // Expose so the Escape key handler can close the compare dock via the same function
+                window.closeProjectionCompare = closeProjectionCompare;
 
                 if (compareProjectionsBtn) {
                     compareProjectionsBtn.addEventListener('click', openProjectionCompare);
@@ -7363,7 +7627,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     projTabMercator.classList.remove('active');
                     renderCompareProjection();
                 });
-                window.addEventListener('resize', function() {
+                onWindowResize(function() {
                     if (projectionCompareOverlay.style.display === 'flex' && compareInitialized) renderCompareProjection();
                 });
             })();
@@ -7418,6 +7682,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                             drawGraticule();
                             if (allCountryFeatures.length) {
                                 gCountries.selectAll('path').attr('d', pathGen);
+                                syncCountryGlow();
                                 if (countryLabelSelection) {
                                     countryLabelSelection.remove();
                                     countryLabelSelection = null;
@@ -7448,14 +7713,13 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     }
                 }
                 syncToolsRowPosition();
-                window.addEventListener('resize', syncToolsRowPosition);
+                onWindowResize(syncToolsRowPosition);
 
                 function syncHeaderHeight() {
                     var hdr = document.querySelector('.header');
                     if (hdr) document.documentElement.style.setProperty('--header-height', hdr.offsetHeight + 'px');
                 }
                 if (typeof ResizeObserver !== 'undefined') {
-                    var headerEl = document.querySelector('.header');
                     if (headerEl) {
                         var headerRO = new ResizeObserver(function() { syncHeaderHeight(); });
                         headerRO.observe(headerEl);
@@ -7762,7 +8026,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     ldm.classList.toggle('visible');
                 }
             });
-            window.addEventListener('resize', function() {
+            onWindowResize(function() {
                 if (langDropdownMenu && langDropdownMenu.classList.contains('visible')) positionLangDropdown();
             });
             document.getElementById('themeToggleBtn').addEventListener('click', function() {
