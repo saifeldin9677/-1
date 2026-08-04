@@ -25,6 +25,9 @@
     --tooltip-border: rgba(255, 255, 255, 0.2);
     --hover-text: #fff; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
     --overlay-text: #fff; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
+    --title-gradient-end: #b0c4de; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
+    --header-title-start: #ffffff; /* fixed: header bg (--brand-primary) is the same navy in every theme; title gradient stays constant */
+    --header-title-end: #9dd0ff; /* fixed: header bg (--brand-primary) is the same navy in every theme; title gradient stays constant */
     --legend-bg: rgba(20, 24, 32, 0.96);
     --shortcuts-bg: #1e2330;
     --onboarding-bg: rgba(30,40,60,0.96);
@@ -57,7 +60,7 @@
     --z-table-header: 1;
     --z-header: 10;
     --z-mobile-nav: 15;
-    --z-controls-important: 20; /* !important inside @media(min-width:1024px) */
+    --z-controls-important: 100; /* was 20 — raised above --z-suggestions-list (50) to prevent overlap with the search dropdown; kept below --z-modal (3000) */
     --z-country-panel: 30;
     --z-suggestions-list: 50;
     --z-popover: 100;
@@ -122,7 +125,8 @@ path:focus-visible {
         --hover-text: #fff; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
         --overlay-text: #fff; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
         --title-gradient-end: #b0c4de; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
-    --title-gradient-end: #b0c4de; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
+        --header-title-start: #ffffff; /* fixed: header bg (--brand-primary) is the same navy in every theme; title gradient stays constant */
+        --header-title-end: #9dd0ff; /* fixed: header bg (--brand-primary) is the same navy in every theme; title gradient stays constant */
         --legend-bg: rgba(255, 255, 255, 0.96);
         --shortcuts-bg: #ffffff;
         --onboarding-bg: rgba(240, 245, 255, 0.96);
@@ -162,6 +166,8 @@ path:focus-visible {
     --hover-text: #fff; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
     --overlay-text: #fff; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
     --title-gradient-end: #b0c4de; /* extracted from hardcoded value, same in both themes for now — revisit if a real light-mode value is wanted later */
+    --header-title-start: #ffffff; /* fixed: header bg (--brand-primary) is the same navy in every theme; title gradient stays constant */
+    --header-title-end: #9dd0ff; /* fixed: header bg (--brand-primary) is the same navy in every theme; title gradient stays constant */
     --legend-bg: rgba(255, 255, 255, 0.96);
     --shortcuts-bg: #ffffff;
     --onboarding-bg: rgba(240, 245, 255, 0.96);
@@ -272,7 +278,7 @@ body {
 .header h1 {
     font-size: 0.9em;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--text), var(--title-gradient-end));
+    background: linear-gradient(135deg, var(--header-title-start), var(--header-title-end));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     white-space: nowrap;
@@ -1159,7 +1165,7 @@ body {
     }
     .controls-bar {
         position: absolute;
-        top: 0;
+        top: var(--header-height);
         left: 0;
         right: 0;
         bottom: auto;
@@ -1181,10 +1187,11 @@ body {
         gap: 6px 16px;
         max-height: none;
         overflow-y: visible;
-        /* FLAG: overrides .controls-bar's base var(--z-controls-bar) (1000) with
-           20 !important inside the desktop media query — a downward override that
-           may indicate an unresolved stacking-context bug; revisit in the
-           !important task. */
+        /* Resolved: previously overrode .controls-bar's base var(--z-controls-bar)
+           (1000) downward to 20 !important; now uses --z-controls-important: 100,
+           which sits above --z-suggestions-list (50) while staying below --z-modal
+           (3000), so the panel cannot be sandwiched by the search suggestions list.
+           The !important is required to beat the base rule's higher stacking value. */
         z-index: var(--z-controls-important) !important;
         margin: 0;
     }

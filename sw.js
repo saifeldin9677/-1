@@ -1,6 +1,6 @@
-const LEPIDOS_CACHE_VERSION = 'lepidos-v6';
-const LEPIDOS_CACHE_PRECACHE = 'lepidos-precache-v6';
-const LEPIDOS_CACHE_RUNTIME = 'lepidos-runtime-v6';
+const LEPIDOS_CACHE_VERSION = 'lepidos-v7';
+const LEPIDOS_CACHE_PRECACHE = 'lepidos-precache-v7';
+const LEPIDOS_CACHE_RUNTIME = 'lepidos-runtime-v7';
 
 const PRECACHE_URLS = [
     './',

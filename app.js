@@ -1903,11 +1903,10 @@
                     closePath: function() {},
                     reset: function() { this.minX = Infinity; this.minY = Infinity; this.maxX = -Infinity; this.maxY = -Infinity; }
                 };
-                var boundsGen = d3.geoPath(proj, collector);
                 var out = new Array(features.length);
                 for (var i = 0; i < features.length; i++) {
                     collector.reset();
-                    var b = boundsGen({ type: 'Feature', geometry: { type: features[i].type, coordinates: features[i].coordinates } });
+                    adminProjectGeometryToPath(collector, proj, { type: features[i].type, coordinates: features[i].coordinates });
                     out[i] = isFinite(collector.minX) ? [collector.minX, collector.minY, collector.maxX, collector.maxY] : null;
                 }
                 _adminRingBounds = out;
@@ -1919,6 +1918,44 @@
                 if (_adminBakeDirty) return true;
                 if (!_adminBakedCanvas || !_adminBakedTransform) return true;
                 return false;
+            }
+            function adminProjectLineToPath(path, proj, line) {
+                if (!line || !line.length) return;
+                var moved = false;
+                for (var i = 0; i < line.length; i++) {
+                    var p = proj(line[i]);
+                    if (isFinite(p[0]) && isFinite(p[1])) {
+                        if (moved) {
+                            path.lineTo(p[0], p[1]);
+                        } else {
+                            path.moveTo(p[0], p[1]);
+                            moved = true;
+                        }
+                    }
+                }
+            }
+            function adminProjectRingsToPath(path, proj, rings) {
+                for (var r = 0; r < rings.length; r++) {
+                    adminProjectLineToPath(path, proj, rings[r]);
+                    path.closePath();
+                }
+            }
+            function adminProjectGeometryToPath(path, proj, geom) {
+                if (!geom) return;
+                var t = geom.type;
+                if (t === 'Polygon') {
+                    adminProjectRingsToPath(path, proj, geom.coordinates);
+                } else if (t === 'MultiPolygon') {
+                    for (var pi = 0; pi < geom.coordinates.length; pi++) {
+                        adminProjectRingsToPath(path, proj, geom.coordinates[pi]);
+                    }
+                } else if (t === 'LineString') {
+                    adminProjectLineToPath(path, proj, geom.coordinates);
+                } else if (t === 'MultiLineString') {
+                    for (var li = 0; li < geom.coordinates.length; li++) {
+                        adminProjectLineToPath(path, proj, geom.coordinates[li]);
+                    }
+                }
             }
             // Waterman butterfly renders the South Pole across several face
             // pieces; a ring that wraps the pole gets bridged with long chords
@@ -1986,6 +2023,29 @@
                     }
                     return geom.coordinates.length === keepPieces.length ? (keepPieces.length && keepPieces[0].type === 'MultiPolygon' ? geom : keepPieces) : keepPieces;
                 }
+                if (geom.type === 'LineString') {
+                    var linePieces = split(geom.coordinates);
+                    if (linePieces.length > 1) {
+                        var lineResults = [];
+                        for (var lp = 0; lp < linePieces.length; lp++) lineResults.push({ type: 'LineString', coordinates: linePieces[lp] });
+                        return lineResults;
+                    }
+                    return geom;
+                }
+                if (geom.type === 'MultiLineString') {
+                    var mlResults = [];
+                    var mlJump = false;
+                    for (var ml = 0; ml < geom.coordinates.length; ml++) {
+                        var mlPieces = split(geom.coordinates[ml]);
+                        if (mlPieces.length > 1) {
+                            mlJump = true;
+                            for (var mq = 0; mq < mlPieces.length; mq++) mlResults.push({ type: 'LineString', coordinates: mlPieces[mq] });
+                        } else {
+                            mlResults.push({ type: 'LineString', coordinates: geom.coordinates[ml] });
+                        }
+                    }
+                    return mlJump ? mlResults : geom;
+                }
                 return geom;
             }
             function bakeAdminBoundariesCanvas(features) {
@@ -2032,18 +2092,15 @@
                         }
                     }
                 }
-                var merged = { type: 'GeometryCollection', geometries: visibleGeoms };
-                var originalPrecision = proj.precision();
-                proj.precision(5);
-                var canvasPathGen = d3.geoPath(proj, _adminBakedCtx);
                 _adminBakedCtx.beginPath();
-                canvasPathGen(merged);
+                for (var vi = 0; vi < visibleGeoms.length; vi++) {
+                    adminProjectGeometryToPath(_adminBakedCtx, proj, visibleGeoms[vi]);
+                }
                 _adminBakedCtx.strokeStyle = MAP_COLORS.adminBoundaries.stroke;
                 _adminBakedCtx.lineWidth = (isMobile ? 0.4 : 0.6) / k;
                 _adminBakedCtx.globalAlpha = 0.5;
                 _adminBakedCtx.setLineDash([2 / k, 2 / k]);
                 _adminBakedCtx.stroke();
-                proj.precision(originalPrecision);
                 _adminBakedTransform = { k: k, tx: tx, ty: ty };
                 _adminBakeDirty = false;
             }
@@ -2104,21 +2161,18 @@
                 }
                 adminBoundariesCtx.clearRect(0, 0, rect.width, rect.height);
                 if (!adminBoundariesVisible) return;
-                var merged = getMergedAdminBoundaries(features);
                 var proj = getActiveProjection();
-                var originalPrecision = proj.precision();
-                proj.precision(5);
-                var canvasPathGen = d3.geoPath(proj, adminBoundariesCtx);
                 adminBoundariesCtx.save();
                 adminBoundariesCtx.beginPath();
-                canvasPathGen(merged);
+                for (var gi = 0; gi < features.length; gi++) {
+                    adminProjectGeometryToPath(adminBoundariesCtx, proj, { type: features[gi].type, coordinates: features[gi].coordinates });
+                }
                 adminBoundariesCtx.strokeStyle = MAP_COLORS.adminBoundaries.stroke;
                 adminBoundariesCtx.lineWidth = isMobile ? 0.4 : 0.6;
                 adminBoundariesCtx.globalAlpha = 0.5;
                 adminBoundariesCtx.setLineDash([2, 2]);
                 adminBoundariesCtx.stroke();
                 adminBoundariesCtx.restore();
-                proj.precision(originalPrecision);
             }
 
             // ── Toggle functions ──
