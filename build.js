@@ -14,14 +14,17 @@ function run(cmd) {
     execSync(cmd, { cwd: SRC, stdio: 'inherit' });
 }
 
-console.log('Minifying app.js ...');
-run('npx terser app.js -o dist/app.js -c -m --comments "/^!|^[\\^]/"');
+const MODULES = ['data.js', 'state.js', 'i18n.js', 'layers.js', 'map-core.js', 'quiz.js', 'export.js', 'ui.js', 'main.js'];
 
-console.log('Minifying data.js ...');
-run('npx terser data.js -o dist/data.js -c -m --comments "/^!|^[\\^]/"');
+for (const mod of MODULES) {
+    console.log(`Minifying ${mod} ...`);
+    run(`npx terser ${mod} -o dist/${mod} -c -m --comments "/^!|^[\\^]/"`);
+}
 
 console.log('Minifying style.css ...');
 run('npx csso style.css -o dist/style.css');
+
+if (fs.existsSync(path.join(DIST, 'app.js'))) fs.rmSync(path.join(DIST, 'app.js'));
 
 console.log('Minifying index.html ...');
 run('npx html-minifier-terser --collapse-whitespace --remove-comments --remove-redundant-attributes --minify-css true --minify-js false index.html -o dist/index.html');
@@ -60,7 +63,7 @@ console.log('  Copied icons.js');
         console.log('  Skipped ' + f + ' (not found in source)');
     }
 });
-const files = ['app.js', 'data.js', 'style.css', 'index.html'];
+const files = [...MODULES, 'style.css', 'index.html'];
 const origTotal = files.reduce((s, f) => s + fs.statSync(path.join(SRC, f)).size, 0);
 const distTotal = files.reduce((s, f) => s + fs.statSync(path.join(DIST, f)).size, 0);
 files.forEach(f => {

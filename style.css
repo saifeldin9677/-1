@@ -58,13 +58,13 @@
        intended stacking slot is readable and stays consistent. The two
        `!important` entries below are flagged inline; do not renumber. */
     --z-table-header: 1;
-    --z-header: 10;
+    --z-header: 150; /* header is a flex item, so this z-index caps every child — including the search suggestions list — above the controls bar (--z-controls-important: 100) but below --z-toolbar (999) */
     --z-mobile-nav: 15;
-    --z-controls-important: 100; /* was 20 — raised above --z-suggestions-list (50) to prevent overlap with the search dropdown; kept below --z-modal (3000) */
+    --z-controls-important: 100; /* keeps the controls bar above the base map but below --z-suggestions-list (150) so the search dropdown stays on top of it */
     --z-country-panel: 30;
-    --z-suggestions-list: 50;
+    --z-suggestions-list: 150; /* inside the .header stacking context (--z-header: 150), so search results drop over the menu bar; kept below --z-modal (3000) */
     --z-popover: 100;
-    --z-copy-notification: 200;
+    --z-copy-notification: 1100; /* above --z-coordinates-display (1000) so the toast is never hidden under the coords pill */
     --z-measure-result-label: 500;
     --z-toolbar: 999;
     --z-coordinates-display: 1000;
@@ -241,7 +241,7 @@ body {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: safe center;
     gap: 6px;
     flex: 1;
 }
@@ -352,7 +352,7 @@ body {
     padding: 6px 10px;
     font-size: 0.75em;
     font-weight: bold;
-    color: rgba(255,255,255,0.7);
+    color: var(--text-secondary);
     z-index: var(--z-toolbar);
     pointer-events: none;
 }
@@ -399,7 +399,7 @@ body {
     box-shadow: var(--shadow-sm);
 }
 .zoom-btn:hover {
-    background: rgba(40, 46, 58, 0.95);
+    background: var(--btn-hover);
     transform: scale(1.08);
 }
 .search-box {
@@ -527,7 +527,7 @@ body {
     bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(10, 14, 20, 0.92);
+    background: var(--panel-overlay-92);
     backdrop-filter: none;
     padding: 4px 16px;
     border-radius: var(--radius-pill);
@@ -1140,7 +1140,7 @@ body {
     .tools-row-start { flex-shrink: 0; }
     .tools-row-middle {
         flex-wrap: nowrap;
-        justify-content: center;
+        justify-content: safe center;
         overflow-x: auto;
         scrollbar-width: none;
         flex: 1;
@@ -1165,7 +1165,10 @@ body {
     }
     .controls-bar {
         position: absolute;
-        top: var(--header-height);
+        /* Containing block is #mapContainer, which already starts just below the
+           header, so top: 0 hugs the header. Previously `top: var(--header-height)`
+           added the header height AGAIN, leaving a one-header-height gap. */
+        top: 0;
         left: 0;
         right: 0;
         bottom: auto;
@@ -1187,11 +1190,12 @@ body {
         gap: 6px 16px;
         max-height: none;
         overflow-y: visible;
-        /* Resolved: previously overrode .controls-bar's base var(--z-controls-bar)
-           (1000) downward to 20 !important; now uses --z-controls-important: 100,
-           which sits above --z-suggestions-list (50) while staying below --z-modal
-           (3000), so the panel cannot be sandwiched by the search suggestions list.
-           The !important is required to beat the base rule's higher stacking value. */
+        /* Resolved: the controls bar sits above the base map via
+           var(--z-controls-important) (100) but BELOW the search suggestions
+           list (--z-suggestions-list: 150), so typing in the header search box
+           drops the results over the menu bar instead of behind it.
+           The !important is required to beat the base rule's var(--z-controls-bar)
+           (1000) while keeping the panel's effective z-index at 100. */
         z-index: var(--z-controls-important) !important;
         margin: 0;
     }
@@ -1254,7 +1258,7 @@ body {
         border: 1px solid rgba(255, 255, 255, 0.15);
     }
     .zoom-btn:hover {
-        background: rgba(50, 56, 70, 0.95);
+        background: var(--btn-hover);
         transform: scale(1.08);
     }
     .legend {
@@ -1335,6 +1339,16 @@ body {
     }
     .controls-bar .layers-row {
         display: none;
+    }
+    /* At tablet widths #toolsRow (search box + tools) lives inside the controls
+       bar (JS move at <1024), so let the search suggestions escape the bar
+       instead of being clipped by its scroll. The bar also drops below the
+       zoom controls/FABs so an open menu no longer covers the zoom buttons
+       (matches the desktop stacking reasoning for --z-controls-important). */
+    .controls-bar {
+        max-height: none;
+        overflow-y: visible;
+        z-index: var(--z-controls-important) !important;
     }
 }
 .legend-gradient-bar {
@@ -1589,6 +1603,24 @@ body {
     outline: 2px solid var(--brand-accent);
     outline-offset: 2px;
 }
+.skip-link {
+    position: fixed;
+    left: -9999px;
+    top: 8px;
+    z-index: var(--z-modal);
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    background: var(--brand-accent);
+    color: #fff;
+    font-size: 0.85em;
+    font-weight: 700;
+    text-decoration: none;
+}
+.skip-link:focus-visible {
+    left: 8px;
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
 .layers-modal {
     position: fixed;
     inset: 0;
@@ -1642,6 +1674,225 @@ body {
 }
 .layers-modal-close:hover {
     color: var(--text);
+}
+.about-modal .layers-modal-content {
+    max-width: 560px;
+}
+.about-section {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+.about-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+.about-section-title {
+    margin: 0 0 6px 0;
+    font-size: 0.75em;
+    font-weight: 700;
+    color: var(--brand-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.about-section p {
+    margin: 4px 0;
+    font-size: 0.78em;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+.about-meta-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4px;
+    font-size: 0.76em;
+}
+.about-meta-table th {
+    text-align: start;
+    font-weight: 700;
+    color: var(--brand-accent);
+    padding: 6px 8px;
+    border-bottom: 2px solid var(--border);
+    font-size: 0.92em;
+}
+.about-meta-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    line-height: 1.5;
+    vertical-align: top;
+}
+.about-meta-table .about-meta-layer {
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+}
+.about-meta-table tr:last-child td {
+    border-bottom: none;
+}
+.preset-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    background: var(--btn-bg);
+}
+.preset-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+.preset-name {
+    font-size: 0.82em;
+    font-weight: 600;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.preset-date {
+    font-size: 0.68em;
+    color: var(--text-secondary);
+}
+.preset-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.preset-delete {
+    color: #e05555;
+}
+.measure-toolbar {
+    position: fixed;
+    bottom: 92px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: var(--panel-overlay-96);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: var(--z-coordinates-display);
+    flex-wrap: wrap;
+    max-width: 46vw;
+}
+.measure-seg {
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+    background: var(--btn-bg);
+    border-radius: var(--radius-sm);
+}
+.measure-mode-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.72em;
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+}
+.measure-mode-btn.toggle-on {
+    background: var(--btn-active);
+    color: var(--brand-accent);
+    font-weight: 700;
+}
+.measure-mode-btn:hover {
+    color: var(--text);
+}
+body.measure-active .measure-toolbar { display: flex; }
+.annotation-toolbar {
+    bottom: 148px;
+}
+body.annotate-active .annotation-toolbar { display: flex; }
+.annotation-pin-circle {
+    fill: #eab308;
+    stroke: #fff;
+    stroke-width: 1.5;
+}
+.annotation-pin-label {
+    fill: var(--text, #e0e8f0);
+    font-size: 11px;
+    font-weight: 600;
+    paint-order: stroke;
+    stroke: var(--map-bg, #16202b);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+.annotation-region-poly {
+    fill: rgba(234, 179, 8, 0.15);
+    stroke: #eab308;
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+.annotation-region-vertex {
+    fill: #eab308;
+    stroke: #fff;
+    stroke-width: 1;
+}
+.annotation-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85em;
+}
+.annotation-item-type {
+    font-size: 0.75em;
+    font-weight: 700;
+    color: var(--brand-accent);
+    flex-shrink: 0;
+    width: 42px;
+}
+.annotation-item-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text, #e0e8f0);
+}
+.annotation-item-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-shrink: 0;
+}
+.annotation-vis-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.7em;
+    padding: 3px 6px;
+    cursor: pointer;
+}
+.annotation-del-btn {
+    background: none;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    border-radius: var(--radius-sm);
+    color: #ef4444;
+    font-size: 0.7em;
+    padding: 3px 6px;
+    cursor: pointer;
+}
+.annotation-hidden-label {
+    font-size: 0.65em;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 .layers-category {
     margin-bottom: 12px;
@@ -1912,7 +2163,7 @@ body {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.2);
+    background: color-mix(in srgb, var(--text-secondary) 30%, transparent);
     transition: all var(--dur-base) var(--ease);
 }
 .onboard-dot.active {
@@ -2053,7 +2304,7 @@ body {
     overflow-y: auto;
     box-shadow: var(--shadow-lg);
     color: var(--text, #e0e8f0);
-    text-align: right;
+    text-align: start;
 }
 .quiz-panel-title {
     margin: 0 0 16px 0;
@@ -2327,7 +2578,7 @@ body {
     color: var(--brand-accent);
 }
 .quiz-missed-wrap {
-    text-align: right;
+    text-align: start;
     margin-bottom: 16px;
 }
 .quiz-missed-wrap h4 {
@@ -2502,6 +2753,11 @@ body {
 .quiz-active #toolsRow {
     display: none;
 }
+.quiz-active .mobile-topbar,
+.quiz-active .mobile-bottom-nav,
+.quiz-active .mobile-mode-sheet {
+    display: none !important;
+}
 .quiz-active #tooltip {
     display: none;
 }
@@ -2591,7 +2847,7 @@ body {
     flex-direction: column;
     overflow: hidden;
     color: var(--text, #e0e8f0);
-    text-align: right;
+    text-align: start;
 }
 .quiz-custom-main-header {
     display: flex;
@@ -2731,7 +2987,7 @@ body {
     flex-direction: column;
     overflow: hidden;
     color: var(--text, #e0e8f0);
-    text-align: right;
+    text-align: start;
 }
 .quiz-custom-sidebar-header {
     display: flex;
@@ -2754,6 +3010,31 @@ body {
 }
 .quiz-custom-sidebar-body .quiz-form-row {
     margin-bottom: 12px;
+}
+
+.quiz-library-actions {
+    display: flex;
+    gap: 8px;
+}
+.quiz-library-btn {
+    flex: 1;
+    font-size: 0.72em;
+    padding: 5px 8px;
+    color: var(--brand-accent);
+    border-color: rgba(20, 184, 166, 0.35);
+}
+.quiz-review-provenance {
+    font-size: 0.75em;
+    color: var(--brand-accent, #14B8A6);
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+.quiz-results-export-btn {
+    font-size: 0.8em;
+    padding: 7px 14px;
+    color: var(--brand-accent);
+    border-color: rgba(20, 184, 166, 0.35);
+    margin-right: 10px;
 }
 
 /* Close button */
@@ -3089,7 +3370,7 @@ body {
 .quiz-results-table td {
     padding: 8px 10px;
     border-bottom: 1px solid var(--border);
-    text-align: left;
+    text-align: start;
 }
 .quiz-results-table th {
     color: var(--text-secondary);

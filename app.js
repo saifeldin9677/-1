@@ -1,5 +1,7 @@
-        (function() {
+import { i18n, arabicNames, russianNames, uzbekNames, religionByCountry, denominationByCountry, MAP_COLORS, religionColors, denominationColors, elevationByCountry, densityByCountry, precipitationByCountry, tempByCountry, gdpByCountry, hdiByCountry, timezoneOffsets, corridorsData, mountainRanges, rivers, naturalResourcesData, ethnicGroupsData, oceanCurrentsData, windsData, earthquakesData, tectonicPlatesData, volcanoesData, additionalWaterwaysData, geopoliticalBlocsData, desertsForestsData, borderDisputesData, densitySpots, majorCitiesData, countryInfo, continentByCountry, governmentByCountry, continentArabic, governmentArabic, religionRussian, denominationRussian, continentRussian, governmentRussian, densitySpotEnglish, densitySpotRussian, densitySpotUzbek, featureRussian, capitalsRussian, langsRussian, continentUzbek, governmentUzbek, religionUzbek, denominationUzbek, featureUzbek, capitalsUzbek, langsUzbek, denominationArabic, religionArabic, labelPositions, featureSpanish, spanishNames, densitySpotSpanish, continentSpanish, governmentSpanish, religionSpanish, denominationSpanish, capitalsSpanish, langsSpanish } from './data.js';
             const BASE = window.__BASE_PATH || './';
+            // Mirrors the version in package.json; shown in the About panel and PDF exports.
+            const APP_VERSION = '1.0.0';
 
             // ── Global error safety net ─────────────────────────────────
             // Catches anything that escapes the app's specific try/catch and
@@ -254,11 +256,20 @@
             let quizActive = false;
             let measureActive = false;
             let measurePoints = [];
+            let measureKind = 'distance';
+            let measureGeodesic = true;
+            let measureFinalized = false;
             let gMeasure = null;
+            let annotateActive = false;
+            let annotateKind = 'pin';
+            let annotatePoints = [];
+            let gAnnotations = null;
+            let annotationsList = [];
             let presentationModeActive = false;
             let exportInProgress = false;
             let currentSessionCode = null;
             let currentStudentName = null;
+            let lastQuizResults = null;
             let quizStartTime = null;
             let coordsVisible = true;
             let adminBoundariesData = null;
@@ -423,6 +434,39 @@
                 let s = i18n[lang]?.[key] || i18n.en[key] || key;
                 for (let [k, v] of Object.entries(params)) s = s.replace(`{${k}}`, v);
                 return s;
+            }
+
+            // ── Intl formatting & pluralization helpers ──
+            const INTl_LOCALES = { ar: 'ar-EG-u-nu-latn', en: 'en', ru: 'ru', uz: 'uz-UZ', es: 'es' };
+            function intlLocale() { return INTl_LOCALES[lang] || 'en'; }
+            function fmtNum(n) {
+                if (n == null || isNaN(n)) return '';
+                try { return new Intl.NumberFormat(intlLocale()).format(n); } catch(e) { return String(n); }
+            }
+            function fmtDate(d) {
+                if (!d) return '';
+                try { return new Intl.DateTimeFormat(intlLocale(), { dateStyle: 'short' }).format(new Date(d)); } catch(e) { return new Date(d).toLocaleDateString(); }
+            }
+            function fmtTime(seconds) {
+                if (seconds == null || isNaN(seconds)) return '';
+                var s = Math.max(0, Math.round(seconds));
+                var m = Math.floor(s / 60), r = s % 60;
+                return m + ':' + (r < 10 ? '0' : '') + r;
+            }
+            function pluralize(count, one, few, many) {
+                var n = Math.abs(count);
+                if (lang === 'ar') {
+                    if (n === 1) return one;
+                    if (n <= 10) return few || many;
+                    return many;
+                }
+                if (lang === 'ru') {
+                    if (n === 1) return one;
+                    var m10 = n % 10, m100 = n % 100;
+                    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few || many;
+                    return many;
+                }
+                return n === 1 ? one : many;
             }
 
             // ── Name resolution & localization helpers ──
@@ -1441,7 +1485,7 @@
                     html += '<p><strong>'+t('currentType')+':</strong> '+t('gyre')+'</p>';
                 } else if (d.type==='trench') {
                     html += '<p><strong>'+t('currentType')+':</strong> '+t('trenchDepth')+'</p>';
-                    if (d.depth) html += '<p><strong>'+t('trenchDepth')+':</strong> '+d.depth.toLocaleString('en')+' '+t('elevationUnit')+'</p>';
+                    if (d.depth) html += '<p><strong>'+t('trenchDepth')+':</strong> '+fmtNum(d.depth)+' '+t('elevationUnit')+'</p>';
                 }
                 if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:lang==='ru'?(d.description_ru||d.description_en):lang==='uz'?(d.description_uz||d.description_en):lang==='es'?(d.description_es||d.description_en):d.description_en)+'</p>';
                 _lastPanelRenderTime = performance.now();
@@ -1586,7 +1630,7 @@
                 selectedFeatureType = 'volcano';
                 var displayName = lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;
                 var html = '<h3>🌋 '+displayName+'</h3>';
-                if (d.elevation) html += '<p><strong>'+t('tooltipElevation')+':</strong> '+d.elevation.toLocaleString('en')+' '+t('elevationUnit')+'</p>';
+                if (d.elevation) html += '<p><strong>'+t('tooltipElevation')+':</strong> '+fmtNum(d.elevation)+' '+t('elevationUnit')+'</p>';
                 if (d.type) html += '<p><strong>'+t('volcanoType')+':</strong> '+(lang==='ar'?d.type_ar||d.type:lang==='ru'?(d.type_ru||d.type_en||d.type):lang==='uz'?(d.type_uz||d.type_en||d.type):lang==='es'?(d.type_es||d.type_en||d.type):d.type_en||d.type)+'</p>';
                 if (d.lastEruption) html += '<p><strong>'+t('lastEruption')+':</strong> '+d.lastEruption+'</p>';
                 if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:lang==='ru'?(d.description_ru||d.description_en):lang==='uz'?(d.description_uz||d.description_en):lang==='es'?(d.description_es||d.description_en):d.description_en)+'</p>';
@@ -1686,7 +1730,7 @@
                 var displayName = lang==='ar'?d.name:lang==='ru'?(d.name_ru||d.name_en):lang==='uz'?(d.name_uz||d.name_en):lang==='es'?(d.name_es||d.name_en):d.name_en;
                 var typeIcon = d.type==='desert'?'🏜️':'🌲';
                 var html = '<h3>'+typeIcon+' '+displayName+'</h3>';
-                if (d.area_km2) html += '<p><strong>'+t('areaTitle')+':</strong> '+d.area_km2.toLocaleString('en')+' '+t('km2')+'</p>';
+                if (d.area_km2) html += '<p><strong>'+t('areaTitle')+':</strong> '+fmtNum(d.area_km2)+' '+t('km2')+'</p>';
                 if (d.countries_ar||d.countries_en) html += '<p><strong>'+t('featureCountries')+':</strong> '+(lang==='ar'?d.countries_ar:lang==='ru'?(d.countries_ru||d.countries_en):lang==='uz'?(d.countries_uz||d.countries_en):lang==='es'?(d.countries_es||d.countries_en):d.countries_en)+'</p>';
                 if (d.biome_ar||d.biome_en) html += '<p><strong>'+t('biome')+':</strong> '+(lang==='ar'?d.biome_ar:lang==='ru'?(d.biome_ru||d.biome_en):lang==='uz'?(d.biome_uz||d.biome_en):lang==='es'?(d.biome_es||d.biome_en):d.biome_en)+'</p>';
                 if (d.description_ar||d.description_en) html += '<p><strong>'+t('featureDescription')+':</strong> '+(lang==='ar'?d.description_ar:lang==='ru'?(d.description_ru||d.description_en):lang==='uz'?(d.description_uz||d.description_en):lang==='es'?(d.description_es||d.description_en):d.description_en)+'</p>';
@@ -2239,13 +2283,13 @@
                 const displayName = lang === 'ar' ? data.name : lang === 'ru' ? (data.name_ru || data.name_en || data.name) : lang === 'uz' ?(data.name_uz || data.name_en || data.name): lang === 'es' ?(data.name_es || data.name_en || data.name) : (data.name_en || data.name);
                 let html = `<h3>${isMountain ? t('featureMountainTitle') : t('featureRiverTitle')}: ${displayName}</h3>`;
                 if (data.length) {
-                    html += `<p><strong>${t('featureLength')}:</strong> ${data.length.toLocaleString('en')} ${t('featureKm')}</p>`;
+                    html += `<p><strong>${t('featureLength')}:</strong> ${fmtNum(data.length)} ${t('featureKm')}</p>`;
                 }
                 if (isMountain) {
                     if (data.highestPeak) {
                         const peakName = lang === 'ar' ? data.highestPeak : lang === 'ru' ? (data.highestPeak_ru || data.highestPeak_en || data.highestPeak) : lang === 'uz' ?(data.highestPeak_uz || data.highestPeak_en || data.highestPeak): lang === 'es' ?(data.highestPeak_es || data.highestPeak_en || data.highestPeak) : (data.highestPeak_en || data.highestPeak);
                         html += `<p><strong>${t('featureHighestPeak')}:</strong> ${peakName}`;
-                        if (data.highestElevation) html += ` (${data.highestElevation.toLocaleString('en')} ${t('elevationUnit')})`;
+                        if (data.highestElevation) html += ` (${fmtNum(data.highestElevation)} ${t('elevationUnit')})`;
                         html += `</p>`;
                     }
                 } else {
@@ -2258,10 +2302,10 @@
                         html += `<p><strong>${t('featureMouth')}:</strong> ${mth}</p>`;
                     }
                     if (data.discharge) {
-                        html += `<p><strong>${t('featureDischarge')}:</strong> ${data.discharge.toLocaleString('en')} ${t('featureM3s')}</p>`;
+                        html += `<p><strong>${t('featureDischarge')}:</strong> ${fmtNum(data.discharge)} ${t('featureM3s')}</p>`;
                     }
                     if (data.basinArea) {
-                        html += `<p><strong>${t('featureBasinArea')}:</strong> ${data.basinArea.toLocaleString('en')} ${t('featureKm2')}</p>`;
+                        html += `<p><strong>${t('featureBasinArea')}:</strong> ${fmtNum(data.basinArea)} ${t('featureKm2')}</p>`;
                     }
                 }
                 if (data.countries_ar || data.countries_en) {
@@ -3174,6 +3218,8 @@
                     var quizBtnEl = document.getElementById('quizBtn');
                     if (quizBtnEl) { quizBtnEl.disabled = true; quizBtnEl.classList.add('quiz-disabled'); quizBtnEl.title = t('quizUnavailableOnGlobe'); }
                     clearMeasurement();
+                    if (annotateActive) toggleAnnotationMode();
+                    clearAnnotationsView();
                     var lbl = document.getElementById('headerProjectionLabel');
                     if (lbl) { lbl.setAttribute('data-i18n', 'globeProjectionType'); lbl.textContent = t('globeProjectionType'); }
                     initGlobeProjection();
@@ -3281,6 +3327,7 @@
                     if (countryLabelSelection) { countryLabelSelection.remove(); countryLabelSelection = null; }
                     drawCountryLabels(allCountryFeatures);
                     syncCountryGlow();
+                    redrawAnnotations();
                     updateHashDebounced();
                 }
             }
@@ -3324,6 +3371,12 @@
             }
             function applyLanguage() {
                 applyDataI18nAttributes();
+                const aboutModalEl = document.getElementById('aboutModal');
+                if (aboutModalEl && aboutModalEl.classList.contains('visible')) renderAboutModal();
+                const presetsModalEl = document.getElementById('presetsModal');
+                if (presetsModalEl && presetsModalEl.classList.contains('visible')) renderPresetsModal();
+                const annotationsModalEl = document.getElementById('annotationsModal');
+                if (annotationsModalEl && annotationsModalEl.classList.contains('visible')) renderAnnotationsModal();
                 document.documentElement.setAttribute('lang', lang === 'ar' ? 'ar' : lang === 'ru' ? 'ru' : lang === 'uz' ? 'uz' : lang === 'es' ? 'es' : 'en');
                 document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
                 document.title = t('appName');
@@ -3719,6 +3772,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
                         countryPanel.classList.add('visible');
+                        updateHash();
                     });
                 });
             }
@@ -3743,6 +3797,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 compareCountry = null;
                 highlightSelectedCountry(null);
                 closeFeatureDetail();
+                updateHash();
             }
 
             function renderCountryPanel(d) {
@@ -3830,7 +3885,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 html += `<p><strong>${t('government')}:</strong> ${govLabel}</p>`;
                 html += `<p><strong>${t('capital')}:</strong> ${capital}</p>`;
                 html +=
-                    `<p><strong>${t('areaTitle')}:</strong> ${area ? area.toLocaleString('en') : t('unknown')} ${t('km2')}</p>`;
+                    `<p><strong>${t('areaTitle')}:</strong> ${area ? fmtNum(area) : t('unknown')} ${t('km2')}</p>`;
                 html +=
                     `<p><strong>${t('densityTitle')}:</strong> ${density !== null ? density + ' ' + t('densityUnit') : t('unknown')}</p>`;
                 html +=
@@ -3838,7 +3893,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 html += `<p><strong>${t('languageTitle')}:</strong> ${language}</p>`;
                 html += `<p><strong>🕒 ${t('localTime')}:</strong> ${localTimeStr}</p>`;
                 const gdpVal = getGDP(name);
-                if (gdpVal !== null) html += `<p><strong>💰 ${t('tooltipGDP')}:</strong> $${gdpVal.toLocaleString('en-US')}</p>`;
+                if (gdpVal !== null) html += `<p><strong>💰 ${t('tooltipGDP')}:</strong> $${fmtNum(gdpVal)}</p>`;
                 const hdiVal = getHDI(name);
                 if (hdiVal !== null) html += `<p><strong>📊 ${t('tooltipHDI')}:</strong> ${hdiVal.toFixed(3)}</p>`;
                 const tzLabel = timezoneOffsets[name] || timezoneOffsets[cleanName];
@@ -3946,8 +4001,8 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 const bar1Area = area1 ? (area1 / maxArea * 100) : 0;
                 const bar2Area = area2 ? (area2 / maxArea * 100) : 0;
                 html += '<tr><td style="padding:4px;">' + e(t('areaTitle')) + '</td>' +
-                    '<td style="padding:4px;">' + (area1 ? e(area1.toLocaleString('en')) + ' km²' : '?') + '<br><span class="compare-bar" style="width:' + bar1Area + '%;background:#42a5f5;"></span></td>' +
-                    '<td style="padding:4px;">' + (area2 ? e(area2.toLocaleString('en')) + ' km²' : '?') + '<br><span class="compare-bar" style="width:' + bar2Area + '%;background:#42a5f5;"></span></td></tr>';
+                    '<td style="padding:4px;">' + (area1 ? e(fmtNum(area1)) + ' km²' : '?') + '<br><span class="compare-bar" style="width:' + bar1Area + '%;background:#42a5f5;"></span></td>' +
+                    '<td style="padding:4px;">' + (area2 ? e(fmtNum(area2)) + ' km²' : '?') + '<br><span class="compare-bar" style="width:' + bar2Area + '%;background:#42a5f5;"></span></td></tr>';
 
                 const bar1Dens = dens1 ? (dens1 / maxDens * 100) : 0;
                 const bar2Dens = dens2 ? (dens2 / maxDens * 100) : 0;
@@ -3967,8 +4022,8 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 const gdp1 = getGDP(name1);
                 const gdp2 = getGDP(name2);
                 html += '<tr><td style="padding:4px;">💰 ' + e(t('tooltipGDP')) + '</td>' +
-                    '<td style="padding:4px;">' + (gdp1 !== null ? '$' + e(gdp1.toLocaleString('en-US')) : '?') + '</td>' +
-                    '<td style="padding:4px;">' + (gdp2 !== null ? '$' + e(gdp2.toLocaleString('en-US')) : '?') + '</td></tr>';
+                    '<td style="padding:4px;">' + (gdp1 !== null ? '$' + e(fmtNum(gdp1)) : '?') + '</td>' +
+                    '<td style="padding:4px;">' + (gdp2 !== null ? '$' + e(fmtNum(gdp2)) : '?') + '</td></tr>';
                 const hdi1 = getHDI(name1);
                 const hdi2 = getHDI(name2);
                 html += '<tr><td style="padding:4px;">📊 ' + e(t('tooltipHDI')) + '</td>' +
@@ -4117,7 +4172,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 }
             }
 
-            function haversineDistanceKm(coord1, coord2) {
+                function haversineDistanceKm(coord1, coord2) {
                     var R = 6371;
                     var toRad = function(d) { return d * Math.PI / 180; };
                     var dLat = toRad(coord2[1] - coord1[1]);
@@ -4129,17 +4184,293 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
                     return R * c;
                 }
+                // Local planar scale: km per projected map unit, calibrated around a center
+                // point using a tiny lon offset so the two distance modes are comparable.
+                function projectedScaleKmPerUnit(proj, center) {
+                    if (!center || isNaN(center[0]) || isNaN(center[1])) return 0;
+                    var p0 = proj(center);
+                    var p1 = proj([center[0] + 0.001, center[1]]);
+                    if (!p0 || !p1 || isNaN(p0[0]) || isNaN(p0[1]) || isNaN(p1[0]) || isNaN(p1[1])) return 0;
+                    var dProj = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+                    if (dProj === 0) return 0;
+                    return haversineDistanceKm(center, [center[0] + 0.001, center[1]]) / dProj;
+                }
+                function planarDistanceKm(p1, p2, proj) {
+                    var xy1 = proj(p1), xy2 = proj(p2);
+                    if (!xy1 || !xy2 || isNaN(xy1[0]) || isNaN(xy2[0])) return NaN;
+                    var mid = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+                    var scale = projectedScaleKmPerUnit(proj, mid);
+                    if (scale === 0) return NaN;
+                    return Math.hypot(xy2[0] - xy1[0], xy2[1] - xy1[1]) * scale;
+                }
+                // Spherical polygon area via latitude-weighted longitude differences
+                // (sum over edges: (dLon) * (2 + sin(lat1) + sin(lat2)) * r^2 / 2).
+                function geodesicPolygonAreaKm2(points) {
+                    if (points.length < 3) return 0;
+                    var R = 6371;
+                    var toRad = function(d) { return d * Math.PI / 180; };
+                    var sum = 0;
+                    for (var i = 0; i < points.length; i++) {
+                        var p1 = points[i];
+                        var p2 = points[(i + 1) % points.length];
+                        sum += (toRad(p2[0]) - toRad(p1[0])) * (2 + Math.sin(toRad(p1[1])) + Math.sin(toRad(p2[1])));
+                    }
+                    return Math.abs(sum) * R * R / 2;
+                }
+                function planarPolygonAreaKm2(points, proj) {
+                    if (points.length < 3) return 0;
+                    var xy = points.map(function(p) { return proj(p); });
+                    if (xy.some(function(v) { return !v || isNaN(v[0]) || isNaN(v[1]); })) return NaN;
+                    var sum = 0;
+                    for (var i = 0; i < xy.length; i++) {
+                        var a = xy[i], b = xy[(i + 1) % xy.length];
+                        sum += a[0] * b[1] - b[0] * a[1];
+                    }
+                    var mid = [0, 0];
+                    points.forEach(function(p) { mid[0] += p[0]; mid[1] += p[1]; });
+                    mid[0] /= points.length; mid[1] /= points.length;
+                    var scale = projectedScaleKmPerUnit(proj, mid);
+                    if (scale === 0) return NaN;
+                    return Math.abs(sum) / 2 * scale * scale;
+                }
+                function measureDistanceKm(p1, p2, proj) {
+                    return measureGeodesic ? haversineDistanceKm(p1, p2) : planarDistanceKm(p1, p2, proj);
+                }
+                function measurePolygonAreaKm2(points, proj) {
+                    return measureGeodesic ? geodesicPolygonAreaKm2(points) : planarPolygonAreaKm2(points, proj);
+                }
                 function clearMeasurement() {
                     measurePoints = [];
+                    measureFinalized = false;
                     if (gMeasure) gMeasure.selectAll('*').remove();
                     measureResultLabel.style.display = 'none';
+                    var finishBtn = document.getElementById('measureFinishBtn');
+                    if (finishBtn) finishBtn.style.display = 'none';
+                }
+                function setMeasureToolbarActive() {
+                    var kd = document.getElementById('measureKindDist');
+                    var ka = document.getElementById('measureKindArea');
+                    var gb = document.getElementById('measureGeodesicBtn');
+                    var pb = document.getElementById('measurePlanarBtn');
+                    if (kd) kd.classList.toggle('toggle-on', measureKind === 'distance');
+                    if (ka) ka.classList.toggle('toggle-on', measureKind === 'area');
+                    if (gb) gb.classList.toggle('toggle-on', measureGeodesic);
+                    if (pb) pb.classList.toggle('toggle-on', !measureGeodesic);
+                }
+                function toggleMeasureKind(kind) {
+                    if (!measureActive) return;
+                    if (measureKind === kind) return;
+                    measureKind = kind;
+                    measureFinalized = false;
+                    clearMeasurement();
+                    setMeasureToolbarActive();
+                }
+                function toggleMeasureCalcMode() {
+                    if (!measureActive) return;
+                    measureGeodesic = !measureGeodesic;
+                    measureFinalized = false;
+                    clearMeasurement();
+                    setMeasureToolbarActive();
                 }
                 function toggleMeasureMode() {
                     measureActive = !measureActive;
                     document.getElementById('measureToolBtn').classList.toggle('toggle-on', measureActive);
                     clearMeasurement();
                     document.body.classList.toggle('measure-active', measureActive);
+                    var toolbar = document.getElementById('measureToolbar');
+                    if (toolbar) toolbar.style.display = measureActive ? 'flex' : 'none';
+                    if (measureActive) {
+                        if (annotateActive) toggleAnnotationMode();
+                        setMeasureToolbarActive();
+                    }
                 }
+
+                // ── Annotation Layer ──
+                const ANNOTATIONS_KEY = 'lepidosAnnotations';
+                function loadAnnotations() {
+                    try {
+                        var raw = localStorage.getItem(ANNOTATIONS_KEY);
+                        var arr = raw ? JSON.parse(raw) : [];
+                        return Array.isArray(arr) ? arr : [];
+                    } catch(e) { return []; }
+                }
+                function saveAnnotations() {
+                    try { localStorage.setItem(ANNOTATIONS_KEY, JSON.stringify(annotationsList)); } catch(e) {}
+                }
+                function redrawAnnotations() {
+                    if (!gAnnotations) gAnnotations = gMap.append('g').attr('class', 'annotation-layer');
+                    gAnnotations.selectAll('*').remove();
+                    var proj = getActiveProjection();
+                    annotationsList.forEach(function(a) {
+                        if (a.hidden) return;
+                        if (a.type === 'pin') {
+                            var xy = proj(a.coords);
+                            if (!xy || isNaN(xy[0])) return;
+                            gAnnotations.append('circle').attr('class', 'annotation-pin-circle').attr('cx', xy[0]).attr('cy', xy[1]).attr('r', 6);
+                            if (a.label) {
+                                gAnnotations.append('text').attr('class', 'annotation-pin-label').attr('x', xy[0] + 9).attr('y', xy[1] + 4).text(a.label);
+                            }
+                        } else if (a.type === 'region' && Array.isArray(a.coords) && a.coords.length >= 3) {
+                            var pts = a.coords.map(function(c) { return proj(c); });
+                            if (pts.some(function(p) { return !p || isNaN(p[0]); })) return;
+                            var d = 'M' + pts.map(function(p) { return p[0] + ',' + p[1]; }).join('L') + 'Z';
+                            gAnnotations.append('path').attr('class', 'annotation-region-poly').attr('d', d);
+                            if (a.label) {
+                                var cx = 0, cy = 0;
+                                pts.forEach(function(p) { cx += p[0]; cy += p[1]; });
+                                cx /= pts.length; cy /= pts.length;
+                                gAnnotations.append('text').attr('class', 'annotation-pin-label').attr('x', cx).attr('y', cy).attr('text-anchor', 'middle').text(a.label);
+                            }
+                        }
+                    });
+                }
+                function clearAnnotationsView() {
+                    if (gAnnotations) gAnnotations.selectAll('*').remove();
+                }
+                function redrawAnnotationDrawing() {
+                    if (!gAnnotations) gAnnotations = gMap.append('g').attr('class', 'annotation-layer');
+                    gAnnotations.selectAll('.annotation-draw-vertex, .annotation-draw-poly').remove();
+                    var proj = getActiveProjection();
+                    var finishBtn = document.getElementById('annotationFinishBtn');
+                    if (finishBtn) finishBtn.style.display = (annotatePoints.length >= 3) ? '' : 'none';
+                    annotatePoints.forEach(function(c) {
+                        var xy = proj(c);
+                        if (!xy || isNaN(xy[0])) return;
+                        gAnnotations.append('circle').attr('class', 'annotation-region-vertex annotation-draw-vertex').attr('cx', xy[0]).attr('cy', xy[1]).attr('r', 4);
+                    });
+                    if (annotatePoints.length >= 2) {
+                        var pts = annotatePoints.map(function(c) { return proj(c); }).filter(function(p) { return p && !isNaN(p[0]); });
+                        if (pts.length >= 2) {
+                            var d = 'M' + pts.map(function(p) { return p[0] + ',' + p[1]; }).join('L');
+                            if (annotatePoints.length >= 3) d += 'Z';
+                            gAnnotations.append('path').attr('class', 'annotation-region-poly annotation-draw-poly').attr('d', d);
+                        }
+                    }
+                }
+                function clearAnnotationDrawing() {
+                    annotatePoints = [];
+                    var finishBtn = document.getElementById('annotationFinishBtn');
+                    if (finishBtn) finishBtn.style.display = 'none';
+                    redrawAnnotations();
+                }
+                function finishAnnotationRegion() {
+                    if (annotatePoints.length < 3) return;
+                    var label = window.prompt(t('annotationRegionPromptLabel'), '');
+                    if (label === null) return;
+                    annotationsList.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), type: 'region', coords: annotatePoints.slice(), label: label, createdAt: Date.now() });
+                    annotatePoints = [];
+                    saveAnnotations();
+                    redrawAnnotations();
+                    showToast(t('annotationAdded'));
+                }
+                function handleAnnotationClick(e) {
+                    if (!annotateActive) return;
+                    if (e.target && e.target.closest && e.target.closest('.annotation-toolbar, .measure-toolbar, .layers-modal, .quiz-overlay, .country-panel, .projection-compare-dock')) return;
+                    if (e.target && e.target.closest && e.target.closest('.annotation-pin-circle, .annotation-pin-label, .annotation-region-poly')) return;
+                    var rect = getMapRect();
+                    var clickX = e.clientX - rect.left;
+                    var clickY = e.clientY - rect.top;
+                    var svgPoint = currentTransform.invert([clickX, clickY]);
+                    var coords = getActiveProjection().invert(svgPoint);
+                    if (!coords || isNaN(coords[0]) || isNaN(coords[1])) return;
+                    if (annotateKind === 'pin') {
+                        var label = window.prompt(t('annotationPromptLabel'), '');
+                        if (label === null) return;
+                        annotationsList.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), type: 'pin', coords: [coords[0], coords[1]], label: label, createdAt: Date.now() });
+                        saveAnnotations();
+                        redrawAnnotations();
+                        showToast(t('annotationAdded'));
+                    } else {
+                        annotatePoints.push([coords[0], coords[1]]);
+                        redrawAnnotationDrawing();
+                    }
+                }
+                function toggleAnnotationMode() {
+                    annotateActive = !annotateActive;
+                    var btn = document.getElementById('annotateBtn');
+                    if (btn) btn.classList.toggle('toggle-on', annotateActive);
+                    document.body.classList.toggle('annotate-active', annotateActive);
+                    var toolbar = document.getElementById('annotationToolbar');
+                    if (toolbar) toolbar.style.display = annotateActive ? 'flex' : 'none';
+                    if (annotateActive) {
+                        if (measureActive) toggleMeasureMode();
+                        setAnnotationToolbarActive();
+                    } else {
+                        annotatePoints = [];
+                        clearAnnotationsView();
+                    }
+                }
+                function setAnnotationToolbarActive() {
+                    var pinBtn = document.getElementById('annotationKindPin');
+                    var regionBtn = document.getElementById('annotationKindRegion');
+                    if (pinBtn) pinBtn.classList.toggle('toggle-on', annotateKind === 'pin');
+                    if (regionBtn) regionBtn.classList.toggle('toggle-on', annotateKind === 'region');
+                    if (annotateKind === 'region' && annotatePoints.length > 0) redrawAnnotationDrawing(); else redrawAnnotations();
+                }
+                function toggleAnnotationKind(kind) {
+                    annotateKind = kind;
+                    annotatePoints = [];
+                    setAnnotationToolbarActive();
+                }
+                function renderAnnotationsModal() {
+                    var body = document.getElementById('annotationsModalBody');
+                    if (!body) return;
+                    if (annotationsList.length === 0) {
+                        body.innerHTML = '<p style="color:var(--text-secondary);font-size:0.78em;text-align:center;">' + t('annotationEmpty') + '</p>';
+                        return;
+                    }
+                    body.innerHTML = '';
+                    annotationsList.forEach(function(a, idx) {
+                        var label = escapeHtml(a.label || (a.type === 'pin' ? t('annotationPin') : t('annotationRegion')));
+                        var typeLabel = escapeHtml(a.type === 'pin' ? t('annotationPin') : t('annotationRegion'));
+                        var hiddenBadge = a.hidden ? ' <span class="annotation-hidden-label">' + escapeHtml(t('annotationHidden')) + '</span>' : '';
+                        var row = document.createElement('div');
+                        row.className = 'annotation-item';
+                        var typeEl = document.createElement('span');
+                        typeEl.className = 'annotation-item-type';
+                        typeEl.textContent = typeLabel;
+                        var labelEl = document.createElement('span');
+                        labelEl.className = 'annotation-item-label';
+                        labelEl.innerHTML = escapeHtml(label) + hiddenBadge;
+                        var actions = document.createElement('div');
+                        actions.className = 'annotation-item-actions';
+                        var visBtn = document.createElement('button');
+                        visBtn.className = 'annotation-vis-btn';
+                        visBtn.textContent = t('annotationShow');
+                        visBtn.addEventListener('click', function() {
+                            annotationsList[idx].hidden = !annotationsList[idx].hidden;
+                            saveAnnotations();
+                            renderAnnotationsModal();
+                            redrawAnnotations();
+                        });
+                        var delBtn = document.createElement('button');
+                        delBtn.className = 'annotation-del-btn';
+                        delBtn.textContent = t('annotationDelete');
+                        delBtn.addEventListener('click', function() {
+                            if (!window.confirm(t('annotationDeleteConfirm', { label: a.label || typeLabel }))) return;
+                            annotationsList.splice(idx, 1);
+                            saveAnnotations();
+                            renderAnnotationsModal();
+                            redrawAnnotations();
+                        });
+                        actions.appendChild(visBtn);
+                        actions.appendChild(delBtn);
+                        row.appendChild(typeEl);
+                        row.appendChild(labelEl);
+                        row.appendChild(actions);
+                        body.appendChild(row);
+                    });
+                }
+                function openAnnotationsModal() {
+                    renderAnnotationsModal();
+                    var modal = document.getElementById('annotationsModal');
+                    if (modal) modal.classList.add('visible');
+                }
+                function closeAnnotationsModal() {
+                    var modal = document.getElementById('annotationsModal');
+                    if (modal) modal.classList.remove('visible');
+                }
+
                 function togglePresentationMode() {
                     presentationModeActive = !presentationModeActive;
                     document.body.classList.toggle('presentation-mode', presentationModeActive);
@@ -4221,13 +4552,19 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 async function showClassResults(sessionCode) {
                     if (typeof window.firebaseGetResultsForSession !== 'function') return;
                     var results = await window.firebaseGetResultsForSession(sessionCode);
+                    lastQuizResults = results;
                     var overlay = document.getElementById('quizResultsOverlay');
                     var body = document.getElementById('quizResultsBody');
+                    var csvBtn = document.getElementById('quizResultsExportCsvBtn');
                     document.getElementById('quizResultsSessionCode').innerHTML = t('quizSessionCode') + ': <strong>' + sessionCode + '</strong>';
                     document.getElementById('quizResultsTitle').textContent = t('quizViewResults');
                     document.getElementById('quizResultsSummaryTab').textContent = t('quizResultsSummary');
                     document.getElementById('quizResultsDetailTab').textContent = t('quizResultsDetail');
                     document.getElementById('quizResultsCloseBtn').textContent = t('quizResultsClose');
+                    if (csvBtn) {
+                        csvBtn.textContent = t('quizExportCsv');
+                        csvBtn.style.display = results.length > 0 ? '' : 'none';
+                    }
 
                     if (results.length === 0) {
                         body.innerHTML = '<div class="quiz-results-empty">' + t('quizResultsEmpty') + '</div>';
@@ -4306,8 +4643,41 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     if (!str) return '';
                     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
                 }
+                function triggerDownload(filename, blob) {
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(function() { URL.revokeObjectURL(url); a.remove(); }, 200);
+                }
+                function exportResultsCsv() {
+                    if (!lastQuizResults || lastQuizResults.length === 0) return;
+                    var rows = [[t('quizStudentName'), t('quizFinalScore'), t('quizExportCsvQuestion'), t('quizExportCsvStatus'), t('quizExportCsvAnswer')]];
+                    lastQuizResults.forEach(function(r) {
+                        var scoreCell = r.total > 0 ? (r.score + '/' + r.total) : '';
+                        if (r.answers && r.answers.length > 0) {
+                            r.answers.forEach(function(a) {
+                                rows.push([r.studentName, scoreCell, a.promptText || a.layerType || '', a.correct === true ? t('quizCorrect') : a.correct === false ? t('quizIncorrect') : t('quizSkipped'), a.answerText || '']);
+                            });
+                        } else {
+                            rows.push([r.studentName, scoreCell, '', '', '']);
+                        }
+                    });
+                    var csv = '\uFEFF' + rows.map(function(row) {
+                        return row.map(function(cell) {
+                            var s = String(cell == null ? '' : cell);
+                            if (/[",\n\r]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+                            return s;
+                        }).join(',');
+                    }).join('\r\n');
+                    triggerDownload('quiz-results-' + (currentSessionCode || 'export') + '.csv', new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+                }
                 function handleMeasureClick(e) {
                     if (!measureActive) return;
+                    if (e.target && e.target.closest && e.target.closest('.measure-toolbar')) return;
+                    if (measureKind === 'area' && measureFinalized) return;
                     var rect = getMapRect();
                     var clickX = e.clientX - rect.left;
                     var clickY = e.clientY - rect.top;
@@ -4315,7 +4685,11 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     var coords = getActiveProjection().invert(svgPoint);
                     if (!coords || isNaN(coords[0]) || isNaN(coords[1])) return;
 
-                    if (measurePoints.length >= 2) clearMeasurement();
+                    if (measureKind === 'distance') {
+                        if (measurePoints.length >= 2) clearMeasurement();
+                    } else {
+                        if (measurePoints.length >= 24) return;
+                    }
                     measurePoints.push(coords);
                     redrawMeasureLayer();
                 }
@@ -4324,6 +4698,9 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     if (!gMeasure) gMeasure = gMap.append('g').attr('class', 'measure-layer');
                     gMeasure.selectAll('*').remove();
                     var proj = getActiveProjection();
+                    var finishBtn = document.getElementById('measureFinishBtn');
+                    if (finishBtn) finishBtn.style.display = (measureKind === 'area' && measurePoints.length >= 3 && !measureFinalized) ? '' : 'none';
+
                     measurePoints.forEach(function(pt) {
                         var xy = proj(pt);
                         if (!xy || isNaN(xy[0])) return;
@@ -4331,6 +4708,61 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                             .attr('cx', xy[0]).attr('cy', xy[1]).attr('r', 5)
                             .attr('fill', 'var(--brand-accent, #14B8A6)').attr('stroke', '#fff').attr('stroke-width', 1.5);
                     });
+
+                    if (measureKind === 'area' && measurePoints.length >= 2) {
+                        var linePoints = measurePoints.map(function(pt) { return proj(pt); });
+                        if (linePoints.some(function(v) { return !v || isNaN(v[0]); })) return;
+                        if (measureFinalized) {
+                            var closePts = linePoints.concat([linePoints[0]]);
+                            var polyStr = closePts.map(function(v) { return v[0] + ',' + v[1]; }).join(' ');
+                            gMeasure.insert('polygon', ':first-child')
+                                .attr('points', polyStr)
+                                .attr('fill', 'rgba(20,184,166,0.15)')
+                                .attr('stroke', 'var(--brand-accent, #14B8A6)')
+                                .attr('stroke-width', 2);
+                        } else {
+                            var openStr = linePoints.map(function(v) { return v[0] + ',' + v[1]; }).join(' ');
+                            gMeasure.insert('polyline', ':first-child')
+                                .attr('points', openStr)
+                                .attr('fill', 'none')
+                                .attr('stroke', 'var(--brand-accent, #14B8A6)')
+                                .attr('stroke-width', 2)
+                                .attr('stroke-dasharray', '6,4');
+                            gMeasure.insert('line', ':first-child')
+                                .attr('x1', linePoints[0][0]).attr('y1', linePoints[0][1])
+                                .attr('x2', linePoints[linePoints.length - 1][0]).attr('y2', linePoints[linePoints.length - 1][1])
+                                .attr('stroke', 'var(--brand-accent, #14B8A6)')
+                                .attr('stroke-width', 1.5)
+                                .attr('stroke-dasharray', '3,4');
+                        }
+                        if (measurePoints.length >= 3) {
+                            var areaKm2 = measurePolygonAreaKm2(measurePoints, proj);
+                            if (isFinite(areaKm2) && areaKm2 > 0) {
+                                var cx = 0, cy = 0;
+                                linePoints.forEach(function(v) { cx += v[0]; cy += v[1]; });
+                                cx /= linePoints.length; cy /= linePoints.length;
+                                var screenMid = currentTransform.apply([cx, cy]);
+                                var rect = getMapRect();
+                                measureResultLabel.textContent = fmtNum(Math.round(areaKm2)) + ' ' + t('measureAreaUnit');
+                                measureResultLabel.style.left = (rect.left + screenMid[0]) + 'px';
+                                measureResultLabel.style.top = (rect.top + screenMid[1]) + 'px';
+                                measureResultLabel.style.display = '';
+                            }
+                        } else if (measurePoints.length === 2) {
+                            var dKm = measureDistanceKm(measurePoints[0], measurePoints[1], proj);
+                            if (isFinite(dKm)) {
+                                var mxy1 = linePoints[0], mxy2 = linePoints[1];
+                                var mmid = currentTransform.apply([(mxy1[0] + mxy2[0]) / 2, (mxy1[1] + mxy2[1]) / 2]);
+                                var mrect = getMapRect();
+                                measureResultLabel.textContent = fmtNum(Math.round(dKm)) + ' ' + t('measureKmUnit');
+                                measureResultLabel.style.left = (mrect.left + mmid[0]) + 'px';
+                                measureResultLabel.style.top = (mrect.top + mmid[1]) + 'px';
+                                measureResultLabel.style.display = '';
+                            }
+                        }
+                        return;
+                    }
+
                     if (measurePoints.length === 2) {
                         var xy1 = proj(measurePoints[0]);
                         var xy2 = proj(measurePoints[1]);
@@ -4339,21 +4771,24 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                                 .attr('x1', xy1[0]).attr('y1', xy1[1])
                                 .attr('x2', xy2[0]).attr('y2', xy2[1])
                                 .attr('stroke', 'var(--brand-accent, #14B8A6)').attr('stroke-width', 2).attr('stroke-dasharray', '6,4');
-                            var distanceKm = haversineDistanceKm(measurePoints[0], measurePoints[1]);
-                            var midX = (xy1[0] + xy2[0]) / 2;
-                            var midY = (xy1[1] + xy2[1]) / 2;
-                            var screenMid = currentTransform.apply([midX, midY]);
-                            var rect = getMapRect();
-                            measureResultLabel.textContent = Math.round(distanceKm).toLocaleString() + ' ' + t('measureKmUnit');
-                            measureResultLabel.style.left = (rect.left + screenMid[0]) + 'px';
-                            measureResultLabel.style.top = (rect.top + screenMid[1]) + 'px';
-                            measureResultLabel.style.display = '';
+                            var distanceKm = measureDistanceKm(measurePoints[0], measurePoints[1], proj);
+                            if (isFinite(distanceKm)) {
+                                var midX = (xy1[0] + xy2[0]) / 2;
+                                var midY = (xy1[1] + xy2[1]) / 2;
+                                var screenMid = currentTransform.apply([midX, midY]);
+                                var rect = getMapRect();
+                                measureResultLabel.textContent = fmtNum(Math.round(distanceKm)) + ' ' + t('measureKmUnit');
+                                measureResultLabel.style.left = (rect.left + screenMid[0]) + 'px';
+                                measureResultLabel.style.top = (rect.top + screenMid[1]) + 'px';
+                                measureResultLabel.style.display = '';
+                            }
                         }
                     }
                 }
 
                 function handleCountryActivate(e, d) {
                     if (measureActive) return;
+                    if (annotateActive) return;
                     if (e.shiftKey && selectedCountry) {
                         compareCountry = d;
                         renderComparePanel(selectedCountry, compareCountry);
@@ -4488,7 +4923,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     if (colorMode === 'gdp') {
                         const gdp = getGDP(name);
                         html +=
-                            `<div>${t('tooltipGDP')}: ${gdp !== null ? '$' + gdp.toLocaleString('en-US') : t('unknown')}</div>`;
+                            `<div>${t('tooltipGDP')}: ${gdp !== null ? '$' + fmtNum(gdp) : t('unknown')}</div>`;
                     }
                     if (colorMode === 'hdi') {
                         const hdi = getHDI(name);
@@ -4596,6 +5031,11 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     hash.set(def.hashKey, def.getFlag() ? '1' : '0');
                 });
                 if (selectedBloc !== 'all') hash.set('bloc', selectedBloc);
+                hash.set('theme', document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
+                if (globeModeActive) hash.set('globe', '1');
+                if (selectedCountry && selectedCountry.properties && selectedCountry.properties.name) {
+                    hash.set('country', selectedCountry.properties.name);
+                }
                 hash.set('k', currentTransform.k.toFixed(2));
                 hash.set('x', currentTransform.x.toFixed(0));
                 hash.set('y', currentTransform.y.toFixed(0));
@@ -4613,6 +5053,11 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     const hash = new URLSearchParams(window.location.hash.substring(1));
                     const langVal = hash.get('lang');
                     if (langVal && VALID_LANGS.includes(langVal)) setLanguage(langVal);
+                    const themeVal = hash.get('theme');
+                    if (themeVal === 'light' || themeVal === 'dark') applyTheme(themeVal);
+                    // Globe must be restored BEFORE mode/filter/layers: toggleGlobeMode()
+                    // calls resetLayersAndModes(), so restore those after it.
+                    if (hash.get('globe') === '1' && !globeModeActive) toggleGlobeMode();
                     const modeVal = hash.get('mode');
                     if (modeVal && VALID_MODES.includes(modeVal)) setMode(modeVal);
                     const filterVal = hash.get('filter');
@@ -4647,6 +5092,16 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                             y = +hash.get('y');
                         if (isFinite(k) && isFinite(x) && isFinite(y) && k >= 0.5 && k <= 12)
                             svg.call(zoomBehavior.transform, d3.zoomIdentity.translate(x, y).scale(k));
+                    }
+                    const countryVal = hash.get('country');
+                    if (countryVal && allCountryFeatures) {
+                        const feat = allCountryFeatures.find(function(x) { return x.properties && x.properties.name === countryVal; });
+                        if (feat) {
+                            selectedCountry = feat;
+                            compareCountry = null;
+                            openCountryPanel(feat);
+                            highlightSelectedCountry(feat);
+                        }
                     }
                     updateActiveLayerCount();
                 } catch (e) {}
@@ -4821,10 +5276,10 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     html += '<tr>';
                     html += '<td>' + htmlEscape(r.name) + '</td>';
                     html += '<td>' + htmlEscape(r.continent) + '</td>';
-                    html += '<td>' + (r.population != null ? r.population.toLocaleString('en-US') : t('unknown')) + '</td>';
-                    html += '<td>' + (r.area != null ? r.area.toLocaleString('en-US') : t('unknown')) + '</td>';
+                    html += '<td>' + (r.population != null ? fmtNum(r.population) : t('unknown')) + '</td>';
+                    html += '<td>' + (r.area != null ? fmtNum(r.area) : t('unknown')) + '</td>';
                     html += '<td>' + (r.density != null ? r.density + ' ' + t('densityUnit') : t('unknown')) + '</td>';
-                    html += '<td>' + (r.gdp != null ? '$' + r.gdp.toLocaleString('en-US') : t('unknown')) + '</td>';
+                    html += '<td>' + (r.gdp != null ? '$' + fmtNum(r.gdp) : t('unknown')) + '</td>';
                     html += '<td>' + (r.hdi != null ? r.hdi.toFixed(3) : t('unknown')) + '</td>';
                     html += '<td>' + htmlEscape(r.religionLabel) + '</td>';
                     html += '</tr>';
@@ -5231,6 +5686,8 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 loadingMsg.remove();
 
                 renderCountries(features);
+                annotationsList = loadAnnotations();
+                try { redrawAnnotations(); } catch(e) { console.error('annotation draw error:', e); }
                 try { loadFromHash(); } catch(e) {}
                 try { applyLanguage(); } catch(e) { console.error('applyLanguage error:', e); }
                 try { updateHash(); } catch(e) {}
@@ -5546,6 +6003,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 var quizMarkerLine = document.getElementById('quizMarkerLine');
                 var quizPromptInput = document.getElementById('quizPromptInput');
                 var quizSaveQuestionBtn = document.getElementById('quizSaveQuestionBtn');
+                var quizProvenanceInput = document.getElementById('quizProvenanceInput');
                 var quizSaveCancelBtn = document.getElementById('quizSaveCancelBtn');
                 var quizAuthoringAnswerFormatRow = document.getElementById('quizAuthoringAnswerFormatRow');
                 var quizAnswerFormatTF = document.getElementById('quizAnswerFormatTF');
@@ -6417,6 +6875,53 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 }
                 customQuestionsLibrary = loadCustomQuestionsLibrary();
 
+                function downloadQuizBankJson() {
+                    var lib = loadCustomQuestionsLibrary();
+                    if (lib.length === 0) {
+                        showToast(t('quizNoCustomQuestions'));
+                        return;
+                    }
+                    var payload = {
+                        app: 'lepidos-atlas',
+                        kind: 'quiz-bank',
+                        version: 1,
+                        exportedAt: new Date().toISOString(),
+                        questions: lib
+                    };
+                    triggerDownload('lepidos-quiz-bank-' + new Date().toISOString().slice(0, 10) + '.json', new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+                }
+                function importQuizBankFromText(text) {
+                    var parsed;
+                    try {
+                        parsed = JSON.parse(text);
+                    } catch (e) {
+                        showToast(t('quizImportError'));
+                        return;
+                    }
+                    var arr = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.questions) ? parsed.questions : null);
+                    if (!arr) {
+                        showToast(t('quizImportError'));
+                        return;
+                    }
+                    var lib = loadCustomQuestionsLibrary();
+                    var ids = {};
+                    lib.forEach(function(q) { if (q && q.id) ids[q.id] = 1; });
+                    var added = 0;
+                    arr.forEach(function(q) {
+                        if (q && q.id && typeof q.promptText === 'string' && q.promptText.trim() && !ids[q.id]) {
+                            ids[q.id] = 1;
+                            lib.push(q);
+                            added++;
+                        }
+                    });
+                    if (added > 0) {
+                        saveCustomQuestionsLibrary(lib);
+                        customQuestionsLibrary = loadCustomQuestionsLibrary();
+                    }
+                    initCustomQuizSetup(false);
+                    showToast(added > 0 ? pluralize(added, t('quizImportOne'), t('quizImportFew'), t('quizImportMany')).replace('{count}', fmtNum(added)) : t('quizImportNothingNew'));
+                }
+
                 function exitAllQuizOverlays() {
                     quizSetupOverlay.style.display = 'none';
                     quizModeChoiceOverlay.style.display = 'none';
@@ -6699,6 +7204,23 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     updateCustomStartBtn();
                 });
 
+                document.getElementById('quizExportBtn').addEventListener('click', function() {
+                    downloadQuizBankJson();
+                });
+                document.getElementById('quizImportBtn').addEventListener('click', function() {
+                    document.getElementById('quizImportInput').click();
+                });
+                document.getElementById('quizImportInput').addEventListener('change', function() {
+                    var file = this.files && this.files[0];
+                    this.value = '';
+                    if (!file) return;
+                    var reader = new FileReader();
+                    reader.onload = function() {
+                        importQuizBankFromText(reader.result);
+                    };
+                    reader.readAsText(file);
+                });
+
                 // ── Authoring Mode ──
                 function clearAuthoringMarkers() {
                     gAuthoringMarkers.selectAll('*').remove();
@@ -6798,8 +7320,10 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     quizAnswerFormatWritten.checked = false;
                     quizAnswerFormatMC.checked = false;
                     quizPromptInput.value = '';
+                    if (quizProvenanceInput) quizProvenanceInput.value = '';
                     quizAuthoringStatusRow.style.display = 'none';
                     quizAuthoringFormFields.style.display = 'none';
+                    document.getElementById('quizAuthoringProvenanceRow').style.display = 'none';
                     quizAuthoringTFAnswerRow.style.display = 'none';
                     quizAuthoringMCChoicesRow.style.display = 'none';
                     quizAuthoringActions.style.display = 'none';
@@ -6903,6 +7427,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     quizAuthoringStatusRow.style.display = '';
                     quizAuthoringStatus.textContent = t('quizMarkerPlaced');
                     quizAuthoringFormFields.style.display = '';
+                    document.getElementById('quizAuthoringProvenanceRow').style.display = '';
                     quizAuthoringAnswerFormatRow.style.display = '';
                     quizAnswerFormatTF.checked = false;
                     quizAnswerFormatWritten.checked = false;
@@ -7130,6 +7655,9 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                         promptText: prompt,
                         createdAt: Date.now()
                     };
+                    if (quizProvenanceInput && quizProvenanceInput.value.trim()) {
+                        q.source = quizProvenanceInput.value.trim();
+                    }
                     if (fmt === 'true_false') {
                         q.correctAnswer = quizTFAnswerTrue.checked;
                     }
@@ -7467,6 +7995,15 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     var item = reviewPendingItems[reviewCurrentIndex];
                     quizReviewProgress.textContent = t('quizReviewOf', { current: reviewCurrentIndex + 1, total: reviewPendingItems.length });
                     quizReviewPrompt.textContent = item.promptText || 'Q';
+                    var provText = '';
+                    if (item.libraryIdx !== undefined && customQuestionsLibrary[item.libraryIdx] && customQuestionsLibrary[item.libraryIdx].source) {
+                        provText = t('quizProvenanceReview', { source: customQuestionsLibrary[item.libraryIdx].source });
+                    }
+                    var provEl = document.getElementById('quizReviewProvenance');
+                    if (provEl) {
+                        provEl.textContent = provText;
+                        provEl.style.display = provText ? '' : 'none';
+                    }
                     if (item.clickCoords) {
                         quizReviewClickInfo.textContent = 'Click: ' + item.clickCoords[0].toFixed(2) + ', ' + item.clickCoords[1].toFixed(2);
                     } else if (item.studentAnswer) {
@@ -7556,6 +8093,10 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
 
                 document.getElementById('quizResultsCloseBtn').addEventListener('click', function() {
                     document.getElementById('quizResultsOverlay').style.display = 'none';
+                });
+
+                document.getElementById('quizResultsExportCsvBtn').addEventListener('click', function() {
+                    exportResultsCsv();
                 });
 
                 document.getElementById('quizResultsOverlay').addEventListener('click', function(e) {
@@ -7749,6 +8290,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                             drawCapitals();
                             drawTimezones();
                             drawMajorCities();
+                            redrawAnnotations();
                             svg.call(zoomBehavior.transform, currentTransform);
                         }
                     }, 80);
@@ -7868,14 +8410,19 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 }
 
                 // Render text blocks as images (supports Arabic/Cyrillic/Unicode)
-                var headerDate = new Date().toLocaleDateString();
+                var headerDate = fmtDate(new Date());
                 var exportProjKey = globeModeActive ? 'globeProjectionType' : 'headerProjectionType';
                 var headerImgPromise = renderTextBlockToImage(
                     [t('appName'), t(exportProjKey) + ' \u2014 ' + headerDate],
                     800, 80
                 );
                 var citationText = t('pdfCitationLabel').replace('{date}', headerDate);
-                var footerImgPromise = renderTextBlockToImage([citationText], 800, 36);
+                var footerLines = [citationText, t('pdfVersionLine').replace('{version}', APP_VERSION)];
+                var activeMetaGroups = getActiveLayerMetaGroups();
+                if (activeMetaGroups.length) {
+                    footerLines.push(t('layerMetaPdfLabel') + ': ' + activeMetaGroups.map(function(g) { return t(g.nameKey); }).join(' \u00b7 '));
+                }
+                var footerImgPromise = renderTextBlockToImage(footerLines, 800, 64);
 
                 Promise.all([headerImgPromise, footerImgPromise]).then(function(imgs) {
                     var headerImgData = imgs[0];
@@ -7958,7 +8505,7 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                             }
 
                             // Footer citation as image
-                            var footerAspect = 800 / 36;
+                            var footerAspect = 800 / 64;
                             var ftrW = 140;
                             var ftrH = ftrW / footerAspect;
                             if (ftrH > 8) { ftrH = 8; ftrW = ftrH * footerAspect; }
@@ -8086,8 +8633,26 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
             document.getElementById('themeToggleBtn').addEventListener('click', function() {
                 var current = document.documentElement.getAttribute('data-theme');
                 applyTheme(current === 'light' ? 'dark' : 'light');
+                updateHash();
             });
             document.getElementById('measureToolBtn').addEventListener('click', toggleMeasureMode);
+            const measureKindDistBtn = document.getElementById('measureKindDist');
+            const measureKindAreaBtn = document.getElementById('measureKindArea');
+            const measureGeodesicBtn2 = document.getElementById('measureGeodesicBtn');
+            const measurePlanarBtn2 = document.getElementById('measurePlanarBtn');
+            const measureFinishBtn2 = document.getElementById('measureFinishBtn');
+            const measureClearBtn2 = document.getElementById('measureClearBtn');
+            if (measureKindDistBtn) measureKindDistBtn.addEventListener('click', function() { toggleMeasureKind('distance'); });
+            if (measureKindAreaBtn) measureKindAreaBtn.addEventListener('click', function() { toggleMeasureKind('area'); });
+            if (measureGeodesicBtn2) measureGeodesicBtn2.addEventListener('click', toggleMeasureCalcMode);
+            if (measurePlanarBtn2) measurePlanarBtn2.addEventListener('click', toggleMeasureCalcMode);
+            if (measureFinishBtn2) measureFinishBtn2.addEventListener('click', function() {
+                if (measureKind === 'area' && measurePoints.length >= 3) {
+                    measureFinalized = true;
+                    redrawMeasureLayer();
+                }
+            });
+            if (measureClearBtn2) measureClearBtn2.addEventListener('click', clearMeasurement);
             document.getElementById('presentationModeBtn').addEventListener('click', togglePresentationMode);
             document.getElementById('presentationExitBtn').addEventListener('click', togglePresentationMode);
             mapContainer.addEventListener('click', handleMeasureClick, true);
@@ -8123,6 +8688,10 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
             shareBtn.addEventListener('click', shareMap);
             resetBtn.addEventListener('click', resetAll);
             document.getElementById('pdfExportBtn').addEventListener('click', exportMapPDF);
+            var aboutBtn = document.getElementById('aboutBtn');
+            if (aboutBtn) aboutBtn.addEventListener('click', openAboutModal);
+            var presetsBtn = document.getElementById('presetsBtn');
+            if (presetsBtn) presetsBtn.addEventListener('click', openPresetsModal);
 
             // ── Mobile UI event wiring ──
             var mobileLangBtn = document.getElementById('mobileLangToggle');
@@ -8207,6 +8776,10 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 if (mobileToolsMenu) mobileToolsMenu.classList.toggle('open');
             });
             if (mobileOnboardBtn) mobileOnboardBtn.addEventListener('click', function() { closeMobileToolsMenu(); maybeShowProjectionExplainer(true); });
+            var mobileAboutBtn = document.getElementById('mobileAboutBtn');
+            if (mobileAboutBtn) mobileAboutBtn.addEventListener('click', function() { closeMobileToolsMenu(); openAboutModal(); });
+            var mobilePresetsBtn = document.getElementById('mobilePresetsBtn');
+            if (mobilePresetsBtn) mobilePresetsBtn.addEventListener('click', function() { closeMobileToolsMenu(); openPresetsModal(); });
             if (mobileShortcutsBtn) mobileShortcutsBtn.addEventListener('click', function() { closeMobileToolsMenu(); shortcutsOverlay.classList.add('visible'); });
             if (mobilePdfBtn) mobilePdfBtn.addEventListener('click', function() { closeMobileToolsMenu(); exportMapPDF(); });
             function closeMobileToolsMenu() { if (mobileToolsMenu) mobileToolsMenu.classList.remove('open'); }
@@ -8336,6 +8909,15 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                 if (e.key === 'Escape' && layersModal && layersModal.classList.contains('visible')) {
                     closeLayersModal();
                 }
+                if (e.key === 'Escape' && aboutModal && aboutModal.classList.contains('visible')) {
+                    closeAboutModal();
+                }
+                if (e.key === 'Escape' && presetsModal && presetsModal.classList.contains('visible')) {
+                    closePresetsModal();
+                }
+                if (e.key === 'Escape' && annotationsModal && annotationsModal.classList.contains('visible')) {
+                    closeAnnotationsModal();
+                }
                 if (e.key === 'Escape' && presentationModeActive) {
                     togglePresentationMode();
                 }
@@ -8343,6 +8925,303 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     document.querySelectorAll('.lang-dropdown-menu.visible').forEach(function(m) { m.classList.remove('visible'); });
                 }
             });
+
+            // ── About modal ──
+            const aboutModal = document.getElementById('aboutModal');
+            const aboutModalBackdrop = document.getElementById('aboutModalBackdrop');
+            const aboutModalClose = document.getElementById('aboutModalClose');
+
+            // ── Accessibility: skip link, dialog focus trap & focus restore ──
+            const A11Y_DIALOG_SELECTOR = '[role="dialog"], .layers-modal, .quiz-overlay, .quiz-custom-panels, .shortcuts-overlay, .data-table-overlay, .mobile-mode-sheet';
+            const A11Y_FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), iframe';
+
+            function a11yIsVisible(el) {
+                if (!el || !el.isConnected) return false;
+                var st = getComputedStyle(el);
+                if (st.display === 'none' || st.visibility === 'hidden' || el.getAttribute('aria-hidden') === 'true') return false;
+                return true;
+            }
+            function a11yOpenDialog() {
+                var els = document.querySelectorAll(A11Y_DIALOG_SELECTOR);
+                for (var i = els.length - 1; i >= 0; i--) {
+                    if (a11yIsVisible(els[i])) return els[i];
+                }
+                return null;
+            }
+
+            var a11ySkipLink = document.querySelector('.skip-link');
+            if (a11ySkipLink) {
+                a11ySkipLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var mapEl = document.getElementById('mapContainer');
+                    if (mapEl) { mapEl.focus(); }
+                });
+            }
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key !== 'Tab') return;
+                var dlg = a11yOpenDialog();
+                if (!dlg) return;
+                var focusables = Array.prototype.filter.call(dlg.querySelectorAll(A11Y_FOCUSABLE), a11yIsVisible);
+                if (!focusables.length) return;
+                var first = focusables[0];
+                var last = focusables[focusables.length - 1];
+                var active = document.activeElement;
+                if (e.shiftKey) {
+                    if (active === first || !dlg.contains(active)) { e.preventDefault(); last.focus(); }
+                } else {
+                    if (active === last || !dlg.contains(active)) { e.preventDefault(); first.focus(); }
+                }
+            });
+
+            // Remember the last element focused outside any dialog so focus can be
+            // returned to the opener when the dialog closes.
+            var a11yLastOutside = null;
+            document.addEventListener('focusin', function(e) {
+                if (e.target && e.target.closest && !e.target.closest(A11Y_DIALOG_SELECTOR)) {
+                    a11yLastOutside = e.target;
+                }
+            });
+            var a11yDialogWasOpen = false;
+            new MutationObserver(function() {
+                if (!a11yDialogWasOpen) return;
+                if (!a11yOpenDialog()) {
+                    a11yDialogWasOpen = false;
+                    if (a11yLastOutside && a11yLastOutside.isConnected && a11yLastOutside !== document.activeElement) {
+                        a11yLastOutside.focus();
+                    }
+                }
+            }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+            document.addEventListener('focusin', function() {
+                if (a11yOpenDialog()) a11yDialogWasOpen = true;
+            });
+
+            const LAYER_META = [
+                { id: 'base',      nameKey: 'layerMetaBaseName',      srcKey: 'layerMetaBaseSource',      licKey: 'layerMetaBaseLicense',      dateKey: 'layerMetaBaseDate',      accKey: 'layerMetaBaseAccuracy',      layers: [] },
+                { id: 'admin',     nameKey: 'layerMetaAdminName',     srcKey: 'layerMetaAdminSource',     licKey: 'layerMetaAdminLicense',     dateKey: 'layerMetaAdminDate',     accKey: 'layerMetaAdminAccuracy',     layers: ['adminBoundaries'] },
+                { id: 'rivers',    nameKey: 'layerMetaRiversName',    srcKey: 'layerMetaRiversSource',    licKey: 'layerMetaRiversLicense',    dateKey: 'layerMetaRiversDate',    accKey: 'layerMetaRiversAccuracy',    layers: ['rivers'] },
+                { id: 'landforms', nameKey: 'layerMetaLandformsName', srcKey: 'layerMetaLandformsSource', licKey: 'layerMetaLandformsLicense', dateKey: 'layerMetaLandformsDate', accKey: 'layerMetaLandformsAccuracy', layers: ['desertsForests', 'densitySpots'] },
+                { id: 'human',     nameKey: 'layerMetaHumanName',     srcKey: 'layerMetaHumanSource',     licKey: 'layerMetaHumanLicense',     dateKey: 'layerMetaHumanDate',     accKey: 'layerMetaHumanAccuracy',     layers: ['capitals', 'majorCities', 'ethnicGroups', 'geopoliticalBlocs', 'borderDisputes', 'naturalResources'] },
+                { id: 'ocean',     nameKey: 'layerMetaOceanName',     srcKey: 'layerMetaOceanSource',     licKey: 'layerMetaOceanLicense',     dateKey: 'layerMetaOceanDate',     accKey: 'layerMetaOceanAccuracy',     layers: ['oceanCurrents', 'winds'] },
+                { id: 'hazards',   nameKey: 'layerMetaHazardsName',   srcKey: 'layerMetaHazardsSource',   licKey: 'layerMetaHazardsLicense',   dateKey: 'layerMetaHazardsDate',   accKey: 'layerMetaHazardsAccuracy',   layers: ['earthquakes', 'volcanoes'] },
+                { id: 'timezone',  nameKey: 'layerMetaTimezoneName',  srcKey: 'layerMetaTimezoneSource',  licKey: 'layerMetaTimezoneLicense',  dateKey: 'layerMetaTimezoneDate',  accKey: 'layerMetaTimezoneAccuracy',  layers: ['timezones'] }
+            ];
+
+            function getActiveLayerMetaGroups() {
+                const active = [];
+                LAYER_META.forEach(function(g) {
+                    let on = g.layers.length === 0;
+                    if (!on) {
+                        on = g.layers.some(function(id) {
+                            const def = LAYER_DEFS[id];
+                            return def ? !!def.getFlag() : false;
+                        });
+                    }
+                    if (on) active.push(g);
+                });
+                return active;
+            }
+
+            function renderAboutModal() {
+                const body = document.getElementById('aboutModalBody');
+                if (!body) return;
+                body.innerHTML = '';
+                const section = (key, lines) => {
+                    const s = document.createElement('div');
+                    s.className = 'about-section';
+                    const h = document.createElement('h4');
+                    h.className = 'about-section-title';
+                    h.textContent = t(key);
+                    s.appendChild(h);
+                    lines.forEach(function(txt) {
+                        const p = document.createElement('p');
+                        p.textContent = txt;
+                        s.appendChild(p);
+                    });
+                    body.appendChild(s);
+                };
+                section('aboutIntro', [t('aboutVersion', { version: APP_VERSION })]);
+                section('aboutDataSources', [
+                    t('aboutSrcBorders'),
+                    t('aboutSrcPhysical'),
+                    t('aboutSrcHuman'),
+                    t('aboutSrcHazards'),
+                    t('aboutSrcTimezone'),
+                    t('aboutNotes')
+                ]);
+                section('layerMetaTitle', [t('layerMetaIntro')]);
+                const table = document.createElement('table');
+                table.className = 'about-meta-table';
+                const thead = document.createElement('thead');
+                const hr = document.createElement('tr');
+                [t('layerMetaColLayer'), t('layerMetaColSource'), t('layerMetaColLicense'), t('layerMetaColDate'), t('layerMetaColAccuracy')].forEach(function(h) {
+                    const th = document.createElement('th');
+                    th.textContent = h;
+                    hr.appendChild(th);
+                });
+                thead.appendChild(hr);
+                table.appendChild(thead);
+                const tbody = document.createElement('tbody');
+                LAYER_META.forEach(function(g) {
+                    const tr = document.createElement('tr');
+                    [t(g.nameKey), t(g.srcKey), t(g.licKey), t(g.dateKey), t(g.accKey)].forEach(function(v, i) {
+                        const td = document.createElement('td');
+                        td.textContent = v;
+                        if (i === 0) td.className = 'about-meta-layer';
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+                body.appendChild(table);
+            }
+            function openAboutModal() {
+                if (!aboutModal) return;
+                renderAboutModal();
+                aboutModal.classList.add('visible');
+            }
+            function closeAboutModal() {
+                if (aboutModal) aboutModal.classList.remove('visible');
+            }
+            if (aboutModalClose) aboutModalClose.addEventListener('click', closeAboutModal);
+            if (aboutModalBackdrop) aboutModalBackdrop.addEventListener('click', closeAboutModal);
+
+            // ── Lesson presets ──
+            const presetsModal = document.getElementById('presetsModal');
+            const presetsModalBackdrop = document.getElementById('presetsModalBackdrop');
+            const presetsModalClose = document.getElementById('presetsModalClose');
+            const PRESETS_KEY = 'lepPresets';
+
+            function showToast(text) {
+                const n = document.getElementById('copyNotification');
+                if (!n) return;
+                n.textContent = text;
+                n.classList.add('show');
+                clearTimeout(n._toastTimer);
+                n._toastTimer = setTimeout(function() { n.classList.remove('show'); }, 2000);
+            }
+            function getPresets() {
+                try {
+                    const raw = localStorage.getItem(PRESETS_KEY);
+                    if (!raw) return [];
+                    const arr = JSON.parse(raw);
+                    return Array.isArray(arr) ? arr : [];
+                } catch (e) { return []; }
+            }
+            function persistPresets(list) {
+                try { localStorage.setItem(PRESETS_KEY, JSON.stringify(list.slice(0, 50))); } catch (e) {}
+            }
+            function renderPresetsModal() {
+                const body = document.getElementById('presetsModalBody');
+                if (!body) return;
+                body.innerHTML = '';
+                const list = getPresets();
+                const saveRow = document.createElement('div');
+                saveRow.style.cssText = 'display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;';
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.id = 'presetsNameInput';
+                nameInput.placeholder = t('presetsNamePlaceholder');
+                nameInput.style.cssText = 'flex:1;min-width:140px;padding:6px 10px;border-radius:var(--radius-sm);background:var(--btn-bg);color:var(--text);border:1px solid var(--border);font-size:0.78em;font-family:inherit;';
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'btn';
+                saveBtn.textContent = t('presetsSave');
+                saveBtn.addEventListener('click', function() {
+                    const name = (nameInput.value || '').trim();
+                    if (!name) return;
+                    updateHash();
+                    let hash = window.location.hash || '';
+                    if (!hash.startsWith('#')) hash = '#' + hash;
+                    const next = getPresets();
+                    next.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: name, hash: hash, created: Date.now() });
+                    persistPresets(next);
+                    showToast(t('presetsSavedToast'));
+                    renderPresetsModal();
+                });
+                nameInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') saveBtn.click();
+                });
+                saveRow.appendChild(nameInput);
+                saveRow.appendChild(saveBtn);
+                body.appendChild(saveRow);
+                if (!list.length) {
+                    const empty = document.createElement('p');
+                    empty.style.cssText = 'color:var(--text-secondary);font-size:0.78em;';
+                    empty.textContent = t('presetsEmpty');
+                    body.appendChild(empty);
+                    return;
+                }
+                const wrap = document.createElement('div');
+                list.slice().reverse().forEach(function(p) {
+                    const row = document.createElement('div');
+                    row.className = 'preset-row';
+                    const info = document.createElement('div');
+                    info.className = 'preset-info';
+                    const nameEl = document.createElement('span');
+                    nameEl.className = 'preset-name';
+                    nameEl.textContent = p.name || '\u2014';
+                    const dateEl = document.createElement('span');
+                    dateEl.className = 'preset-date';
+                    dateEl.textContent = p.created ? fmtDate(p.created) : '';
+                    info.appendChild(nameEl);
+                    info.appendChild(dateEl);
+                    const loadBtn = document.createElement('button');
+                    loadBtn.className = 'btn';
+                    loadBtn.textContent = t('presetsLoad');
+                    loadBtn.addEventListener('click', function() {
+                        if (p.hash) window.location.hash = p.hash;
+                        window.location.reload();
+                    });
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'btn preset-delete';
+                    delBtn.textContent = t('presetsDelete');
+                    delBtn.addEventListener('click', function() {
+                        persistPresets(getPresets().filter(function(x) { return x.id !== p.id; }));
+                        showToast(t('presetsDeletedToast'));
+                        renderPresetsModal();
+                    });
+                    const actions = document.createElement('div');
+                    actions.className = 'preset-actions';
+                    actions.appendChild(loadBtn);
+                    actions.appendChild(delBtn);
+                    row.appendChild(info);
+                    row.appendChild(actions);
+                    wrap.appendChild(row);
+                });
+                body.appendChild(wrap);
+            }
+            function openPresetsModal() {
+                if (!presetsModal) return;
+                renderPresetsModal();
+                presetsModal.classList.add('visible');
+            }
+            function closePresetsModal() {
+                if (presetsModal) presetsModal.classList.remove('visible');
+            }
+            if (presetsModalClose) presetsModalClose.addEventListener('click', closePresetsModal);
+            if (presetsModalBackdrop) presetsModalBackdrop.addEventListener('click', closePresetsModal);
+
+            // ── Annotations modal ──
+            const annotationsModal = document.getElementById('annotationsModal');
+            const annotationsModalBackdrop = document.getElementById('annotationsModalBackdrop');
+            const annotationsModalClose = document.getElementById('annotationsModalClose');
+            if (annotationsModalClose) annotationsModalClose.addEventListener('click', closeAnnotationsModal);
+            if (annotationsModalBackdrop) annotationsModalBackdrop.addEventListener('click', closeAnnotationsModal);
+            const annotateBtn = document.getElementById('annotateBtn');
+            if (annotateBtn) annotateBtn.addEventListener('click', toggleAnnotationMode);
+            const annotationKindPinBtn = document.getElementById('annotationKindPin');
+            const annotationKindRegionBtn = document.getElementById('annotationKindRegion');
+            const annotationFinishBtn2 = document.getElementById('annotationFinishBtn');
+            const annotationClearBtn2 = document.getElementById('annotationClearBtn');
+            const annotationManageBtn2 = document.getElementById('annotationManageBtn');
+            if (annotationKindPinBtn) annotationKindPinBtn.addEventListener('click', function() { toggleAnnotationKind('pin'); });
+            if (annotationKindRegionBtn) annotationKindRegionBtn.addEventListener('click', function() { toggleAnnotationKind('region'); });
+            if (annotationFinishBtn2) annotationFinishBtn2.addEventListener('click', finishAnnotationRegion);
+            if (annotationClearBtn2) annotationClearBtn2.addEventListener('click', clearAnnotationDrawing);
+            if (annotationManageBtn2) annotationManageBtn2.addEventListener('click', openAnnotationsModal);
+            mapContainer.addEventListener('click', handleAnnotationClick, true);
+            const mobileAnnotateBtn = document.getElementById('mobileAnnotateBtn');
+            if (mobileAnnotateBtn) mobileAnnotateBtn.addEventListener('click', function() { closeMobileToolsMenu(); toggleAnnotationMode(); });
 
             // ── Menu toggle & panel buttons ──
             closePanelBtn.addEventListener('click', () => {
@@ -8448,4 +9327,3 @@ opt.textContent = (lang === 'ar' ? b.name : lang === 'ru' ? (b.name_ru || b.name
                     });
                 });
             })();
-        })();

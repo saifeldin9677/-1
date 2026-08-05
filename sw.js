@@ -1,12 +1,19 @@
-const LEPIDOS_CACHE_VERSION = 'lepidos-v7';
-const LEPIDOS_CACHE_PRECACHE = 'lepidos-precache-v7';
-const LEPIDOS_CACHE_RUNTIME = 'lepidos-runtime-v7';
+const LEPIDOS_CACHE_VERSION = 'lepidos-v9';
+const LEPIDOS_CACHE_PRECACHE = 'lepidos-precache-v9';
+const LEPIDOS_CACHE_RUNTIME = 'lepidos-runtime-v9';
 
 const PRECACHE_URLS = [
     './',
     './index.html',
     './style.css',
-    './app.js',
+    './state.js',
+    './i18n.js',
+    './layers.js',
+    './map-core.js',
+    './quiz.js',
+    './export.js',
+    './ui.js',
+    './main.js',
     './data.js',
     './manifest.json',
     './admin-boundaries-data.json',
@@ -47,14 +54,16 @@ self.addEventListener('install', function(event) {
 });
 
 // Wipe every lepidos cache from any previous version, then take control.
-// This guarantees the next load uses the freshly deployed files and can never
-// be served stale/broken copies from an old cache.
+// The CURRENT version's caches (just created during install) are kept so the
+// app shell remains available offline; only stale caches from older
+// deployments are removed. This guarantees the next load uses the freshly
+// deployed files and can never be served stale/broken copies from an old cache.
 self.addEventListener('activate', function(event) {
     event.waitUntil(
         caches.keys().then(function(keys) {
             return Promise.all(
                 keys.filter(function(key) {
-                    return key.indexOf('lepidos-') === 0;
+                    return key.indexOf('lepidos-') === 0 && key !== LEPIDOS_CACHE_PRECACHE && key !== LEPIDOS_CACHE_RUNTIME;
                 }).map(function(key) {
                     return caches.delete(key);
                 })

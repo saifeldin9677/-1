@@ -1,4 +1,4 @@
-            const i18n = {
+export const i18n = {
                 ar: {
                     langLabel: '🌐 اللغة:',
                     langButton: 'العربية',
@@ -467,6 +467,21 @@
                     quizSearchQuestions: 'ابحث في الأسئلة...',
                     quizClearAll: 'مسح الكل',
                     quizClearAllConfirm: 'سيتم حذف جميع الأسئلة المحفوظة ({count}) بشكل دائم. لا يمكن التراجع عن هذا الإجراء. هل تريد المتابعة؟',
+                    quizExportBank: 'تصدير البنك',
+                    quizImportBank: 'استيراد',
+                    quizImportOne: 'تم استيراد {count} سؤال جديد إلى البنك.',
+                    quizImportFew: 'تم استيراد {count} أسئلة جديدة إلى البنك.',
+                    quizImportMany: 'تم استيراد {count} سؤالاً جديداً إلى البنك.',
+                    quizImportNothingNew: 'لا توجد أسئلة جديدة للاستيراد.',
+                    quizImportError: 'تعذر استيراد الملف. تأكد من أن الملف بنسق JSON صحيح.',
+                    quizExportCsv: 'تصدير CSV',
+                    quizExportCsvQuestion: 'السؤال',
+                    quizExportCsvStatus: 'الحالة',
+                    quizExportCsvAnswer: 'الإجابة',
+                    quizSkipped: 'تم التخطي',
+                    quizProvenanceLabel: 'المصدر / المرجع (اختياري)',
+                    quizProvenancePlaceholder: 'مثال: كتاب الجغرافيا، الصف الخامس',
+                    quizProvenanceReview: 'المصدر: {source}',
                     quizStudentName: 'الطالب',
                     quizResultsTitle: 'نتائج الجلسة',
                     closeLabel: 'إغلاق',
@@ -517,6 +532,95 @@
                     catClimate: 'مناخ وجيولوجيا',
                     allOff: '🔴 إيقاف الكل',
                     resetLayers: '↺ إعادة الطبقات',
+                    aboutTitle: 'حول التطبيق',
+skipLinkLabel: "تخطَّ إلى الخريطة",
+                    aboutIntro: 'أطلس ليبيدوس خريطة عالم تفاعلية تعليمية للمدارس والجامعات ومراكز البحث. تجمع بين الجغرافيا والثقافة وطبقات البيانات الحية مع وضع الاختبارات.',
+                    aboutVersion: 'الإصدار {version}',
+                    aboutDataSources: 'مصادر البيانات والإسناد',
+                    aboutSrcBorders: 'حدود الدول والإسقاطات ومواضع التسميات: مأخوذة من خرائط مرجعية عامة مفتوحة.',
+                    aboutSrcPhysical: 'الطبقات الطبيعية (الأنهار والجبال والصحاري والغابات): مأخوذة من أطالس مرجعية عامة.',
+                    aboutSrcHuman: 'الطبقات البشرية (العواصم والمدن والمجموعات العرقية والموارد والطرق والنزاعات الحدودية): مأخوذة من بيانات مرجعية عامة.',
+                    aboutSrcHazards: 'طبقات المخاطر (الزلازل والبراكين والصفائح التكتونية): مأخوذة من سجلات زلزالية عامة.',
+                    aboutSrcTimezone: 'حدود المناطق الزمنية والفروق: مستمدة من بيانات مرجعية عامة للمناطق الزمنية.',
+                    aboutNotes: 'للاستشهاد الأكاديمي، استخدم تاريخ الاستخراج المطبوع على ملفات PDF المُصدَّرة. البيانات مقدمة للأغراض التعليمية.',
+                    layerMetaTitle: 'بيانات الطبقات والاستشهاد',
+                    layerMetaIntro: 'لكل طبقة بيانات: المصدر، والترخيص، وتاريخ آخر تحديث، والدقة. للاستشهاد الأكاديمي، استخدم تاريخ الاستخراج المطبوع على الملفات المُصدَّرة.',
+                    layerMetaColLayer: 'طبقة البيانات',
+                    layerMetaColSource: 'المصدر',
+                    layerMetaColLicense: 'الترخيص',
+                    layerMetaColDate: 'آخر تحديث',
+                    layerMetaColAccuracy: 'الدقة',
+                    layerMetaPdfLabel: 'طبقات البيانات في هذا التصدير',
+                    layerMetaBaseName: 'الخريطة الأساسية وحدود الدول',
+                    layerMetaBaseSource: 'خرائط مرجعية عامة مفتوحة',
+                    layerMetaBaseLicense: 'مفتوح — استخدام تعليمي',
+                    layerMetaBaseDate: '2024',
+                    layerMetaBaseAccuracy: 'خطوط عامة للعرض بمستوى تقريبي',
+                    layerMetaAdminName: 'الحدود الإدارية',
+                    layerMetaAdminSource: 'بيانات إدارية مرجعية عامة مفتوحة',
+                    layerMetaAdminLicense: 'مفتوح — استخدام تعليمي',
+                    layerMetaAdminDate: '2024',
+                    layerMetaAdminAccuracy: 'حدود دون وطنية، بشكل مبسّط',
+                    layerMetaRiversName: 'الأنهار والمسطحات المائية',
+                    layerMetaRiversSource: 'أطالس مرجعية عامة',
+                    layerMetaRiversLicense: 'مفتوح — استخدام تعليمي',
+                    layerMetaRiversDate: '2024',
+                    layerMetaRiversAccuracy: 'أنهار رئيسية، بشكل مبسّط',
+                    layerMetaLandformsName: 'الصحاري والغابات والتضاريس',
+                    layerMetaLandformsSource: 'أطالس مرجعية عامة',
+                    layerMetaLandformsLicense: 'مفتوح — استخدام تعليمي',
+                    layerMetaLandformsDate: '2024',
+                    layerMetaLandformsAccuracy: 'مناطق عامة',
+                    layerMetaHumanName: 'الجغرافيا البشرية (المدن، المجموعات العرقية، الموارد، التكتلات، النزاعات)',
+                    layerMetaHumanSource: 'بيانات سكانية وسياسية مرجعية عامة',
+                    layerMetaHumanLicense: 'مفتوح — استخدام تعليمي',
+                    layerMetaHumanDate: '2024',
+                    layerMetaHumanAccuracy: 'مواقع نقطية تقريبية',
+                    layerMetaOceanName: 'التيارات المحيطية والرياح',
+                    layerMetaOceanSource: 'بيانات مناخية مرجعية عامة',
+                    layerMetaOceanLicense: 'مفتوح — استخدام تعليمي',
+                    layerMetaOceanDate: '2024',
+                    layerMetaOceanAccuracy: 'أنماط موسمية تخطيطية',
+                    layerMetaHazardsName: 'الزلازل والبراكين',
+                    layerMetaHazardsSource: 'سجلات زلزالية وبركانية عامة',
+                    layerMetaHazardsLicense: 'مفتوح — استخدام تعليمي',
+                    layerMetaHazardsDate: '2024',
+                    layerMetaHazardsAccuracy: 'أحداث تاريخية، بشكل عام',
+                    layerMetaTimezoneName: 'المناطق الزمنية',
+                    layerMetaTimezoneSource: 'بيانات مناطق زمنية مرجعية عامة',
+                    layerMetaTimezoneLicense: 'مفتوح — استخدام تعليمي',
+                    layerMetaTimezoneDate: '2024',
+                    layerMetaTimezoneAccuracy: 'حدود وفروق زمنية قياسية',
+                    pdfVersionLine: 'الإصدار {version} · أطلس ليبيدوس',
+                    presetsTitle: 'المحفوظات التعليمية',
+                    presetsSave: 'حفظ العرض الحالي',
+                    presetsNamePlaceholder: 'اسم المحفوظة (مثال: درس أفريقيا 1)',
+                    presetsLoad: 'فتح',
+                    presetsDelete: 'حذف',
+                    presetsEmpty: 'لا توجد محفوظات بعد. احفظ عرض الخريطة الحالي لإعادة استخدامه في الحصة.',
+                    presetsSavedToast: 'تم حفظ المحفوظة',
+                    presetsDeletedToast: 'تم حذف المحفوظة',
+                    measureDist: 'مسافة',
+                    measureArea: 'مساحة',
+                    measureGeodesic: 'جيوديسي',
+                    measurePlanar: 'مستوي',
+                    measureClear: 'مسح',
+                    measureFinish: 'إنهاء',
+                    annotationToolLabel: 'إضافة تعليقات',
+                    annotationPin: 'نقطة',
+                    annotationRegion: 'منطقة',
+                    annotationClear: 'مسح',
+                    annotationManage: 'إدارة',
+                    annotationPromptLabel: 'تسمية التعليق:',
+                    annotationRegionPromptLabel: 'تسمية المنطقة (اختياري):',
+                    annotationEmpty: 'لا توجد تعليقات بعد. استخدم أداة التعليقات لإضافة نقاط ومناطق.',
+                    annotationTitle: 'التعليقات',
+                    annotationDelete: 'حذف',
+                    annotationDeleteConfirm: 'حذف التعليق "{label}"؟',
+                    annotationAdded: 'تمت إضافة التعليق.',
+                    annotationShow: 'إظهار',
+                    annotationHidden: 'مخفي',
+                    measureAreaUnit: 'كم²',
                 },
                 en: {
                     langLabel: '🌐 Language:',
@@ -986,6 +1090,21 @@
                     quizSearchQuestions: 'Search questions...',
                     quizClearAll: 'Clear All',
                     quizClearAllConfirm: 'This will permanently delete all {count} saved questions. This cannot be undone. Continue?',
+                    quizExportBank: 'Export Bank',
+                    quizImportBank: 'Import',
+                    quizImportOne: 'Imported {count} new question.',
+                    quizImportFew: 'Imported {count} new questions.',
+                    quizImportMany: 'Imported {count} new questions.',
+                    quizImportNothingNew: 'No new questions to import.',
+                    quizImportError: 'Could not import file. Please make sure it is a valid JSON file.',
+                    quizExportCsv: 'Export CSV',
+                    quizExportCsvQuestion: 'Question',
+                    quizExportCsvStatus: 'Status',
+                    quizExportCsvAnswer: 'Answer',
+                    quizSkipped: 'Skipped',
+                    quizProvenanceLabel: 'Source / reference (optional)',
+                    quizProvenancePlaceholder: 'e.g. Geography textbook, Grade 5',
+                    quizProvenanceReview: 'Source: {source}',
                     quizStudentName: 'Student',
                     quizResultsTitle: 'Session Results',
                     closeLabel: 'Close',
@@ -1036,6 +1155,95 @@
                     catClimate: 'Climate & Geology',
                     allOff: '🔴 All Off',
                     resetLayers: '↺ Reset Layers',
+                    aboutTitle: 'About',
+skipLinkLabel: "Skip to map",
+                    aboutIntro: 'Lepidos Atlas is an educational interactive world map for schools, universities and research centers. It combines geography, culture, and live data layers with a quiz mode.',
+                    aboutVersion: 'Version {version}',
+                    aboutDataSources: 'Data sources & attribution',
+                    aboutSrcBorders: 'Country borders, projections and label placements: compiled from open public reference cartography.',
+                    aboutSrcPhysical: 'Physical layers (rivers, mountains, deserts, forests): compiled from public reference atlases.',
+                    aboutSrcHuman: 'Human layers (capitals, cities, ethnic groups, resources, corridors, border disputes): compiled from public reference data.',
+                    aboutSrcHazards: 'Hazard layers (earthquakes, volcanoes, tectonic plates): compiled from public seismological records.',
+                    aboutSrcTimezone: 'Time zone boundaries and offsets: derived from public time zone reference data.',
+                    aboutNotes: 'For academic citation, use the extraction date printed on exported PDFs. Data is provided for educational purposes.',
+                    layerMetaTitle: 'Layer data & citation',
+                    layerMetaIntro: 'For each data layer: source, license, last updated and accuracy. For academic citation, use the extraction date printed on exported files.',
+                    layerMetaColLayer: 'Data layer',
+                    layerMetaColSource: 'Source',
+                    layerMetaColLicense: 'License',
+                    layerMetaColDate: 'Last updated',
+                    layerMetaColAccuracy: 'Accuracy',
+                    layerMetaPdfLabel: 'Data layers in this export',
+                    layerMetaBaseName: 'Base map & country borders',
+                    layerMetaBaseSource: 'Open public reference cartography',
+                    layerMetaBaseLicense: 'Open — educational use',
+                    layerMetaBaseDate: '2024',
+                    layerMetaBaseAccuracy: 'Generalized outlines for low-zoom reference',
+                    layerMetaAdminName: 'Administrative boundaries',
+                    layerMetaAdminSource: 'Open public reference administrative data',
+                    layerMetaAdminLicense: 'Open — educational use',
+                    layerMetaAdminDate: '2024',
+                    layerMetaAdminAccuracy: 'Subnational borders, generalized',
+                    layerMetaRiversName: 'Rivers & water features',
+                    layerMetaRiversSource: 'Public reference atlases',
+                    layerMetaRiversLicense: 'Open — educational use',
+                    layerMetaRiversDate: '2024',
+                    layerMetaRiversAccuracy: 'Major rivers, simplified',
+                    layerMetaLandformsName: 'Deserts, forests & landforms',
+                    layerMetaLandformsSource: 'Public reference atlases',
+                    layerMetaLandformsLicense: 'Open — educational use',
+                    layerMetaLandformsDate: '2024',
+                    layerMetaLandformsAccuracy: 'Generalized zones',
+                    layerMetaHumanName: 'Human geography (cities, ethnic groups, resources, blocs, disputes)',
+                    layerMetaHumanSource: 'Public reference demographic & political data',
+                    layerMetaHumanLicense: 'Open — educational use',
+                    layerMetaHumanDate: '2024',
+                    layerMetaHumanAccuracy: 'Point locations, approximate',
+                    layerMetaOceanName: 'Ocean currents & winds',
+                    layerMetaOceanSource: 'Public climate reference data',
+                    layerMetaOceanLicense: 'Open — educational use',
+                    layerMetaOceanDate: '2024',
+                    layerMetaOceanAccuracy: 'Schematic seasonal patterns',
+                    layerMetaHazardsName: 'Earthquakes & volcanoes',
+                    layerMetaHazardsSource: 'Public seismological & volcanological records',
+                    layerMetaHazardsLicense: 'Open — educational use',
+                    layerMetaHazardsDate: '2024',
+                    layerMetaHazardsAccuracy: 'Historical events, generalized',
+                    layerMetaTimezoneName: 'Time zones',
+                    layerMetaTimezoneSource: 'Public time zone reference data',
+                    layerMetaTimezoneLicense: 'Open — educational use',
+                    layerMetaTimezoneDate: '2024',
+                    layerMetaTimezoneAccuracy: 'Standard boundaries & offsets',
+                    pdfVersionLine: 'Version {version} · Lepidos Atlas',
+                    presetsTitle: 'Lesson presets',
+                    presetsSave: 'Save current view',
+                    presetsNamePlaceholder: 'Preset name (e.g. Africa lesson 1)',
+                    presetsLoad: 'Open',
+                    presetsDelete: 'Delete',
+                    presetsEmpty: 'No presets saved yet. Save the current map view to reuse it in class.',
+                    presetsSavedToast: 'Preset saved',
+                    presetsDeletedToast: 'Preset deleted',
+                    measureDist: 'Distance',
+                    measureArea: 'Area',
+                    measureGeodesic: 'Geodesic',
+                    measurePlanar: 'Planar',
+                    measureClear: 'Clear',
+                    measureFinish: 'Finish',
+                    annotationToolLabel: 'Annotate',
+                    annotationPin: 'Pin',
+                    annotationRegion: 'Region',
+                    annotationClear: 'Clear',
+                    annotationManage: 'Manage',
+                    annotationPromptLabel: 'Annotation label:',
+                    annotationRegionPromptLabel: 'Region label (optional):',
+                    annotationEmpty: 'No annotations yet. Use the Annotate tool to add pins and regions.',
+                    annotationTitle: 'Annotations',
+                    annotationDelete: 'Delete',
+                    annotationDeleteConfirm: 'Delete annotation "{label}"?',
+                    annotationAdded: 'Annotation added.',
+                    annotationShow: 'Show',
+                    annotationHidden: 'Hidden',
+                    measureAreaUnit: 'km²',
                 },
                 ru: {
                     langLabel: '🌐 Язык:',
@@ -1504,6 +1712,21 @@
                     quizSearchQuestions: 'Поиск вопросов...',
                     quizClearAll: 'Очистить все',
                     quizClearAllConfirm: 'Все сохранённые вопросы ({count}) будут удалены безвозвратно. Это действие нельзя отменить. Продолжить?',
+                    quizExportBank: 'Экспорт банка',
+                    quizImportBank: 'Импорт',
+                    quizImportOne: 'Импортирован {count} новый вопрос.',
+                    quizImportFew: 'Импортировано {count} новых вопроса.',
+                    quizImportMany: 'Импортировано {count} новых вопросов.',
+                    quizImportNothingNew: 'Новых вопросов для импорта нет.',
+                    quizImportError: 'Не удалось импортировать файл. Убедитесь, что это корректный JSON-файл.',
+                    quizExportCsv: 'Экспорт CSV',
+                    quizExportCsvQuestion: 'Вопрос',
+                    quizExportCsvStatus: 'Статус',
+                    quizExportCsvAnswer: 'Ответ',
+                    quizSkipped: 'Пропущено',
+                    quizProvenanceLabel: 'Источник / ссылка (необязательно)',
+                    quizProvenancePlaceholder: 'например, учебник географии, 5 класс',
+                    quizProvenanceReview: 'Источник: {source}',
                     quizStudentName: 'Студент',
                     quizResultsTitle: 'Результаты сессии',
                     closeLabel: 'Закрыть',
@@ -1554,6 +1777,95 @@
                     catClimate: 'Климат и геология',
                     allOff: '🔴 Выкл. всё',
                     resetLayers: '↺ Сброс слоёв',
+                    aboutTitle: 'О приложении',
+skipLinkLabel: "Перейти к карте",
+                    aboutIntro: 'Атлас Лепидос — интерактивная образовательная карта мира для школ, университетов и исследовательских центров. Сочетает географию, культуру и живые слои данных с режимом викторины.',
+                    aboutVersion: 'Версия {version}',
+                    aboutDataSources: 'Источники данных и атрибуция',
+                    aboutSrcBorders: 'Границы стран, проекции и размещение подписей: на основе открытых публичных картографических источников.',
+                    aboutSrcPhysical: 'Физические слои (реки, горы, пустыни, леса): на основе публичных справочных атласов.',
+                    aboutSrcHuman: 'Социальные слои (столицы, города, этнические группы, ресурсы, маршруты, пограничные споры): на основе публичных справочных данных.',
+                    aboutSrcHazards: 'Слои опасностей (землетрясения, вулканы, тектонические плиты): на основе публичных сейсмологических записей.',
+                    aboutSrcTimezone: 'Часовые пояса и смещения: на основе публичных справочных данных о часовых поясах.',
+                    aboutNotes: 'Для академического цитирования используйте дату извлечения, указанную в экспортированных PDF. Данные предоставляются в образовательных целях.',
+                    layerMetaTitle: 'Данные слоёв и цитирование',
+                    layerMetaIntro: 'Для каждого слоя данных: источник, лицензия, дата последнего обновления и точность. Для академического цитирования используйте дату извлечения, указанную в экспортированных файлах.',
+                    layerMetaColLayer: 'Слой данных',
+                    layerMetaColSource: 'Источник',
+                    layerMetaColLicense: 'Лицензия',
+                    layerMetaColDate: 'Обновлено',
+                    layerMetaColAccuracy: 'Точность',
+                    layerMetaPdfLabel: 'Слои данных в этом экспорте',
+                    layerMetaBaseName: 'Базовые карта и границы стран',
+                    layerMetaBaseSource: 'Открытые общедоступные справочные карты',
+                    layerMetaBaseLicense: 'Открытая — учебное использование',
+                    layerMetaBaseDate: '2024',
+                    layerMetaBaseAccuracy: 'Обобщённые контуры для обзорного масштаба',
+                    layerMetaAdminName: 'Административные границы',
+                    layerMetaAdminSource: 'Открытые справочные административные данные',
+                    layerMetaAdminLicense: 'Открытая — учебное использование',
+                    layerMetaAdminDate: '2024',
+                    layerMetaAdminAccuracy: 'Субнациональные границы, обобщённо',
+                    layerMetaRiversName: 'Реки и водные объекты',
+                    layerMetaRiversSource: 'Общедоступные справочные атласы',
+                    layerMetaRiversLicense: 'Открытая — учебное использование',
+                    layerMetaRiversDate: '2024',
+                    layerMetaRiversAccuracy: 'Основные реки, упрощённо',
+                    layerMetaLandformsName: 'Пустыни, леса и формы рельефа',
+                    layerMetaLandformsSource: 'Общедоступные справочные атласы',
+                    layerMetaLandformsLicense: 'Открытая — учебное использование',
+                    layerMetaLandformsDate: '2024',
+                    layerMetaLandformsAccuracy: 'Обобщённые зоны',
+                    layerMetaHumanName: 'География населения (города, этносы, ресурсы, блоки, споры)',
+                    layerMetaHumanSource: 'Открытые справочные демографические и политические данные',
+                    layerMetaHumanLicense: 'Открытая — учебное использование',
+                    layerMetaHumanDate: '2024',
+                    layerMetaHumanAccuracy: 'Точечные расположения, приблизительно',
+                    layerMetaOceanName: 'Океанические течения и ветры',
+                    layerMetaOceanSource: 'Открытые справочные климатические данные',
+                    layerMetaOceanLicense: 'Открытая — учебное использование',
+                    layerMetaOceanDate: '2024',
+                    layerMetaOceanAccuracy: 'Схематичные сезонные закономерности',
+                    layerMetaHazardsName: 'Землетрясения и вулканы',
+                    layerMetaHazardsSource: 'Открытые сейсмологические и вулканологические записи',
+                    layerMetaHazardsLicense: 'Открытая — учебное использование',
+                    layerMetaHazardsDate: '2024',
+                    layerMetaHazardsAccuracy: 'Исторические события, обобщённо',
+                    layerMetaTimezoneName: 'Часовые пояса',
+                    layerMetaTimezoneSource: 'Открытые справочные данные о часовых поясах',
+                    layerMetaTimezoneLicense: 'Открытая — учебное использование',
+                    layerMetaTimezoneDate: '2024',
+                    layerMetaTimezoneAccuracy: 'Стандартные границы и смещения',
+                    pdfVersionLine: 'Версия {version} · Атлас Лепидос',
+                    presetsTitle: 'Сохранённые уроки',
+                    presetsSave: 'Сохранить текущий вид',
+                    presetsNamePlaceholder: 'Название (напр. Урок об Африке 1)',
+                    presetsLoad: 'Открыть',
+                    presetsDelete: 'Удалить',
+                    presetsEmpty: 'Пока нет сохранённых уроков. Сохраните текущий вид карты, чтобы использовать его на занятии.',
+                    presetsSavedToast: 'Урок сохранён',
+                    presetsDeletedToast: 'Урок удалён',
+                    measureDist: 'Расстояние',
+                    measureArea: 'Площадь',
+                    measureGeodesic: 'Геодезический',
+                    measurePlanar: 'Плоский',
+                    measureClear: 'Очистить',
+                    measureFinish: 'Готово',
+                    annotationToolLabel: 'Комментарии',
+                    annotationPin: 'Точка',
+                    annotationRegion: 'Область',
+                    annotationClear: 'Очистить',
+                    annotationManage: 'Управление',
+                    annotationPromptLabel: 'Подпись:',
+                    annotationRegionPromptLabel: 'Подпись области (необязательно):',
+                    annotationEmpty: 'Комментариев пока нет. Используйте инструмент «Комментарии», чтобы добавить точки и области.',
+                    annotationTitle: 'Комментарии',
+                    annotationDelete: 'Удалить',
+                    annotationDeleteConfirm: 'Удалить комментарий «{label}»?',
+                    annotationAdded: 'Комментарий добавлен.',
+                    annotationShow: 'Показать',
+                    annotationHidden: 'Скрыто',
+                    measureAreaUnit: 'км²',
                 },
                 uz: {
                     langLabel: '🌐 Til:',
@@ -1564,7 +1876,7 @@
                     globeProjectionType: '3D Shar ko\'rinishi',
                     modeLabel: '🎨 Rejim:',
                     mode_religion: '🕌 Din',
-                    mode_terrain: '🏔️ Relьef',
+                    mode_terrain: '🏔️ Relief',
                     mode_density: '👥 Zichlik',
                     mode_precipitation: '🌧️ Yomg\'ir',
                     mode_temperature: '🌡️ Harorat',
@@ -1602,7 +1914,7 @@
                     resetBtn: '↺ Tiklash',
                     shareBtn: '📤 Ulashish',
                     infoOverlay: '🦋 Waterman Butterfly | Mashtab: {zoom}x | Suring | Aylantiring',
-                    terrainLegend: '🏔️ Relьef',
+                    terrainLegend: '🏔️ Relief',
                     densityLegend: '👥 Zichlik',
                     precipitationLegend: '🌧️ Yomg\'ir (mm/yil)',
                     temperatureLegend: '🌡️ Harorat',
@@ -1664,7 +1976,7 @@
                     government: 'Hukumat',
                     coordsBarLabel: '📍 Koordinatalar',
                     mode_religion_tip: 'Din bo\'yicha rang',
-                    mode_terrain_tip: 'Relьef bo\'yicha rang',
+                    mode_terrain_tip: 'Relief bo\'yicha rang',
                     mode_density_tip: 'Zichlik bo\'yicha rang',
                     mode_precipitation_tip: "Yomg'ir bo'yicha rang",
                     mode_temperature_tip: 'Harorat bo\'yicha rang',
@@ -1729,7 +2041,7 @@
                     earthquakesLegend: '🏚️ Zilzilalar',
                     volcanoesLegend: '🌋 Vulkanlar',
                     additionalWaterwaysLegend: '🚢 Qo\'shimcha suv yo\'llari',
-                    geopoliticalBlocsLegend: '🇺🇳 Gеopolitik bloklar',
+                    geopoliticalBlocsLegend: '🇺🇳 Geopolitik bloklar',
                     desertsForestsLegend: '🏜️ Cho\'llar va o\'rmonlar',
                     featureClickHint: '💡 Tog\' yoki daryoga bosing',
                     featureKm: 'km',
@@ -2022,12 +2334,27 @@
                     quizSearchQuestions: 'Savollarni qidirish...',
                     quizClearAll: 'Hammasini tozalash',
                     quizClearAllConfirm: 'Barcha saqlangan savollar ({count}) doimiy o\'chiriladi. Bu amalni bekor qilib bo\'lmaydi. Davom etasizmi?',
+                    quizExportBank: 'Bankni eksport qilish',
+                    quizImportBank: 'Import',
+                    quizImportOne: 'Bankka {count} ta yangi savol qo\'shildi.',
+                    quizImportFew: 'Bankka {count} ta yangi savol qo\'shildi.',
+                    quizImportMany: 'Bankka {count} ta yangi savol qo\'shildi.',
+                    quizImportNothingNew: 'Import qilish uchun yangi savollar yo\'q.',
+                    quizImportError: 'Faylni import qilib bo\'lmadi. Fayl to\'g\'ri JSON formatda ekaniga ishonch hosil qiling.',
+                    quizExportCsv: 'CSV eksporti',
+                    quizExportCsvQuestion: 'Savol',
+                    quizExportCsvStatus: 'Holat',
+                    quizExportCsvAnswer: 'Javob',
+                    quizSkipped: 'O\'tkazib yuborildi',
+                    quizProvenanceLabel: 'Manba / havola (ixtiyoriy)',
+                    quizProvenancePlaceholder: 'masalan, geografiya darsligi, 5-sinf',
+                    quizProvenanceReview: 'Manba: {source}',
                     quizStudentName: 'Talaba',
                     quizResultsTitle: 'Sessiya natijalari',
                     closeLabel: 'Yopish',
                     langOverlaySubtitle: 'Tilni tanlang',
                     shortcut_R: 'Dinlar rejimi',
-                    shortcut_T: 'Relьef',
+                    shortcut_T: 'Relief',
                     shortcut_D: 'Aholi zichligi',
                     shortcut_P: 'Yog\'inlar',
                     shortcut_H: 'Harorat',
@@ -2072,6 +2399,95 @@
                     catClimate: 'Iqlim va geologiya',
                     allOff: '🔴 Hammasi o\'chirish',
                     resetLayers: '↺ Qatlamlarni tiklash',
+                    aboutTitle: 'Ilova haqida',
+skipLinkLabel: "Xaritaga o'tish",
+                    aboutIntro: "Lepidos Atlas — maktablar, universitetlar va ilmiy markazlar uchun mo'ljallangan interaktiv ta'limiy dunyo xaritasi. Geografiya, madaniyat va jonli ma'lumot qatlamlarini viktorina rejimi bilan birlashtiradi.",
+                    aboutVersion: 'Versiya {version}',
+                    aboutDataSources: "Ma'lumot manbalari va hujjatlar",
+                    aboutSrcBorders: "Davlat chegaralari, proyeksiyalar va yozuvlar joylashuvi: ochiq jamoat kartografik manbalaridan tuzilgan.",
+                    aboutSrcPhysical: "Fizik qatlamlar (daryolar, tog'lar, cho'llar, o'rmonlar): ochiq ma'lumotnoma atlaslaridan.",
+                    aboutSrcHuman: "Ijtimoiy qatlamlar (poytaxtlar, shaharlar, etnik guruhlar, resurslar, yo'nalishlar, chegara nizolari): ochiq ma'lumotnoma ma'lumotlaridan.",
+                    aboutSrcHazards: "Xavf qatlamlari (zilzilalar, vulqonlar, tektonik plitalar): ochiq seysmik yozuvlardan.",
+                    aboutSrcTimezone: "Vaqt mintaqalari chegaralari va farqlari: ochiq vaqt mintaqasi ma'lumotlaridan.",
+                    aboutNotes: "Akademik iqtibos uchun eksport qilingan PDFlardagi olish sanasidan foydalaning. Ma'lumotlar ta'lim maqsadida taqdim etiladi.",
+                    layerMetaTitle: "Qatlam ma'lumotlari va iqtibos",
+                    layerMetaIntro: "Har bir ma'lumot qatlami uchun: manba, litsenziya, so'nggi yangilangan sana va aniqlik. Akademik iqtibos uchun eksport qilingan fayllardagi olish sanasidan foydalaning.",
+                    layerMetaColLayer: "Ma'lumot qatlami",
+                    layerMetaColSource: 'Manba',
+                    layerMetaColLicense: 'Litsenziya',
+                    layerMetaColDate: "So'nggi yangilanish",
+                    layerMetaColAccuracy: 'Aniqlik',
+                    layerMetaPdfLabel: "Ushbu eksportdagi ma'lumot qatlamlari",
+                    layerMetaBaseName: "Asosiy xarita va davlat chegaralari",
+                    layerMetaBaseSource: "Ochiq umumiy ma'lumotnoma kartografiyasi",
+                    layerMetaBaseLicense: "Ochiq — ta'lim maqsadida",
+                    layerMetaBaseDate: '2024',
+                    layerMetaBaseAccuracy: "Umumiy konturlar, past masshtab uchun",
+                    layerMetaAdminName: "Ma'muriy chegaralar",
+                    layerMetaAdminSource: "Ochiq ma'muriy ma'lumotnoma ma'lumotlari",
+                    layerMetaAdminLicense: "Ochiq — ta'lim maqsadida",
+                    layerMetaAdminDate: '2024',
+                    layerMetaAdminAccuracy: "Submilliy chegaralar, umumlashtirilgan",
+                    layerMetaRiversName: "Daryolar va suv obyektlari",
+                    layerMetaRiversSource: "Umumiy ma'lumotnoma atlaslari",
+                    layerMetaRiversLicense: "Ochiq — ta'lim maqsadida",
+                    layerMetaRiversDate: '2024',
+                    layerMetaRiversAccuracy: "Asosiy daryolar, soddalashtirilgan",
+                    layerMetaLandformsName: "Cho'llar, o'rmonlar va relyef",
+                    layerMetaLandformsSource: "Umumiy ma'lumotnoma atlaslari",
+                    layerMetaLandformsLicense: "Ochiq — ta'lim maqsadida",
+                    layerMetaLandformsDate: '2024',
+                    layerMetaLandformsAccuracy: 'Umumiy zonalar',
+                    layerMetaHumanName: "Aholi geografiyasi (shaharlar, etnik guruhlar, resurslar, bloklar, nizolar)",
+                    layerMetaHumanSource: "Ochiq demografik va siyosiy ma'lumotnoma ma'lumotlari",
+                    layerMetaHumanLicense: "Ochiq — ta'lim maqsadida",
+                    layerMetaHumanDate: '2024',
+                    layerMetaHumanAccuracy: "Nuqtali joylashuvlar, taxminiy",
+                    layerMetaOceanName: "Okean oqimlari va shamollar",
+                    layerMetaOceanSource: "Ochiq iqlim ma'lumotnoma ma'lumotlari",
+                    layerMetaOceanLicense: "Ochiq — ta'lim maqsadida",
+                    layerMetaOceanDate: '2024',
+                    layerMetaOceanAccuracy: "Sxematik mavsumiy naqshlar",
+                    layerMetaHazardsName: "Zilzilalar va vulqonlar",
+                    layerMetaHazardsSource: "Ochiq seysmologik va vulqonologik yozuvlar",
+                    layerMetaHazardsLicense: "Ochiq — ta'lim maqsadida",
+                    layerMetaHazardsDate: '2024',
+                    layerMetaHazardsAccuracy: "Tarixiy hodisalar, umumlashtirilgan",
+                    layerMetaTimezoneName: "Vaqt mintaqalari",
+                    layerMetaTimezoneSource: "Ochiq vaqt mintaqalari ma'lumotnoma ma'lumotlari",
+                    layerMetaTimezoneLicense: "Ochiq — ta'lim maqsadida",
+                    layerMetaTimezoneDate: '2024',
+                    layerMetaTimezoneAccuracy: "Standart chegaralar va farqlar",
+                    pdfVersionLine: 'Versiya {version} · Lepidos Atlas',
+                    presetsTitle: 'Dars andozalari',
+                    presetsSave: "Joriy ko'rinishni saqlash",
+                    presetsNamePlaceholder: "Andoza nomi (masalan, Afrika darsi 1)",
+                    presetsLoad: 'Ochish',
+                    presetsDelete: "O'chirish",
+                    presetsEmpty: "Hozircha saqlangan andozalar yo'q. Darsda qayta ishlatish uchun xaritaning joriy ko'rinishini saqlang.",
+                    presetsSavedToast: 'Andoza saqlandi',
+                    presetsDeletedToast: "Andoza o'chirildi",
+                    measureDist: 'Masofa',
+                    measureArea: 'Yuz maydoni',
+                    measureGeodesic: 'Geodezik',
+                    measurePlanar: 'Tekis',
+                    measureClear: 'Tozalash',
+                    measureFinish: 'Tugatish',
+                    annotationToolLabel: 'Izohlar',
+                    annotationPin: 'Nuqta',
+                    annotationRegion: 'Hudud',
+                    annotationClear: 'Tozalash',
+                    annotationManage: 'Boshqarish',
+                    annotationPromptLabel: 'Izoh yorlig\'i:',
+                    annotationRegionPromptLabel: 'Hudud yorlig\'i (ixtiyoriy):',
+                    annotationEmpty: 'Hali izohlar yo\'q. Nuqta va hudud qo\'shish uchun Izohlar vositasidan foydalaning.',
+                    annotationTitle: 'Izohlar',
+                    annotationDelete: 'O\'chirish',
+                    annotationDeleteConfirm: '"{label}" izohini o\'chirish kerakmi?',
+                    annotationAdded: 'Izoh qo\'shildi.',
+                    annotationShow: 'Ko\'rsatish',
+                    annotationHidden: 'Yashirin',
+                    measureAreaUnit: 'km²',
                 },
                 es: {
                     langLabel: '🌐 Idioma:',
@@ -2540,6 +2956,21 @@
                     quizSearchQuestions: 'Buscar preguntas...',
                     quizClearAll: 'Borrar todo',
                     quizClearAllConfirm: 'Esto eliminará permanentemente todas las {count} preguntas guardadas. Esta acción no se puede deshacer. ¿Continuar?',
+                    quizExportBank: 'Exportar banco',
+                    quizImportBank: 'Importar',
+                    quizImportOne: 'Se importó {count} pregunta nueva.',
+                    quizImportFew: 'Se importaron {count} preguntas nuevas.',
+                    quizImportMany: 'Se importaron {count} preguntas nuevas.',
+                    quizImportNothingNew: 'No hay preguntas nuevas para importar.',
+                    quizImportError: 'No se pudo importar el archivo. Asegúrate de que sea un archivo JSON válido.',
+                    quizExportCsv: 'Exportar CSV',
+                    quizExportCsvQuestion: 'Pregunta',
+                    quizExportCsvStatus: 'Estado',
+                    quizExportCsvAnswer: 'Respuesta',
+                    quizSkipped: 'Omitida',
+                    quizProvenanceLabel: 'Fuente / referencia (opcional)',
+                    quizProvenancePlaceholder: 'p. ej. libro de geografía, Grado 5',
+                    quizProvenanceReview: 'Fuente: {source}',
                     quizStudentName: 'Estudiante',
                     quizResultsTitle: 'Resultados de la sesión',
                     closeLabel: 'Cerrar',
@@ -2590,9 +3021,98 @@
                     catClimate: 'Clima y geología',
                     allOff: '🔴 Desactivar todo',
                     resetLayers: '↺ Restablecer capas',
+                    aboutTitle: 'Acerca de',
+skipLinkLabel: "Ir al mapa",
+                    aboutIntro: 'Lepidos Atlas es un mapa mundial interactivo educativo para escuelas, universidades y centros de investigación. Combina geografía, cultura y capas de datos en vivo con un modo de cuestionario.',
+                    aboutVersion: 'Versión {version}',
+                    aboutDataSources: 'Fuentes de datos y atribución',
+                    aboutSrcBorders: 'Fronteras de países, proyecciones y ubicación de etiquetas: compilado de cartografía pública de referencia.',
+                    aboutSrcPhysical: 'Capas físicas (ríos, montañas, desiertos, bosques): compilado de atlas públicos de referencia.',
+                    aboutSrcHuman: 'Capas humanas (capitales, ciudades, grupos étnicos, recursos, rutas, disputas fronterizas): compilado de datos públicos de referencia.',
+                    aboutSrcHazards: 'Capas de peligro (terremotos, volcanes, placas tectónicas): compilado de registros sismológicos públicos.',
+                    aboutSrcTimezone: 'Límites y desfases de zonas horarias: derivado de datos públicos de referencia de zonas horarias.',
+                    aboutNotes: 'Para citas académicas, use la fecha de extracción impresa en los PDF exportados. Los datos se proporcionan con fines educativos.',
+                    layerMetaTitle: 'Datos de capas y citación',
+                    layerMetaIntro: 'Para cada capa de datos: fuente, licencia, fecha de última actualización y precisión. Para citas académicas, use la fecha de extracción impresa en los archivos exportados.',
+                    layerMetaColLayer: 'Capa de datos',
+                    layerMetaColSource: 'Fuente',
+                    layerMetaColLicense: 'Licencia',
+                    layerMetaColDate: 'Actualizado',
+                    layerMetaColAccuracy: 'Precisión',
+                    layerMetaPdfLabel: 'Capas de datos en esta exportación',
+                    layerMetaBaseName: 'Mapa base y fronteras de países',
+                    layerMetaBaseSource: 'Cartografía pública de referencia abierta',
+                    layerMetaBaseLicense: 'Abierta — uso educativo',
+                    layerMetaBaseDate: '2024',
+                    layerMetaBaseAccuracy: 'Contornos generalizados para escala de vista general',
+                    layerMetaAdminName: 'Límites administrativos',
+                    layerMetaAdminSource: 'Datos administrativos públicos de referencia abierta',
+                    layerMetaAdminLicense: 'Abierta — uso educativo',
+                    layerMetaAdminDate: '2024',
+                    layerMetaAdminAccuracy: 'Límites subnacionales, generalizados',
+                    layerMetaRiversName: 'Ríos y cuerpos de agua',
+                    layerMetaRiversSource: 'Atlas públicos de referencia',
+                    layerMetaRiversLicense: 'Abierta — uso educativo',
+                    layerMetaRiversDate: '2024',
+                    layerMetaRiversAccuracy: 'Ríos principales, simplificados',
+                    layerMetaLandformsName: 'Desiertos, bosques y relieves',
+                    layerMetaLandformsSource: 'Atlas públicos de referencia',
+                    layerMetaLandformsLicense: 'Abierta — uso educativo',
+                    layerMetaLandformsDate: '2024',
+                    layerMetaLandformsAccuracy: 'Zonas generalizadas',
+                    layerMetaHumanName: 'Geografía humana (ciudades, grupos étnicos, recursos, bloques, disputas)',
+                    layerMetaHumanSource: 'Datos demográficos y políticos públicos de referencia',
+                    layerMetaHumanLicense: 'Abierta — uso educativo',
+                    layerMetaHumanDate: '2024',
+                    layerMetaHumanAccuracy: 'Ubicaciones puntuales aproximadas',
+                    layerMetaOceanName: 'Corrientes oceánicas y vientos',
+                    layerMetaOceanSource: 'Datos climáticos públicos de referencia',
+                    layerMetaOceanLicense: 'Abierta — uso educativo',
+                    layerMetaOceanDate: '2024',
+                    layerMetaOceanAccuracy: 'Patrones estacionales esquemáticos',
+                    layerMetaHazardsName: 'Terremotos y volcanes',
+                    layerMetaHazardsSource: 'Registros sismológicos y vulcanológicos públicos',
+                    layerMetaHazardsLicense: 'Abierta — uso educativo',
+                    layerMetaHazardsDate: '2024',
+                    layerMetaHazardsAccuracy: 'Eventos históricos, generalizados',
+                    layerMetaTimezoneName: 'Zonas horarias',
+                    layerMetaTimezoneSource: 'Datos públicos de referencia de zonas horarias',
+                    layerMetaTimezoneLicense: 'Abierta — uso educativo',
+                    layerMetaTimezoneDate: '2024',
+                    layerMetaTimezoneAccuracy: 'Límites y desfases estándar',
+                    pdfVersionLine: 'Versión {version} · Lepidos Atlas',
+                    presetsTitle: 'Vistas de lección',
+                    presetsSave: 'Guardar vista actual',
+                    presetsNamePlaceholder: 'Nombre de la vista (p. ej. Lección África 1)',
+                    presetsLoad: 'Abrir',
+                    presetsDelete: 'Eliminar',
+                    presetsEmpty: 'Aún no hay vistas guardadas. Guarde la vista actual del mapa para reutilizarla en clase.',
+                    presetsSavedToast: 'Vista guardada',
+                    presetsDeletedToast: 'Vista eliminada',
+                    measureDist: 'Distancia',
+                    measureArea: 'Área',
+                    measureGeodesic: 'Geodésico',
+                    measurePlanar: 'Plano',
+                    measureClear: 'Limpiar',
+                    measureFinish: 'Terminar',
+                    annotationToolLabel: 'Anotar',
+                    annotationPin: 'Punto',
+                    annotationRegion: 'Región',
+                    annotationClear: 'Borrar',
+                    annotationManage: 'Administrar',
+                    annotationPromptLabel: 'Etiqueta de anotación:',
+                    annotationRegionPromptLabel: 'Etiqueta de región (opcional):',
+                    annotationEmpty: 'Aún no hay anotaciones. Usa la herramienta Anotar para añadir puntos y regiones.',
+                    annotationTitle: 'Anotaciones',
+                    annotationDelete: 'Eliminar',
+                    annotationDeleteConfirm: '¿Eliminar la anotación "{label}"?',
+                    annotationAdded: 'Anotación añadida.',
+                    annotationShow: 'Mostrar',
+                    annotationHidden: 'Oculto',
+                    measureAreaUnit: 'km²',
                 }
             };
-            const arabicNames = {
+export const arabicNames = {
                 'Afghanistan': 'أفغانستان',
                 'Albania': 'ألبانيا',
                 'Algeria': 'الجزائر',
@@ -2821,7 +3341,7 @@
                 'Azores': 'الأزور',
                 'Canary Is.': 'جزر الكناري'
             };
-            const russianNames = {
+export const russianNames = {
                 'Afghanistan': 'Афганистан',
                 'Albania': 'Албания',
                 'Algeria': 'Алжир',
@@ -3047,7 +3567,7 @@
                 'Azores': 'Азорские острова',
                 'Canary Is.': 'Канарские острова'
             };
-            const uzbekNames = {
+export const uzbekNames = {
                 'Afghanistan': 'Afg\'oniston',
                 'Albania': 'Albaniya',
                 'Algeria': 'Jazoir',
@@ -3274,7 +3794,7 @@
                 'Canary Is.': 'Kanar orollari'
             };
 
-            const religionByCountry = {
+export const religionByCountry = {
                 'Afghanistan': 'muslim',
                 'Albania': 'muslim',
                 'Algeria': 'muslim',
@@ -3511,7 +4031,7 @@
                 'Canary Is.': 'christian'
             };
 
-            const denominationByCountry = {
+export const denominationByCountry = {
                 'Saudi Arabia': 'sunni',
                 'Algeria': 'sunni',
                 'Morocco': 'sunni',
@@ -3749,7 +4269,7 @@
                 'Canary Is.': 'catholic'
             };
 
-            const MAP_COLORS = {
+export const MAP_COLORS = {
                 terrain: ['#5a5a60','#2d6a4f','#4c8c3a','#6ba33d','#8db840','#c4a840','#c48440','#a06030','#7a4030','#5a3035','#e8e0d8'],
                 density: ['#5a5a60','#f5f0e6','#e0d8c0','#c8b880','#b09860','#a07840','#c04030','#b02020','#7a1020'],
                 precipitation: ['#5a5a60','#d4a85c','#e0c070','#a8d08d','#6ab04c','#4a9c3f','#3b8cc7','#2c5f8a','#1a3d5c'],
@@ -3798,12 +4318,12 @@
                 ui: { textStroke: 'rgba(0,0,0,0.85)', white: '#fff', transparent: 'transparent', pdfBg: '#1a1d23' },
             };
 
-            const religionColors = { muslim: '#1b7a3d', christian: '#3b6fb6', hindu: '#e87830', buddhist: '#d4a017',
+export const religionColors = { muslim: '#1b7a3d', christian: '#3b6fb6', hindu: '#e87830', buddhist: '#d4a017',
                 jewish: '#5b8ec9', other: '#7a7a8a', unknown: '#4a4a55' };
-            const denominationColors = { sunni: '#2d8a4e', shia: '#c44d34', ibadi: '#5fa872', catholic: '#5b7eb5',
+export const denominationColors = { sunni: '#2d8a4e', shia: '#c44d34', ibadi: '#5fa872', catholic: '#5b7eb5',
                 protestant: '#6b8fc9', orthodox: '#9b6fb0', hindu: '#e87830', buddhist: '#d4a017', jewish: '#5b8ec9',
                 folk: '#a09070', shinto: '#c06050', juche: '#b05040', other: '#7a7a8a' };
-            const elevationByCountry = {
+export const elevationByCountry = {
                 'Afghanistan': 1884,
                 'Albania': 708,
                 'Algeria': 800,
@@ -4026,7 +4546,7 @@
                 'Canary Is.': 500
             };
 
-            const densityByCountry = {
+export const densityByCountry = {
                 'Afghanistan': 60,
                 'Albania': 105,
                 'Algeria': 18,
@@ -4253,7 +4773,7 @@
                 'Canary Is.': 293
             };
 
-            const precipitationByCountry = {
+export const precipitationByCountry = {
                 'Afghanistan': 327,
                 'Albania': 1485,
                 'Algeria': 89,
@@ -4490,7 +5010,7 @@
                 'Canary Is.': 200
             };
 
-            const tempByCountry = {
+export const tempByCountry = {
                 'Canada': -5,
                 'Russia': -4,
                 'Finland': 2,
@@ -4569,7 +5089,7 @@
                 'Canary Is.': 20
             };
 
-            const gdpByCountry = {
+export const gdpByCountry = {
                 'Afghanistan': 2100, 'Albania': 18000, 'Algeria': 13000, 'Angola': 7000,
                 'Argentina': 22000, 'Armenia': 17000, 'Australia': 62000, 'Austria': 62000,
                 'Azerbaijan': 16000, 'Bahrain': 48000, 'Bangladesh': 6000, 'Belarus': 21000,
@@ -4625,7 +5145,7 @@
                 'Trinidad and Tobago': 25000, 'United Arab Emirates': 78000,
                 'United States of America': 76000, 'W. Sahara': 2500
             };
-            const hdiByCountry = {
+export const hdiByCountry = {
                 'Afghanistan': 0.48, 'Albania': 0.80, 'Algeria': 0.75, 'Angola': 0.59,
                 'Argentina': 0.85, 'Armenia': 0.77, 'Australia': 0.95, 'Austria': 0.92,
                 'Azerbaijan': 0.76, 'Bahrain': 0.88, 'Bangladesh': 0.66, 'Belarus': 0.81,
@@ -4682,7 +5202,7 @@
                 'United States of America': 0.93, 'W. Sahara': 0.45
             };
 
-            const timezoneOffsets = {
+export const timezoneOffsets = {
                 'Afghanistan': 'UTC+4:30', 'Albania': 'UTC+1', 'Algeria': 'UTC+1', 'Angola': 'UTC+1',
                 'Argentina': 'UTC-3', 'Armenia': 'UTC+4', 'Australia': 'UTC+10', 'Austria': 'UTC+1',
                 'Azerbaijan': 'UTC+4', 'Bahrain': 'UTC+3', 'Bangladesh': 'UTC+6', 'Belarus': 'UTC+3',
@@ -4738,7 +5258,7 @@
                 'Azores': 'UTC-1', 'Canary Is.': 'UTC+0'
             };
 
-            const corridorsData = [
+export const corridorsData = [
                 { name_ar: 'مضيق هرمز', name_en: 'Strait of Hormuz', type: 'sea', coords: [
                         [56.0, 26.5],
                         [56.3, 26.2],
@@ -4788,7 +5308,7 @@
             ];
 
             // weight: 3=عالمية كبرى  2=إقليمية مهمة  1=ثانوية
-            const mountainRanges = [
+export const mountainRanges = [
                 { name: 'هيمالايا', name_en: 'Himalayas', weight: 3, coords: [[73,35],[78,33],[83,29],[88,27],[92,27],[95,28]], length: 2400, highestPeak: 'إيفرست', highestPeak_en: 'Mount Everest', highestElevation: 8848, countries_ar: 'نيبال، الهند، الصين (التبت)، بوتان، باكستان', countries_en: 'Nepal, India, China (Tibet), Bhutan, Pakistan', description_ar: 'أعلى سلسلة جبلية في العالم، تضم 14 قمة تزيد عن 8000 متر.', description_en: 'The highest mountain range in the world, containing 14 peaks over 8000m.' },
                 { name: 'قراقوروم', name_en: 'Karakoram', weight: 3, coords: [[72,35],[75,36],[77,37],[79,36]], length: 500, highestPeak: 'K2', highestPeak_en: 'K2', highestElevation: 8611, countries_ar: 'باكستان، الصين، الهند', countries_en: 'Pakistan, China, India', description_ar: 'ثاني أعلى سلسلة جبلية، تشتهر بقممها الحادة والأنهار الجليدية الكبيرة.', description_en: 'The second-highest mountain range, known for its sharp peaks and large glaciers.' },
                 { name: 'هندوكوش', name_en: 'Hindu Kush', weight: 2, coords: [[62,33],[66,34],[70,35],[72,35]], length: 800, highestPeak: 'تيريش مير', highestPeak_en: 'Tirich Mir', highestElevation: 7708, countries_ar: 'أفغانستان، باكستان', countries_en: 'Afghanistan, Pakistan', description_ar: 'سلسلة جبلية تمتد عبر أفغانستان وباكستان، كانت ممراً تاريخياً مهماً.', description_en: 'A mountain range spanning Afghanistan and Pakistan, historically an important passage.' },
@@ -4832,7 +5352,7 @@
             ];
 
             // weight: 3=عالمي كبير  2=مهم  1=إقليمي
-            const rivers = [
+export const rivers = [
                 { name: 'النيل', name_en: 'Nile', weight: 3, coords: [[32,-1],[32,2],[31,5],[32,10],[31,15],[31,20],[30,24],[31,28],[31,30]], length: 6650, source_ar: 'بحيرة فيكتوريا', source_en: 'Lake Victoria', mouth_ar: 'البحر المتوسط', mouth_en: 'Mediterranean Sea', countries_ar: 'أوغندا، السودان، مصر', countries_en: 'Uganda, Sudan, Egypt', discharge: 2830, basinArea: 3400000, description_ar: 'أطول نهر في العالم، كان مهد الحضارة المصرية القديمة.', description_en: 'The longest river in the world, cradle of ancient Egyptian civilization.' },
                 { name: 'النيل الأزرق', name_en: 'Blue Nile', weight: 2, coords: [[35,10],[33,11],[32,12],[31,15]], length: 1783, source_ar: 'بحيرة تانا', source_en: 'Lake Tana', mouth_ar: 'النيل', mouth_en: 'Nile', countries_ar: 'إثيوبيا، السودان', countries_en: 'Ethiopia, Sudan', discharge: 1513, basinArea: 326400, description_ar: 'الرافد الرئيسي لنهر النيل، يساهم بأكثر من 80% من مياهه في موسم الفيضان.', description_en: 'The main tributary of the Nile, contributing over 80% of its floodwaters.' },
                 { name: 'الأمازون', name_en: 'Amazon', weight: 3, coords: [[-74,-8],[-70,-5],[-65,-3],[-60,-3],[-55,-2],[-50,-1],[-48,0]], length: 6400, source_ar: 'نيفادو ميسمي', source_en: 'Nevado Mismi', mouth_ar: 'المحيط الأطلسي', mouth_en: 'Atlantic Ocean', countries_ar: 'البيرو، البرازيل، كولومبيا', countries_en: 'Peru, Brazil, Colombia', discharge: 209000, basinArea: 7050000, description_ar: 'أكبر نهر في العالم من حيث حجم التدفق، يمر عبر أكبر غابة مطيرة على وجه الأرض.', description_en: 'The largest river by discharge volume, flowing through the world\'s largest rainforest.' },
@@ -4885,7 +5405,7 @@
                 { name: 'كريشنا', name_en: 'Krishna', weight: 1, coords: [[75,18],[74,16],[72,14],[70,12]], length: 1400, source_ar: 'غاتس الغربية', source_en: 'Western Ghats', mouth_ar: 'خليج البنغال', mouth_en: 'Bay of Bengal', countries_ar: 'الهند', countries_en: 'India', discharge: 2213, basinArea: 258948, description_ar: 'نهر رئيسي في جنوب الهند، يستخدم للري على نطاق واسع.', description_en: 'A major river in southern India, extensively used for irrigation.' },
                 { name: 'نهر اللؤلؤ', name_en: 'Pearl River', weight: 1, coords: [[112,24],[114,24],[116,23],[118,22]], length: 2400, source_ar: 'مرتفعات يونان', source_en: 'Yunnan Highlands', mouth_ar: 'بحر الصين الجنوبي', mouth_en: 'South China Sea', countries_ar: 'الصين', countries_en: 'China', discharge: 9500, basinArea: 453700, description_ar: 'ثالث أطول نهر في الصين، يمر عبر منطقة دلتا اللؤلؤ الاقتصادية.', description_en: 'The third-longest river in China, flowing through the Pearl River Delta economic zone.' }
             ];
-            const naturalResourcesData = [
+export const naturalResourcesData = [
                 { name: 'نفط', name_en: 'Oil', coords: [[48,28],[50,26],[52,24],[54,25]], type: 'oil', countries_ar: 'الخليج العربي', countries_en: 'Persian Gulf', reserves: '1,500 مليار برميل', production: '80 مليون برميل/يوم', description_ar: 'الوقود الأحفوري الرئيسي في العالم.', description_en: 'The world\'s primary fossil fuel.' },
                 { name: 'غاز', name_en: 'Natural Gas', coords: [[62,28],[64,27],[66,26],[68,27]], type: 'gas', countries_ar: 'قطر، إيران، روسيا', countries_en: 'Qatar, Iran, Russia', reserves: '200 تريليون م³', production: '4 تريليون م³/سنة', description_ar: 'وقود أحفوري أنظف من النفط.', description_en: 'A cleaner fossil fuel alternative.' },
                 { name: 'فحم', name_en: 'Coal', coords: [[116,39],[118,40],[120,41],[122,40]], type: 'coal', countries_ar: 'الصين، الهند، الولايات المتحدة', countries_en: 'China, India, United States', reserves: '1,000 مليار طن', production: '8 مليار طن/سنة', description_ar: 'أكثر الوقود الأحفوري تلويثاً.', description_en: 'The most polluting fossil fuel.' },
@@ -5020,7 +5540,7 @@
                 { name: 'زنك', name_en: 'Zinc (China)', coords: [115.0, 35.0], type: 'zinc', countries_ar: 'الصين', countries_en: 'China', reserves: '30 مليون طن', production: '4.3 مليون طن/سنة', description_ar: 'أكبر منتج للزنك.', description_en: 'Largest zinc producer.' },
                 { name: 'فضة', name_en: 'Silver (Mexico)', coords: [-100.0, 24.0], type: 'silver', countries_ar: 'المكسيك', countries_en: 'Mexico', reserves: '37000 طن', production: '6000 طن/سنة', description_ar: 'أكبر منتج للفضة.', description_en: 'Largest silver producer.' },
                 { name: 'بوتاس', name_en: 'Potash (Canada)', coords: [-105.0, 50.0], type: 'potash', countries_ar: 'كندا', countries_en: 'Canada', reserves: '1.1 مليار طن', production: '14 مليون طن/سنة', description_ar: 'أكبر منتج للبوتاس.', description_en: 'Largest potash producer.' }];
-            const ethnicGroupsData = [
+export const ethnicGroupsData = [
                 { name: 'الهان', name_en: 'Han Chinese', coords: [108,34], population_ar: 'أكثر من 1.3 مليار', population_en: 'Over 1.3 billion', countries_ar: 'الصين، تايوان', countries_en: 'China, Taiwan', language_ar: 'صينية مندرين', language_en: 'Mandarin Chinese', religion_ar: 'بوذية، طاوية', religion_en: 'Buddhism, Taoism' },
                 { name: 'العرب', name_en: 'Arabs', coords: [44,25], population_ar: 'أكثر من 420 مليون', population_en: 'Over 420 million', countries_ar: '22 دولة عربية', countries_en: '22 Arab countries', language_ar: 'العربية', language_en: 'Arabic', religion_ar: 'الإسلام', religion_en: 'Islam' },
                 { name: 'البانتو', name_en: 'Bantu', coords: [30,-5], population_ar: 'أكثر من 350 مليون', population_en: 'Over 350 million', countries_ar: 'الكونغو، كينيا، تنزانيا، جنوب أفريقيا', countries_en: 'Congo, Kenya, Tanzania, South Africa', language_ar: 'لغات البانتو', language_en: 'Bantu languages', religion_ar: 'مسيحية، أديان تقليدية', religion_en: 'Christianity, traditional beliefs' },
@@ -5072,7 +5592,7 @@
                 { name: 'شعوب الأمازون الأصلية', name_en: 'Amazonian Indigenous', coords: [-65,-3], population_ar: 'أكثر من مليون', population_en: 'Over 1 million', countries_ar: 'البرازيل، البيرو، كولومبيا، الإكوادور، بوليفيا', countries_en: 'Brazil, Peru, Colombia, Ecuador, Bolivia', language_ar: 'لغات أصلية متنوعة', language_en: 'Various indigenous languages', religion_ar: 'أديان تقليدية', religion_en: 'Traditional beliefs' }
             ];
             // --- Ocean Currents Data ---
-            const oceanCurrentsData = [
+export const oceanCurrentsData = [
                 { name: 'تيار الخليج', name_en: 'Gulf Stream', coords: [[-78,26],[-74,30],[-70,34],[-60,40],[-50,45],[-40,50]], type: 'warm', temperature: 26, speed: 2.5, description_ar: 'تيار دافئ قوي ينقل المياه الدافئة من خليج المكسيك إلى شمال الأطلسي.', description_en: 'Strong warm current carrying warm water from the Gulf of Mexico to the North Atlantic.' },
                 { name: 'تيار كوروشيو', name_en: 'Kuroshio Current', coords: [[124,22],[128,26],[132,30],[136,34],[140,38]], type: 'warm', temperature: 24, speed: 3, description_ar: 'تيار دافئ قوي على الساحل الشرقي لليابان.', description_en: 'Strong warm current off the eastern coast of Japan.' },
                 { name: 'تيار همبولت', name_en: 'Humboldt Current', coords: [[-80,-10],[-78,-18],[-76,-26],[-74,-34]], type: 'cold', temperature: 15, speed: 0.5, description_ar: 'تيار بارد غني بالمغذيات على ساحل أمريكا الجنوبية الغربي.', description_en: 'Cold, nutrient-rich current off western South America.' },
@@ -5096,7 +5616,7 @@
                 { name: 'خندق اليابان', name_en: 'Japan Trench', coords: [146,39], type: 'trench', depth: 9000, description_ar: 'خندق شرق اليابان، موقع زلزال 2011 المدمر.', description_en: 'Trench east of Japan, site of the 2011 devastating earthquake.' }
             ];
             // --- Winds Data ---
-            const windsData = [
+export const windsData = [
                 { name: 'الرياح التجارية الشمالية', name_en: 'NE Trade Winds', coords: [[ -70,20],[ -50,20],[ -30,20],[ -10,20],[  10,20],[  30,20],[  50,20],[  70,20],[  90,20],[ 110,20],[ 130,20],[ 150,20],[ 170,20]], type: 'trade' },
                 { name: 'الرياح التجارية الجنوبية', name_en: 'SE Trade Winds', coords: [[ -70,-15],[ -50,-15],[ -30,-15],[ -10,-15],[  10,-15],[  30,-15],[  50,-15],[  70,-15],[  90,-15],[ 110,-15],[ 130,-15],[ 150,-15],[ 170,-15]], type: 'trade' },
                 { name: 'الرياح الغربية', name_en: 'Westerlies', coords: [[ -70,50],[ -50,50],[ -30,50],[ -10,50],[  10,50],[  30,50],[  50,50],[  70,50],[  90,50],[ 110,50],[ 130,50],[ 150,50],[ 170,50]], type: 'westerly' },
@@ -5105,7 +5625,7 @@
                 { name: 'رياح المستنقعات', name_en: 'Sirocco', coords: [[12,34],[14,36],[16,38],[18,40]], type: 'seasonal' }
             ];
             // --- Earthquakes Data ---
-            const earthquakesData = [
+export const earthquakesData = [
                 { name: 'حلقة النار', name_en: 'Ring of Fire', coords: [[140,36],[142,38],[144,40]], magnitude: 9.0, year: '2026', plate_ar: 'المحيط الهادئ', plate_en: 'Pacific Plate', description_ar: 'منطقة نشاط زلزالي وبركاني تحيط بالمحيط الهادئ.', description_en: 'Zone of seismic and volcanic activity surrounding the Pacific Ocean.' },
                 { name: 'سان أندرياس', name_en: 'San Andreas Fault', coords: [[-122,36],[-120,34],[-118,32],[-116,30]], magnitude: 7.8, year: '1906', plate_ar: 'المحيط الهادئ وأمريكا الشمالية', plate_en: 'Pacific and North American Plates', description_ar: 'فالق تحولي شهير في كاليفورنيا.', description_en: 'Famous transform fault in California.' },
                 { name: 'صدع الأناضول', name_en: 'North Anatolian Fault', coords: [[30,40],[32,40],[34,40],[36,40],[38,40]], magnitude: 7.6, year: '1999', plate_ar: 'الأناضول والعربية', plate_en: 'Anatolian and Arabian Plates', description_ar: 'فالق انزلاقي في شمال تركيا.', description_en: 'Strike-slip fault in northern Turkey.' },
@@ -5119,7 +5639,7 @@
                 { name: 'صدع ألاسكا', name_en: 'Alaska Fault', coords: [[-148,62],[-146,61],[-144,60],[-142,59]], magnitude: 9.2, year: '1964', plate_ar: 'المحيط الهادئ وأمريكا الشمالية', plate_en: 'Pacific and North American Plates', description_ar: 'ثاني أقوى زلزال مسجل في التاريخ.', description_en: 'Second most powerful earthquake ever recorded.' },
                 { name: 'صدع المكسيك', name_en: 'Mexican Fault', coords: [[-100,18],[-98,17],[-96,16],[-94,15]], magnitude: 8.1, year: '2017', plate_ar: 'كوكوس وأمريكا الشمالية', plate_en: 'Cocos and North American Plates', description_ar: 'منطقة اندساس على ساحل المحيط الهادئ.', description_en: 'Subduction zone on the Pacific coast.' }
             ];
-            const tectonicPlatesData = [
+export const tectonicPlatesData = [
                 { name_en: 'Pacific Plate', name: 'صفيحة المحيط الهادئ', coords: [[-150,20],[-120,20],[-120,50],[-180,60],[180,60],[160,40],[160,20],[180,-20],[-150,-40],[-150,20]] },
                 { name_en: 'North American Plate', name: 'صفيحة أمريكا الشمالية', coords: [[-130,30],[-170,60],[-140,70],[-60,70],[-80,50],[-100,30],[-130,30]] },
                 { name_en: 'South American Plate', name: 'صفيحة أمريكا الجنوبية', coords: [[-80,-10],[-60,-5],[-40,10],[-30,-20],[-40,-40],[-70,-50],[-80,-10]] },
@@ -5131,7 +5651,7 @@
                 { name_en: 'Arabian Plate', name: 'الصفيحة العربية', coords: [[30,25],[40,25],[50,20],[60,25],[60,15],[50,12],[40,12],[30,25]] }
             ];
             // --- Volcanoes Data ---
-            const volcanoesData = [
+export const volcanoesData = [
                 { name: 'جبل فوجي', name_en: 'Mount Fuji', coords: [138.7,35.4], elevation: 3776, type: 'stratovolcano', type_ar: 'بركان طبقي', type_en: 'Stratovolcano', lastEruption: '1707', description_ar: 'أيقونة اليابان وأعلى قمة فيها.', description_en: 'Icon of Japan and its highest peak.' },
                 { name: 'فيزوف', name_en: 'Mount Vesuvius', coords: [14.4,40.8], elevation: 1281, type: 'stratovolcano', type_ar: 'بركان طبقي', type_en: 'Stratovolcano', lastEruption: '1944', description_ar: 'بركان شهير دمر بومبي عام 79م.', description_en: 'Famous volcano that destroyed Pompeii in 79 AD.' },
                 { name: 'كراكاتوا', name_en: 'Krakatoa', coords: [105.4,-6.1], elevation: 813, type: 'caldera', type_ar: 'كالديرا', type_en: 'Caldera', lastEruption: '2018', description_ar: 'انفجار 1883 كان الأعنف في التاريخ.', description_en: 'The 1883 eruption was the most violent in history.' },
@@ -5150,7 +5670,7 @@
             ];
 
             // --- Additional Waterways Data ---
-            const additionalWaterwaysData = [
+export const additionalWaterwaysData = [
                 { name: 'قناة السويس', name_en: 'Suez Canal', coords: [[32.5,30.5],[32.6,30],[32.7,29.5],[32.8,29]], length_km: 193, countries_ar: 'مصر', countries_en: 'Egypt', type: 'canal' },
                 { name: 'قناة بنما', name_en: 'Panama Canal', coords: [[-79.5,9],[-79.6,8.5],[-79.7,8]], length_km: 82, countries_ar: 'بنما', countries_en: 'Panama', type: 'canal' },
                 { name: 'مضيق هرمز', name_en: 'Strait of Hormuz', coords: [[56,26.5],[56,26],[56,25.5]], length_km: 39, countries_ar: 'إيران، عمان، الإمارات', countries_en: 'Iran, Oman, UAE', type: 'strait' },
@@ -5161,7 +5681,7 @@
                 { name: 'درب الشمال', name_en: 'Northwest Passage', coords: [[-120,72],[-110,74],[-100,76],[-90,78]], length_km: 3200, countries_ar: 'كندا', countries_en: 'Canada', type: 'sea_route' }
             ];
             // --- Geopolitical Blocs Data ---
-            const geopoliticalBlocsData = [
+export const geopoliticalBlocsData = [
                 { name: 'الاتحاد الأوروبي', name_en: 'European Union', coords: [10,52], members_ar: '27 دولة', members_en: '27 countries', type: 'economic', color: '#1a5276', members: ['Austria','Belgium','Bulgaria','Croatia','Cyprus','Czech Republic','Denmark','Estonia','Finland','France','Germany','Greece','Hungary','Ireland','Italy','Latvia','Lithuania','Luxembourg','Malta','Netherlands','Poland','Portugal','Romania','Slovakia','Slovenia','Spain','Sweden'] },
                 { name: 'الناتو', name_en: 'NATO', coords: [4,50], members_ar: '31 دولة', members_en: '31 countries', type: 'military', color: '#2c3e50', members: ['Albania','Belgium','Bulgaria','Canada','Croatia','Czech Republic','Denmark','Estonia','Finland','France','Germany','Greece','Hungary','Iceland','Italy','Latvia','Lithuania','Luxembourg','Montenegro','Netherlands','North Macedonia','Norway','Poland','Portugal','Romania','Slovakia','Slovenia','Spain','Turkey','United Kingdom','United States'] },
                 { name: 'جامعة الدول العربية', name_en: 'Arab League', coords: [36,28], members_ar: '22 دولة', members_en: '22 countries', type: 'regional', color: '#1e8449', members: ['Algeria','Bahrain','Comoros','Djibouti','Egypt','Iraq','Jordan','Kuwait','Lebanon','Libya','Mauritania','Morocco','Oman','Palestine','Qatar','Saudi Arabia','Somalia','Sudan','Syria','Tunisia','United Arab Emirates','Yemen'] },
@@ -5180,7 +5700,7 @@
                 { name: 'الاتحاد الأوراسي الاقتصادي', name_en: 'Eurasian Economic Union', coords: [65,50], members_ar: '5 دول', members_en: '5 countries', type: 'economic', color: '#884ea0', members: ['Armenia','Belarus','Kazakhstan','Kyrgyzstan','Russia'] }
             ];
             // --- Deserts & Forests Data ---
-            const desertsForestsData = [
+export const desertsForestsData = [
                 { name: 'الصحراء الكبرى', name_en: 'Sahara Desert', coords: [[-10,26],[-5,27],[0,28],[5,29],[10,30],[15,30],[20,29],[25,28],[30,27]], type: 'desert', area_km2: 9200000, countries_ar: 'شمال أفريقيا', countries_en: 'North Africa', biome_ar: 'صحراء حارة', biome_en: 'Hot desert', description_ar: 'أكبر صحراء حارة في العالم.', description_en: 'The largest hot desert in the world.' , name_ru: 'Сахара', countries_ru: 'Северная Африка', biome_ru: 'Жаркая пустыня', description_ru: 'Крупнейшая жаркая пустыня в мире.' },
                 { name: 'غابات الأمازون', name_en: 'Amazon Rainforest', coords: [[-70,-5],[-65,-6],[-60,-5],[-55,-4],[-50,-3]], type: 'forest', area_km2: 5500000, countries_ar: 'البرازيل، البيرو، كولومبيا', countries_en: 'Brazil, Peru, Colombia', biome_ar: 'غابة مطيرة استوائية', biome_en: 'Tropical rainforest', description_ar: 'أكبر غابة مطيرة في العالم، رئة الأرض.', description_en: 'The world\'s largest rainforest, the lungs of the Earth.', name_ru: 'Амазонский дождевой лес', countries_ru: 'Бразилия, Перу, Колумбия', biome_ru: 'Тропический дождевой лес', description_ru: 'Крупнейший тропический лес в мире, лёгкие Земли.' },
                 { name: 'غابة الكونغو', name_en: 'Congo Rainforest', coords: [[18,2],[20,1],[22,0],[24,-1],[26,-2]], type: 'forest', area_km2: 2000000, countries_ar: 'الكونغو، الغابون', countries_en: 'Congo, Gabon', biome_ar: 'غابة مطيرة استوائية', biome_en: 'Tropical rainforest', description_ar: 'ثاني أكبر غابة مطيرة في العالم.', description_en: 'The second-largest rainforest in the world.' , name_ru: 'Тропический лес Конго', countries_ru: 'Конго, Габон', biome_ru: 'Тропический дождевой лес', description_ru: 'Второй по величине тропический лес в мире.' },
@@ -5197,7 +5717,7 @@
                 { name: 'صحراء سونورا', name_en: 'Sonoran Desert', coords: [[-112,32],[-110,31],[-108,30],[-106,29]], type: 'desert', area_km2: 260000, countries_ar: 'الولايات المتحدة، المكسيك', countries_en: 'United States, Mexico', biome_ar: 'صحراء حارة', biome_en: 'Hot desert', description_ar: 'صحراء أمريكية تتميز بصبار الساغوارو.', description_en: 'American desert famous for Saguaro cacti.' , name_ru: 'Пустыня Сонора', countries_ru: 'США, Мексика', biome_ru: 'Жаркая пустыня', description_ru: 'Американская пустыня, известная кактусами сагуаро.' },
                 { name: 'صحراء أتاكاما', name_en: 'Atacama Desert', coords: [[-70,-22],[-69,-24],[-68,-26],[-67,-28]], type: 'desert', area_km2: 105000, countries_ar: 'تشيلي، البيرو', countries_en: 'Chile, Peru', biome_ar: 'صحراء جافة جداً', biome_en: 'Hyper-arid desert', description_ar: 'أجف صحراء في العالم، تشبه المريخ.', description_en: 'The driest desert in the world, resembling Mars.' , name_ru: 'Пустыня Атакама', countries_ru: 'Чили, Перу', biome_ru: 'Гипераридная пустыня', description_ru: 'Самая сухая пустыня в мире, напоминает Марс.' }
             ];
-            const borderDisputesData = [
+export const borderDisputesData = [
                 { name_ar: 'مثلث حلايب', name_en: 'Halayeb Triangle', coords: [36.2, 22.8], type: 'active', countries_ar: 'مصر، السودان', countries_en: 'Egypt, Sudan', causes_ar: 'منطقة نزاع حدودي بين مصر والسودان منذ استقلال السودان عام 1956، تطالب بها مصر كجزء من أسوان وتطالب بها السودان كجزء من ولاية البحر الأحمر.', causes_en: 'Border zone disputed between Egypt and Sudan since Sudan\'s independence in 1956; Egypt claims it as part of Aswan while Sudan claims it as part of the Red Sea State.', name_ru: 'Треугольник Халаиба', countries_ru: 'Египет, Судан', causes_ru: 'Пограничная зона, оспариваемая Египтом и Суданом с момента обретения Суданом независимости в 1956 году; Египет считает её частью Асуана, а Судан — частью провинции Красное Море.' },
                 { name_ar: 'الصحراء الغربية', name_en: 'Western Sahara', coords: [-13.0, 24.5], type: 'active', countries_ar: 'المغرب، الجمهورية الصحراوية', countries_en: 'Morocco, Sahrawi Republic', causes_ar: 'نزاع على إقليم الصحراء الغربية بين المغرب وجبهة البوليساريو منذ انسحاب إسبانيا عام 1975، تدعم الجزائر البوليساريو.', causes_en: 'Territorial dispute over Western Sahara between Morocco and the Polisario Front since Spain\'s withdrawal in 1975; Algeria supports the Polisario.', name_ru: 'Западная Сахара', countries_ru: 'Марокко, Сахарская Республика', causes_ru: 'Территориальный спор о Западной Сахаре между Марокко и Фронтом ПОЛИСАРИО с момента ухода Испании в 1975 году; Алжир поддерживает ПОЛИСАРИО.' },
                 { name_ar: 'كشمير', name_en: 'Kashmir', coords: [76.5, 34.5], type: 'active', countries_ar: 'الهند، باكستان، الصين', countries_en: 'India, Pakistan, China', causes_ar: 'نزاع إقليمي منذ تقسيم الهند عام 1947، الهند تطالب بكامل الإقليم وباكستان تطالب بمنطقة جامو وكشمير، والصين تحت控制 أراضي في أكساي تشين.', causes_en: 'Regional dispute since the 1947 partition of India; India claims the entire region, Pakistan claims Jammu and Kashmir, and China controls parts of Aksai Chin.' , name_ru: 'Кашмир', countries_ru: 'Индия, Пакистан, Китай', causes_ru: 'Региональный спор с момента раздела Индии в 1947 году; Индия претендует на весь регион, Пакистан — на Джамму и Кашмир, Китай контролирует часть Аксай-Чина.' },
@@ -5224,7 +5744,7 @@
             // Source: Natural Earth 10m Time Zones (public domain), simplified for web display.
             // "places" descriptions are kept in English only (standard convention for timezone/place identifiers).
             ;
-            const densitySpots = [
+export const densitySpots = [
                 { name: 'طوكيو', coords: [139.7, 35.7], density: 16000 },
                 { name: 'أوساكا', coords: [135.5, 34.7], density: 12000 },
                 { name: 'سيول', coords: [127.0, 37.6], density: 17000 },
@@ -5340,7 +5860,7 @@
                 { name: 'كاراكاس', coords: [-66.9, 10.5], density: 4500 },
                 { name: 'كالي', coords: [-76.5, 3.4], density: 5500 }
             ];
-            const majorCitiesData = [
+export const majorCitiesData = [
                 { name: 'طوكيو', coords: [139.7, 35.7], pop: 37.4, category: 'commercial' },
                 { name: 'دلهي', coords: [77.2, 28.6], pop: 32.0, category: 'commercial' },
                 { name: 'شنغهاي', coords: [121.5, 31.2], pop: 27.8, category: 'commercial' },
@@ -5584,7 +6104,7 @@
                 { name: 'سمرقند', coords: [66.98, 39.65], pop: 0.6, category: 'tourist' }
             ];
 
-            const countryInfo = {
+export const countryInfo = {
                 'Afghanistan': { capital_ar: 'كابول', capital_en: 'Kabul', capital_coords: [69.2, 34.5],
                     population_2026: 42.5, area: 652230, lang_ar: 'الدرية / البشتو', lang_en: 'Dari / Pashto' },
                 'Albania': { capital_ar: 'تيرانا', capital_en: 'Tirana', capital_coords: [19.8, 41.3], population_2026: 2.75,
@@ -6053,7 +6573,7 @@
                 'Canary Is.': { capital_ar: 'سانتا كروز', capital_en: 'Santa Cruz', capital_coords: [-16.2, 28.5],
                     population_2026: 2.2, area: 7493, lang_ar: 'الإسبانية', lang_en: 'Spanish' }
             };
-            const continentByCountry = {
+export const continentByCountry = {
                 'Afghanistan': 'Asia',
                 'Albania': 'Europe',
                 'Algeria': 'Africa',
@@ -6288,7 +6808,7 @@
                 'Azores': 'Europe',
                 'Canary Is.': 'Africa'
             };
-            const governmentByCountry = {
+export const governmentByCountry = {
                 'Afghanistan': 'Islamic Emirate',
                 'Albania': 'Parliamentary Republic',
                 'Algeria': 'Semi-Presidential Republic',
@@ -6523,7 +7043,7 @@
                 'Azores': 'Portugal',
                 'Canary Is.': 'Spain'
             };
-            const continentArabic = {
+export const continentArabic = {
                 'Asia': 'آسيا',
                 'Africa': 'أفريقيا',
                 'Europe': 'أوروبا',
@@ -6532,7 +7052,7 @@
                 'Oceania': 'أوقيانوسيا',
                 'Antarctica': 'القارة القطبية الجنوبية'
             };
-            const governmentArabic = {
+export const governmentArabic = {
                 'Absolute Monarchy': 'ملكية مطلقة',
                 'Constitutional Monarchy': 'ملكية دستورية',
                 'Parliamentary Monarchy': 'ملكية برلمانية',
@@ -6553,7 +7073,7 @@
                 'Unknown': 'غير معروف',
                 'Republic': 'جمهورية'
             };
-            const religionRussian = {
+export const religionRussian = {
                 'muslim': 'Мусульмане',
                 'christian': 'Христиане',
                 'hindu': 'Индуисты',
@@ -6562,7 +7082,7 @@
                 'other': 'Другие',
                 'unknown': 'Неизвестно'
             };
-            const denominationRussian = {
+export const denominationRussian = {
                 'sunni': 'Сунниты',
                 'shia': 'Шииты',
                 'ibadi': 'Ибадиты',
@@ -6577,7 +7097,7 @@
                 'juche': 'Чучхе',
                 'other': 'Другие'
             };
-            const continentRussian = {
+export const continentRussian = {
                 'Africa': 'Африка',
                 'Asia': 'Азия',
                 'Europe': 'Европа',
@@ -6587,7 +7107,7 @@
                 'Antarctica': 'Антарктида',
                 'Unknown': 'Неизвестно'
             };
-            const governmentRussian = {
+export const governmentRussian = {
                 'Absolute Monarchy': 'Абсолютная монархия',
                 'Constitutional Monarchy': 'Конституционная монархия',
                 'Parliamentary Monarchy': 'Парламентская монархия',
@@ -6609,10 +7129,10 @@
                 'Parliamentary Monarchy (Denmark)': 'Парламентская монархия (Дания)',
                 'Federal Absolute Monarchy': 'Федеративная абсолютная монархия'
             };
-            const densitySpotEnglish = {'طوكيو':'Tokyo','أوساكا':'Osaka','سيول':'Seoul','بوسان':'Busan','شنغهاي':'Shanghai','بكين':'Beijing','غوانزو':'Guangzhou','شنتشن':'Shenzhen','تايبيه':'Taipei','هونغ كونغ':'Hong Kong','نانجينغ':'Nanjing','تشينغداو':'Qingdao','تشانغشا':'Changsha','ووهان':'Wuhan','سنغافورة':'Singapore','دلهي':'Delhi','مومباي':'Mumbai','كلكتا':'Kolkata','بنغالور':'Bengaluru','تشيناي':'Chennai','حيدر أباد':'Hyderabad','أحمد أباد':'Ahmedabad','بونه':'Pune','كراتشي':'Karachi','لاهور':'Lahore','داكا':'Dhaka','كاتماندو':'Kathmandu','إسلام أباد':'Islamabad','فيصل أباد':'Faisalabad','جاكرتا':'Jakarta','مانيلا':'Manila','بانكوك':'Bangkok','هوشي منه':'Ho Chi Minh City','هانوي':'Hanoi','يانغون':'Yangon','القاهرة':'Cairo','طهران':'Tehran','بغداد':'Baghdad','الرياض':'Riyadh','إسطنبول':'Istanbul','دبي':'Dubai','القدس':'Jerusalem','جدة':'Jeddah','أبو ظبي':'Abu Dhabi','لاغوس':'Lagos','كينشاسا':'Kinshasa','نيروبي':'Nairobi','جوهانسبرغ':'Johannesburg','أديس أبابا':'Addis Ababa','دار السلام':'Dar es Salaam','أبيدجان':'Abidjan','داكار':'Dakar','لواندا':'Luanda','الخرطوم':'Khartoum','مقديشو':'Mogadishu','أكرا':'Accra','لندن':'London','باريس':'Paris','موسكو':'Moscow','مدريد':'Madrid','برلين':'Berlin','روما':'Rome','برشلونة':'Barcelona','أثينا':'Athens','وارسو':'Warsaw','فيينا':'Vienna','نيويورك':'New York','لوس أنجلوس':'Los Angeles','مكسيكو':'Mexico City','شيكاغو':'Chicago','تورنتو':'Toronto','فانكوفر':'Vancouver','ميامي':'Miami','هيوستن':'Houston','ساو باولو':'São Paulo','ريو دي جانيرو':'Rio de Janeiro','ليما':'Lima','بوغوتا':'Bogotá','بوينس آيرس':'Buenos Aires','سانتياغو':'Santiago','سيدني':'Sydney','ملبورن':'Melbourne','بريزبن':'Brisbane','أوكلاند':'Auckland','كوالالمبور':'Kuala Lumpur','عمان':'Amman','الكويت':'Kuwait City','الدوحة':'Doha','مسقط':'Muscat','صنعاء':'Sana\'a','دمشق':'Damascus','بيروت':'Beirut','الشارقة':'Sharjah','سورات':'Surat','جايبور':'Jaipur','لكناو':'Lucknow','كانبور':'Kanpur','ناغبور':'Nagpur','إندور':'Indore','بوبال':'Bhopal','راولبندي':'Rawalpindi','غوجرانوالا':'Gujranwala','بيشاور':'Peshawar','كويته':'Quetta','تشيتاغونغ':'Chittagong','ماندالاي':'Mandalay','بنوم بنه':'Phnom Penh','فيينتيان':'Vientiane','جورج تاون':'George Town','سورابايا':'Surabaya','ميدان':'Medan','ماكاسار':'Makassar','مانادو':'Manado','بالي':'Bali','كييف':'Kyiv','بودابست':'Budapest','براغ':'Prague','صوفيا':'Sofia','بلغراد':'Belgrade','زيورخ':'Zurich','أمستردام':'Amsterdam','بروكسل':'Brussels','ستوكهولم':'Stockholm','كوبنهاغن':'Copenhagen','أوسلو':'Oslo','هلسنكي':'Helsinki','دبلن':'Dublin','لشبونة':'Lisbon','نيقوسيا':'Nicosia','فاليتا':'Valletta','واشنطن':'Washington, D.C.','سان فرانسيسكو':'San Francisco','مونتريال':'Montreal','دالاس':'Dallas','أتلانتا':'Atlanta','بوسطن':'Boston','فينيكس':'Phoenix','ريفرسايد':'Riverside','ديترويت':'Detroit','سياتل':'Seattle','مينيابوليس':'Minneapolis','دنفر':'Denver','سان دييغو':'San Diego','تامبا':'Tampa','أورلاندو':'Orlando','برازيليا':'Brasília','بيلو هوريزونتي':'Belo Horizonte','كاراكاس':'Caracas','ميديلين':'Medellín','كيتو':'Quito','كالي':'Cali','لاباز':'La Paz','مونتفيدو':'Montevideo','الدار البيضاء':'Casablanca','الجزائر':'Algiers','تونس':'Tunis','طرابلس':'Tripoli','هرجيسا':'Hargeisa','هراري':'Harare','لوساكا':'Lusaka','كمبالا':'Kampala','كيغالي':'Kigali','بوجومبورا':'Bujumbura','باماكو':'Bamako','أبوجا':'Abuja','ياوندي':'Yaoundé','دوالا':'Douala','بيرث':'Perth','ويلينغتون':'Wellington','سوفا':'Suva','بورت مورسبي':'Port Moresby','أبيا':'Apia','نوك':'Nuuk','ريكيافيك':'Reykjavik','تيرانا':'Tirana','سراييفو':'Sarajevo','بريشتينا':'Pristina','بودغوريتسا':'Podgorica','سكوبيه':'Skopje','بوخارست':'Bucharest','تشيسيناو':'Chișinău','مينسك':'Minsk','فيلنيوس':'Vilnius','ريغا':'Riga','تالين':'Tallinn','أولان باتور':'Ulaanbaatar','بيونغ يانغ':'Pyongyang','بورت لويس':'Port Louis','فيكتوريا':'Victoria','ناساو':'Nassau','كينغستون':'Kingston','بورت أو برانس':'Port-au-Prince','سانتو دومينغو':'Santo Domingo','سان خوان':'San Juan','بلموبان':'Belmopan','غواتيمالا':'Guatemala City','تيغوسيغالبا':'Tegucigalpa','سان سلفادور':'San Salvador','ماناغوا':'Managua','سان خوسيه':'San José','بنما':'Panama City','بورت أوف سبين':'Port of Spain','باراماريبو':'Paramaribo','أسونسيون':'Asunción','سانتوريني':'Santorini','مراكش':'Marrakesh','كيوتو':'Kyoto','البندقية':'Venice','ميونخ':'Munich','فلورنسا':'Florence','سان بطرسبرغ':'Saint Petersburg','كيب تاون':'Cape Town','سيشل':'Seychelles','جزر المالديف':'Maldives','أنطاليا':'Antalya','أدنبرة':'Edinburgh','كراكوف':'Krakow','بورصة':'Bursa','إزمير':'Izmir','تيانجين':'Tianjin','تشنغدو':'Chengdu','هانغتشو':'Hangzhou','هامبورغ':'Hamburg','كولونيا':'Cologne','ميلانو':'Milan','تورينو':'Turin','ليون':'Lyon','مرسيليا':'Marseille','مانشستر':'Manchester','برمنغهام':'Birmingham','غلاسكو':'Glasgow','روتردام':'Rotterdam','أنتويرب':'Antwerp','بورت هاركورت':'Port Harcourt','ديربان':'Durban','عنابة':'Annaba','وهران':'Oran','صفاقس':'Sfax','بنغازي':'Benghazi','كالياري':'Cagliari','مونبلييه':'Montpellier','باليرمو':'Palermo','نابولي':'Naples','فالنسيا':'Valencia','حيدر آباد':'Hyderabad','أحمد آباد':'Ahmedabad','فيصل آباد':'Faisalabad','بونة':'Pune','طشقند':'Tashkent','سمرقند':'Samarkand','الإسكندرية':'Alexandria','أنديجان':'Andijan','ريسيفي':'Recife','باندونغ':'Bandung','باتنا':'Patna','سيمارانغ':'Semarang','تل أبيب':'Tel Aviv','كانو':'Kano','إيبادان':'Ibadan','غوادالاخارا':'Guadalajara'};
-            const densitySpotRussian = {'طوكيو':'Токио','أوساكا':'Осака','سيول':'Сеул','بوسان':'Пусан','شنغهاي':'Шанхай','بكين':'Пекин','غوانزو':'Гуанчжоу','شنتشن':'Шэньчжэнь','تايبيه':'Тайбэй','هونغ كونغ':'Гонконг','نانجينغ':'Нанкин','تشينغداو':'Циндао','تشانغشا':'Чанша','ووهان':'Ухань','سنغافورة':'Сингапур','دلهي':'Дели','مومباي':'Мумбаи','كلكتا':'Калькутта','بنغالور':'Бангалор','تشيناي':'Ченнаи','حيدر أباد':'Хайдарабад','أحمد أباد':'Ахмадабад','بونه':'Пуна','كراتشي':'Карачи','لاهور':'Лахор','داكا':'Дакка','كاتماندو':'Катманду','إسلام أباد':'Исламабад','فيصل أباد':'Фейсалабад','جاكرتا':'Джакарта','مانيلا':'Манила','بانكوك':'Бангкок','هوشي منه':'Хошимин','هانوي':'Ханой','يانغون':'Янгон','القاهرة':'Каир','طهران':'Тегеран','بغداد':'Багдад','الرياض':'Эр-Рияд','إسطنبول':'Стамбул','دبي':'Дубай','القدس':'Иерусалим','جدة':'Джидда','أبو ظبي':'Абу-Даби','لاغوس':'Лагос','كينشاسا':'Киншаса','نيروبي':'Найроби','جوهانسبرغ':'Йоханнесбург','أديس أبابا':'Аддис-Абеба','دار السلام':'Дар-эс-Салам','أبيدجان':'Абиджан','داكار':'Дакар','لواندا':'Луанда','الخرطوم':'Хартум','مقديشو':'Могадишо','أكرا':'Аккра','لندن':'Лондон','باريس':'Париж','موسكو':'Москва','مدريد':'Мадрид','برلين':'Берлин','روما':'Рим','برشلونة':'Барселона','أثينا':'Афины','وارسو':'Варшава','فيينا':'Вена','نيويورк':'Нью-Йорк','لوس أنجلوس':'Лос-Анджелес','مكسيكو':'Мехико','شيكاغو':'Чикаго','تورنتو':'Торонто','فانكوفر':'Ванкувер','ميامي':'Майами','هيوستن':'Хьюстон','ساو باولو':'Сан-Паулу','ريو دي جانيرو':'Рио-де-Жанейро','ليما':'Лима','بوغوتا':'Богота','بوينس آيرس':'Буэнос-Айрес','سانتياغو':'Сантьяго','سيدني':'Сидней','ملبورн':'Мельбурн','بريزبن':'Брисбен','أوكلاند':'Окленд','كوالالمبور':'Куала-Лумпур','عمان':'Амман','الكويت':'Эль-Кувейт','الدوحة':'Доха','مسقط':'Маскат','صنعاء':'Сана','دمشق':'Дамаск','بيروت':'Бейрут','الشارقة':'Шарджа','سورات':'Сурат','جايبور':'Джайпур','لكناو':'Лакхнау','كانبور':'Канпур','ناغبور':'Нагпур','إندور':'Индор','بوبال':'Бхопал','راولبندي':'Равалпинди','غوجرانوالا':'Гуджранвала','بيشاور':'Пешавар','كويته':'Кветта','تشيتاغونغ':'Читтагонг','ماندالاي':'Мандалай','بنوم بنه':'Пномпень','فيينتيان':'Вьентьян','جورج تاون':'Джорджтаун','سورابايا':'Сурабая','ميدان':'Медан','ماكاسار':'Макасар','مانادو':'Манадо','بالي':'Бали','كييف':'Киев','بودابست':'Будапешт','براغ':'Прага','صوفيا':'София','بلغراد':'Белград','زيورخ':'Цюрих','أمستردам':'Амстердам','بروكسل':'Брюссель','ستوكهولم':'Стокгольм','كوبنهاغن':'Копенгаген','أوسلو':'Осло','هلسنكي':'Хельсинки','دبلن':'Дублин','لشبونة':'Лиссабон','نيقوسيا':'Никосия','فاليتا':'Валлетта','واشنطن':'Вашингтон','سان فرانسيسكو':'Сан-Франциско','مونتريال':'Монреаль','دالاس':'Даллас','أتلانتا':'Атланта','بوسطن':'Бостон','فينيكс':'Финикс','ريفرسايد':'Риверсайд','ديترويت':'Детройт','سياتل':'Сиэтл','مينيابوليس':'Миннеаполис','دنفر':'Денвер','سان دييغو':'Сан-Диего','تامبا':'Тампа','أورلاندو':'Орландо','برازيليا':'Бразилиа','بيلو هوريزونتي':'Белу-Оризонти','كاراكاس':'Каракас','ميديلين':'Медельин','كيتو':'Кито','كالي':'Кали','لاباز':'Ла-Пас','مونتفيدو':'Монтевидео','الدار البيضاء':'Касабланка','الجزائر':'Алжир','تونس':'Тунис','طرابلس':'Триполи','هرجيسا':'Харгейса','هراري':'Хараре','لوساكا':'Лусака','كمبالا':'Кампала','كيغالي':'Кигали','بوجومبورا':'Бужумбура','باماكو':'Бамако','أبوجا':'Абуджа','ياوندي':'Яунде','دوالا':'Дуала','بيرث':'Перт','ويلينغتون':'Веллингтон','سوفا':'Сува','بورت مورسبي':'Порт-Морсби','أبيا':'Апиа','نوك':'Нуук','ريكيافيك':'Рейкьявик','تيرانا':'Тирана','سراييفو':'Сараево','بريشتينا':'Приштина','بودغوريتسا':'Подгорица','سكوبيه':'Скопье','بوخارست':'Бухарест','تشيسيناو':'Кишинёв','مينسك':'Минск','فيلنيوس':'Вильнюс','ريغا':'Рига','تالين':'Таллин','أولان باتور':'Улан-Батор','بيونغ يانغ':'Пхеньян','بورت لويس':'Порт-Луи','فيكتوريا':'Виктория','ناساو':'Нассау','كينغستон':'Кингстон','بورت أو برانس':'Порт-о-Пренс','سانتو دومينغو':'Санто-Доминго','سان خوان':'Сан-Хуан','بلموبان':'Бельмопан','غواتيمالا':'Гватемала','تيغوسيغالبا':'Тегусигальпа','سان سلفادور':'Сан-Сальвадор','ماناغوا':'Манагуа','سان خوسيه':'Сан-Хосе','بنما':'Панама','بورت أوف سبين':'Порт-оф-Спейн','باراماريبو':'Парамарибо','أسونسيون':'Асунсьон','سانتوريني':'Санторини','مراكش':'Марракеш','كيوتو':'Киото','البندقية':'Венеция','ميونخ':'Мюнхен','فلورنسا':'Флоренция','سان بطرسبرغ':'Санкт-Петербург','كيب تاون':'Кейптаун','سيشل':'Сейшелы','جزر المالديف':'Мальдивы','أنطاليا':'Анталия','أدنبرة':'Эдинбург','كراكوف':'Краков','بورصة':'Бурса','إزمير':'Измир','تيانجين':'Тяньцзинь','تشنغدو':'Чэнду','هانغتشو':'Ханчжоу','هامبورغ':'Гамбург','كولونيا':'Кёльн','ميلانو':'Милан','تورينو':'Турин','ليون':'Лион','مرسيليا':'Марсель','مانشستر':'Манчестер','برمنغهام':'Бирмингем','غلاسكو':'Глазго','روتردام':'Роттердам','أنتويرب':'Антверпен','بورت هاركورت':'Порт-Харкорт','ديربان':'Дурбан','عنابة':'Аннаба','وهران':'Оран','صفاقس':'Сфакс','بنغازي':'Бенгази','كالياري':'Кальяри','مونبلييه':'Монпелье','باليرمو':'Палермо','نابولي':'Неаполь','فالنسيا':'Валенсия','حيدر آباد':'Хайдарабад','أحمد آباد':'Ахмадабад','فيصل آباد':'Фейсалабад','بونة':'Пуна','طشقند':'Ташкент','سمرقند':'Самарканд','الإسكندرية':'Александрия','أنديجان':'Андижан','ريسيفي':'Ресифи','باندونغ':'Бандунг','باتنا':'Патна','سيمارانغ':'Семаранг','تل أبيب':'Тель-Авив','كانو':'Кано','إيبادان':'Ибадан','غوادالاخارا':'Гвадалахара','نيويورك':'Нью-Йорк','ملبورن':'Мельбурн'};
-            const densitySpotUzbek = {'طوكيو':'Tokio','أوساكا':'Osaka','سيول':'Seul','بوسان':'Pusan','شنغهاي':'Shanxay','بكين':'Pekin','غوانزو':'Guanchjou','شنتشن':'Shenchen','تايبيه':'Taybey','هونغ كونغ':'Gonkong','نانجينغ':'Nanjing','تشينغداو':'Tsindao','تشانغشا':'Chansha','ووهان':'Uxan','سنغافورة':'Singapur','دلهي':'Dehli','مومباي':'Mumbai','كلكتا':'Kolkata','بنغالور':'Bengaluru','تشيناي':'Chennai','حيدر أباد':'Xaydarobod','أحمد أباد':'Ahmadobod','بونه':'Pune','كراتشي':'Karachi','لاهور':'Laxor','داكا':'Dakka','كاتماندو':'Katmandu','إسلام أباد':'Islamobod','فيصل أباد':'Faysalobod','جاكرتا':'Djokarta','مانيلا':'Manila','بانكوك':'Bangkok','هوشي منه':'Xoshimin','هانوي':'Xanoy','يانغون':'Yangon','القاهرة':'Qohira','طهران':'Tehron','بغداد':'Bag\'dad','الرياض':'Er-Riyod','إسطنبول':'Stambul','دبي':'Dubay','القدس':'Yerushalayim','جدة':'Jidda','أبو ظبي':'Abu-Dabi','لاغوس':'Lagos','كينشاسا':'Kinshasa','نيروبي':'Nairobi','جوهانسبرغ':'Yoxannesburg','أديس أبابا':'Addis-Abeba','دار السلام':'Dar-es-Salam','أبيدجان':'Abidjan','داكار':'Dakar','لواندا':'Luanda','الخرطوم':'Xartum','مقديشو':'Mogadishu','أكرا':'Akra','لندن':'London','باريس':'Parij','موسكو':'Moskva','مدريد':'Madrid','برلين':'Berlin','روما':'Rim','برشلونة':'Barselona','أثينا':'Afina','وارسو':'Varshava','فيينا':'Vena','نيويورك':'Nyuyork','لوس أنجلوس':'Los-Anjeles','مكسيكو':'Mexiko','شيكاغو':'Chicago','تورنتو':'Toronto','فانكوفر':'Vankuver','ميامي':'Miami','هيوستن':'Houston','ساو باولو':'San-Paulu','ريو دي جانيرو':'Rio-de-Janeiro','ليما':'Lima','بوغوتا':'Bogota','بوينس آيرس':'Buenos-Ayres','سانتياغو':'Santyago','سيدني':'Sydney','ملبورن':'Melburn','بريزبن':'Brisben','أوكلاند':'Aukland','كوالالمبور':'Kuala-Lumpur','عمان':'Amman','الكويت':'Kuveyt','الدوحة':'Doxa','مسقط':'Maskat','صنعاء':'Sana','دمشق':'Dimashq','بيروت':'Bayrut','الشارقة':'Sharja','سورات':'Surat','جايبور':'Jaypur','لكناو':'Lucknow','كانبور':'Kanpur','ناغبور':'Nagpur','إندور':'Indore','بوبال':'Bhopal','راولبندي':'Rawalpindi','غوجرانوالا':'Gudjranvala','بيشاور':'Peshavar','طشقند':'Toshkent','سمرقند':'Samarqand','الإسكندرية':'Aleksandriya','أنديجان':'Andijon','ريسيفي':'Resife','باندونغ':'Bandung','كمبالا':'Kampala','دوالا':'Duala','سورابايا':'Surabaya','تيانجين':'Tyanjin','تشنغدو':'Chendu','بورت أو برانس':'Port-o-Prens','ميديلين':'Medelin','تشيتاغونغ':'Chittagong','باتنا':'Patna','سيمارانغ':'Semarang','تل أبيب':'Tel-Aviv','ميدان':'Medan','كانو':'Kano','إيبادان':'Ibadan','بورت هاركورت':'Port Harcourt','غوادالاخارا':'Gvadalaxara','كيتو':'Kito','كاراكاس':'Karakas','كالي':'Kali','كويته':'Kvetta','ماندالاي':'Mandalay','بنوم بنه':'Pnompen','فيينتيان':'Vyentyan','جورج تاون':'Jorjtaun','ماكاسار':'Makassar','مانادو':'Manado','بالي':'Bali','كييف':'Kiyev','بودابست':'Budapesht','براغ':'Praga','صوفيا':'Sofiya','بلغراد':'Belgrad','زيورخ':'Syurix','أمستردام':'Amsterdam','بروكسل':'Bryussel','ستوكهولم':'Stokgolm','كوبنهاغن':'Kopengagen','أوسلو':'Oslo','هلسنكي':'Xelsinki','دبلن':'Dublin','لشبونة':'Lissabon','نيقوسيا':'Nikosiya','فاليتا':'Valletta','واشنطن':'Vashington','سان فرانسيسكو':'San-Fransisko','مونتريال':'Monreal','دالاس':'Dallas','أتلانتا':'Atlanta','بوسطن':'Boston','فينيكس':'Feniks','ريفرسايد':'Riversayd','ديترويت':'Detroyt','سياتل':'Sietl','مينيابوليس':'Minneapolis','دنفر':'Denver','سان دييغو':'San-Diyego','تامبا':'Tampa','أورلاندو':'Orlando','برازيليا':'Braziliya','بيلو هوريزونتي':'Belu-Orizonti','لاباز':'La-Pas','مونتفيدو':'Montevideo','الدار البيضاء':'Kasablanka','الجزائر':'Aljir','تونس':'Tunis','طرابلس':'Tripoli','هرجيسا':'Xargeysa','هراري':'Xarare','لوساكا':'Lusaka','كيغالي':'Kigali','بوجومبورا':'Bujumbura','باماكو':'Bamako','أبوجا':'Abuja','ياوندي':'Yaunde','بيرث':'Pert','ويلينغتون':'Vellington','سوفا':'Suva','بورت مورسبي':'Port-Morsbi','أبيا':'Apiya','نوك':'Nuuk','ريكيافيك':'Reykyavik','تيرانا':'Tirana','سراييفو':'Sarayevo','بريشتينا':'Prishtina','بودغوريتسا':'Podgoritsa','سكوبيه':'Skopye','بوخارست':'Buxarest','تشيسيناو':'Kishinyov','مينسك':'Minsk','فيلنيوس':'Vilnyus','ريغا':'Riga','تالين':'Tallin','أولان باتور':'Ulanbotor','بيونغ يانغ':'Pxenyan','بورت لويس':'Port-Lui','فيكتوريا':'Viktoriya','ناساو':'Nassau','كينغستون':'Kingston','سانتو دومينغو':'Santo-Domingo','سان خوان':'San-Xuan','بلموبان':'Belmopan','غواتيمالا':'Gvatemala','تيغوسيغالبا':'Tegusigalpa','سان سلفادور':'San-Salvador','ماناغوا':'Managua','سان خوسيه':'San-Xose','بنما':'Panama','بورت أوف سبين':'Port-of-Speyn','باراماريبو':'Paramaribo','أسونسيون':'Asunsyon','سانتوريني':'Santorini','مراكش':'Marrakesh','كيوتو':'Kioto','البندقية':'Venetsiya','ميونخ':'Myunxen','فلورنسا':'Florensiya','سان بطرسبرغ':'Sankt-Peterburg','كيب تاون':'Keyptaun','سيشل':'Seyshel orollari','جزر المالديف':'Maldiv orollari','أنطاليا':'Antaliya','أدنبرة':'Edinburg','كراكوف':'Krakov','بورصة':'Bursa','إزمير':'Izmir','هانغتشو':'Xanchjou','هامبورغ':'Gamburg','كولونيا':'Kyoln','ميلانو':'Milan','تورينو':'Turin','ليون':'Lion','مرسيليا':'Marsel','مانشستر':'Manchester','برمنغهام':'Birmingem','غلاسكو':'Glazgo','روتردام':'Rotterdam','أنتويرب':'Antverpen','ديربان':'Durban','عنابة':'Annaba','وهران':'Oran','صفاقس':'Sfaks','بنغازي':'Bengazi','كالياري':'Kalyari','مونبلييه':'Monpelye','باليرمو':'Palermo','نابولي':'Neapol','فالنسيا':'Valensiya','حيدر آباد':'Xaydarobod','أحمد آباد':'Ahmadobod','فيصل آباد':'Faysalobod','بونة':'Pune'};
-            const featureRussian = {
+export const densitySpotEnglish = {'طوكيو':'Tokyo','أوساكا':'Osaka','سيول':'Seoul','بوسان':'Busan','شنغهاي':'Shanghai','بكين':'Beijing','غوانزو':'Guangzhou','شنتشن':'Shenzhen','تايبيه':'Taipei','هونغ كونغ':'Hong Kong','نانجينغ':'Nanjing','تشينغداو':'Qingdao','تشانغشا':'Changsha','ووهان':'Wuhan','سنغافورة':'Singapore','دلهي':'Delhi','مومباي':'Mumbai','كلكتا':'Kolkata','بنغالور':'Bengaluru','تشيناي':'Chennai','حيدر أباد':'Hyderabad','أحمد أباد':'Ahmedabad','بونه':'Pune','كراتشي':'Karachi','لاهور':'Lahore','داكا':'Dhaka','كاتماندو':'Kathmandu','إسلام أباد':'Islamabad','فيصل أباد':'Faisalabad','جاكرتا':'Jakarta','مانيلا':'Manila','بانكوك':'Bangkok','هوشي منه':'Ho Chi Minh City','هانوي':'Hanoi','يانغون':'Yangon','القاهرة':'Cairo','طهران':'Tehran','بغداد':'Baghdad','الرياض':'Riyadh','إسطنبول':'Istanbul','دبي':'Dubai','القدس':'Jerusalem','جدة':'Jeddah','أبو ظبي':'Abu Dhabi','لاغوس':'Lagos','كينشاسا':'Kinshasa','نيروبي':'Nairobi','جوهانسبرغ':'Johannesburg','أديس أبابا':'Addis Ababa','دار السلام':'Dar es Salaam','أبيدجان':'Abidjan','داكار':'Dakar','لواندا':'Luanda','الخرطوم':'Khartoum','مقديشو':'Mogadishu','أكرا':'Accra','لندن':'London','باريس':'Paris','موسكو':'Moscow','مدريد':'Madrid','برلين':'Berlin','روما':'Rome','برشلونة':'Barcelona','أثينا':'Athens','وارسو':'Warsaw','فيينا':'Vienna','نيويورك':'New York','لوس أنجلوس':'Los Angeles','مكسيكو':'Mexico City','شيكاغو':'Chicago','تورنتو':'Toronto','فانكوفر':'Vancouver','ميامي':'Miami','هيوستن':'Houston','ساو باولو':'São Paulo','ريو دي جانيرو':'Rio de Janeiro','ليما':'Lima','بوغوتا':'Bogotá','بوينس آيرس':'Buenos Aires','سانتياغو':'Santiago','سيدني':'Sydney','ملبورن':'Melbourne','بريزبن':'Brisbane','أوكلاند':'Auckland','كوالالمبور':'Kuala Lumpur','عمان':'Amman','الكويت':'Kuwait City','الدوحة':'Doha','مسقط':'Muscat','صنعاء':'Sana\'a','دمشق':'Damascus','بيروت':'Beirut','الشارقة':'Sharjah','سورات':'Surat','جايبور':'Jaipur','لكناو':'Lucknow','كانبور':'Kanpur','ناغبور':'Nagpur','إندور':'Indore','بوبال':'Bhopal','راولبندي':'Rawalpindi','غوجرانوالا':'Gujranwala','بيشاور':'Peshawar','كويته':'Quetta','تشيتاغونغ':'Chittagong','ماندالاي':'Mandalay','بنوم بنه':'Phnom Penh','فيينتيان':'Vientiane','جورج تاون':'George Town','سورابايا':'Surabaya','ميدان':'Medan','ماكاسار':'Makassar','مانادو':'Manado','بالي':'Bali','كييف':'Kyiv','بودابست':'Budapest','براغ':'Prague','صوفيا':'Sofia','بلغراد':'Belgrade','زيورخ':'Zurich','أمستردام':'Amsterdam','بروكسل':'Brussels','ستوكهولم':'Stockholm','كوبنهاغن':'Copenhagen','أوسلو':'Oslo','هلسنكي':'Helsinki','دبلن':'Dublin','لشبونة':'Lisbon','نيقوسيا':'Nicosia','فاليتا':'Valletta','واشنطن':'Washington, D.C.','سان فرانسيسكو':'San Francisco','مونتريال':'Montreal','دالاس':'Dallas','أتلانتا':'Atlanta','بوسطن':'Boston','فينيكس':'Phoenix','ريفرسايد':'Riverside','ديترويت':'Detroit','سياتل':'Seattle','مينيابوليس':'Minneapolis','دنفر':'Denver','سان دييغو':'San Diego','تامبا':'Tampa','أورلاندو':'Orlando','برازيليا':'Brasília','بيلو هوريزونتي':'Belo Horizonte','كاراكاس':'Caracas','ميديلين':'Medellín','كيتو':'Quito','كالي':'Cali','لاباز':'La Paz','مونتفيدو':'Montevideo','الدار البيضاء':'Casablanca','الجزائر':'Algiers','تونس':'Tunis','طرابلس':'Tripoli','هرجيسا':'Hargeisa','هراري':'Harare','لوساكا':'Lusaka','كمبالا':'Kampala','كيغالي':'Kigali','بوجومبورا':'Bujumbura','باماكو':'Bamako','أبوجا':'Abuja','ياوندي':'Yaoundé','دوالا':'Douala','بيرث':'Perth','ويلينغتون':'Wellington','سوفا':'Suva','بورت مورسبي':'Port Moresby','أبيا':'Apia','نوك':'Nuuk','ريكيافيك':'Reykjavik','تيرانا':'Tirana','سراييفو':'Sarajevo','بريشتينا':'Pristina','بودغوريتسا':'Podgorica','سكوبيه':'Skopje','بوخارست':'Bucharest','تشيسيناو':'Chișinău','مينسك':'Minsk','فيلنيوس':'Vilnius','ريغا':'Riga','تالين':'Tallinn','أولان باتور':'Ulaanbaatar','بيونغ يانغ':'Pyongyang','بورت لويس':'Port Louis','فيكتوريا':'Victoria','ناساو':'Nassau','كينغستون':'Kingston','بورت أو برانس':'Port-au-Prince','سانتو دومينغو':'Santo Domingo','سان خوان':'San Juan','بلموبان':'Belmopan','غواتيمالا':'Guatemala City','تيغوسيغالبا':'Tegucigalpa','سان سلفادور':'San Salvador','ماناغوا':'Managua','سان خوسيه':'San José','بنما':'Panama City','بورت أوف سبين':'Port of Spain','باراماريبو':'Paramaribo','أسونسيون':'Asunción','سانتوريني':'Santorini','مراكش':'Marrakesh','كيوتو':'Kyoto','البندقية':'Venice','ميونخ':'Munich','فلورنسا':'Florence','سان بطرسبرغ':'Saint Petersburg','كيب تاون':'Cape Town','سيشل':'Seychelles','جزر المالديف':'Maldives','أنطاليا':'Antalya','أدنبرة':'Edinburgh','كراكوف':'Krakow','بورصة':'Bursa','إزمير':'Izmir','تيانجين':'Tianjin','تشنغدو':'Chengdu','هانغتشو':'Hangzhou','هامبورغ':'Hamburg','كولونيا':'Cologne','ميلانو':'Milan','تورينو':'Turin','ليون':'Lyon','مرسيليا':'Marseille','مانشستر':'Manchester','برمنغهام':'Birmingham','غلاسكو':'Glasgow','روتردام':'Rotterdam','أنتويرب':'Antwerp','بورت هاركورت':'Port Harcourt','ديربان':'Durban','عنابة':'Annaba','وهران':'Oran','صفاقس':'Sfax','بنغازي':'Benghazi','كالياري':'Cagliari','مونبلييه':'Montpellier','باليرمو':'Palermo','نابولي':'Naples','فالنسيا':'Valencia','حيدر آباد':'Hyderabad','أحمد آباد':'Ahmedabad','فيصل آباد':'Faisalabad','بونة':'Pune','طشقند':'Tashkent','سمرقند':'Samarkand','الإسكندرية':'Alexandria','أنديجان':'Andijan','ريسيفي':'Recife','باندونغ':'Bandung','باتنا':'Patna','سيمارانغ':'Semarang','تل أبيب':'Tel Aviv','كانو':'Kano','إيبادان':'Ibadan','غوادالاخارا':'Guadalajara'};
+export const densitySpotRussian = {'طوكيو':'Токио','أوساكا':'Осака','سيول':'Сеул','بوسان':'Пусан','شنغهاي':'Шанхай','بكين':'Пекин','غوانزو':'Гуанчжоу','شنتشن':'Шэньчжэнь','تايبيه':'Тайбэй','هونغ كونغ':'Гонконг','نانجينغ':'Нанкин','تشينغداو':'Циндао','تشانغشا':'Чанша','ووهان':'Ухань','سنغافورة':'Сингапур','دلهي':'Дели','مومباي':'Мумбаи','كلكتا':'Калькутта','بنغالور':'Бангалор','تشيناي':'Ченнаи','حيدر أباد':'Хайдарабад','أحمد أباد':'Ахмадабад','بونه':'Пуна','كراتشي':'Карачи','لاهور':'Лахор','داكا':'Дакка','كاتماندو':'Катманду','إسلام أباد':'Исламабад','فيصل أباد':'Фейсалабад','جاكرتا':'Джакарта','مانيلا':'Манила','بانكوك':'Бангкок','هوشي منه':'Хошимин','هانوي':'Ханой','يانغون':'Янгон','القاهرة':'Каир','طهران':'Тегеран','بغداد':'Багдад','الرياض':'Эр-Рияд','إسطنبول':'Стамбул','دبي':'Дубай','القدس':'Иерусалим','جدة':'Джидда','أبو ظبي':'Абу-Даби','لاغوس':'Лагос','كينشاسا':'Киншаса','نيروبي':'Найроби','جوهانسبرغ':'Йоханнесбург','أديس أبابا':'Аддис-Абеба','دار السلام':'Дар-эс-Салам','أبيدجان':'Абиджан','داكار':'Дакар','لواندا':'Луанда','الخرطوم':'Хартум','مقديشو':'Могадишо','أكرا':'Аккра','لندن':'Лондон','باريس':'Париж','موسكو':'Москва','مدريد':'Мадрид','برلين':'Берлин','روما':'Рим','برشلونة':'Барселона','أثينا':'Афины','وارسو':'Варшава','فيينا':'Вена','نيويورк':'Нью-Йорк','لوس أنجلوس':'Лос-Анджелес','مكسيكو':'Мехико','شيكاغو':'Чикаго','تورنتو':'Торонто','فانكوفر':'Ванкувер','ميامي':'Майами','هيوستن':'Хьюстон','ساو باولو':'Сан-Паулу','ريو دي جانيرو':'Рио-де-Жанейро','ليما':'Лима','بوغوتا':'Богота','بوينس آيرس':'Буэнос-Айрес','سانتياغو':'Сантьяго','سيدني':'Сидней','ملبورн':'Мельбурн','بريزبن':'Брисбен','أوكلاند':'Окленд','كوالالمبور':'Куала-Лумпур','عمان':'Амман','الكويت':'Эль-Кувейт','الدوحة':'Доха','مسقط':'Маскат','صنعاء':'Сана','دمشق':'Дамаск','بيروت':'Бейрут','الشارقة':'Шарджа','سورات':'Сурат','جايبور':'Джайпур','لكناو':'Лакхнау','كانبور':'Канпур','ناغبور':'Нагпур','إندور':'Индор','بوبال':'Бхопал','راولبندي':'Равалпинди','غوجرانوالا':'Гуджранвала','بيشاور':'Пешавар','كويته':'Кветта','تشيتاغونغ':'Читтагонг','ماندالاي':'Мандалай','بنوم بنه':'Пномпень','فيينتيان':'Вьентьян','جورج تاون':'Джорджтаун','سورابايا':'Сурабая','ميدان':'Медан','ماكاسار':'Макасар','مانادو':'Манадо','بالي':'Бали','كييف':'Киев','بودابست':'Будапешт','براغ':'Прага','صوفيا':'София','بلغراد':'Белград','زيورخ':'Цюрих','أمستردам':'Амстердам','بروكسل':'Брюссель','ستوكهولم':'Стокгольм','كوبنهاغن':'Копенгаген','أوسلو':'Осло','هلسنكي':'Хельсинки','دبلن':'Дублин','لشبونة':'Лиссабон','نيقوسيا':'Никосия','فاليتا':'Валлетта','واشنطن':'Вашингтон','سان فرانسيسكو':'Сан-Франциско','مونتريال':'Монреаль','دالاس':'Даллас','أتلانتا':'Атланта','بوسطن':'Бостон','فينيكс':'Финикс','ريفرسايد':'Риверсайд','ديترويت':'Детройт','سياتل':'Сиэтл','مينيابوليس':'Миннеаполис','دنفر':'Денвер','سان دييغو':'Сан-Диего','تامبا':'Тампа','أورلاندو':'Орландо','برازيليا':'Бразилиа','بيلو هوريزونتي':'Белу-Оризонти','كاراكاس':'Каракас','ميديلين':'Медельин','كيتو':'Кито','كالي':'Кали','لاباز':'Ла-Пас','مونتفيدو':'Монтевидео','الدار البيضاء':'Касабланка','الجزائر':'Алжир','تونس':'Тунис','طرابلس':'Триполи','هرجيسا':'Харгейса','هراري':'Хараре','لوساكا':'Лусака','كمبالا':'Кампала','كيغالي':'Кигали','بوجومبورا':'Бужумбура','باماكو':'Бамако','أبوجا':'Абуджа','ياوندي':'Яунде','دوالا':'Дуала','بيرث':'Перт','ويلينغتون':'Веллингтон','سوفا':'Сува','بورت مورسبي':'Порт-Морсби','أبيا':'Апиа','نوك':'Нуук','ريكيافيك':'Рейкьявик','تيرانا':'Тирана','سراييفو':'Сараево','بريشتينا':'Приштина','بودغوريتسا':'Подгорица','سكوبيه':'Скопье','بوخارست':'Бухарест','تشيسيناو':'Кишинёв','مينسك':'Минск','فيلنيوس':'Вильнюс','ريغا':'Рига','تالين':'Таллин','أولان باتور':'Улан-Батор','بيونغ يانغ':'Пхеньян','بورت لويس':'Порт-Луи','فيكتوريا':'Виктория','ناساو':'Нассау','كينغستон':'Кингстон','بورت أو برانس':'Порт-о-Пренс','سانتو دومينغو':'Санто-Доминго','سان خوان':'Сан-Хуан','بلموبان':'Бельмопан','غواتيمالا':'Гватемала','تيغوسيغالبا':'Тегусигальпа','سان سلفادور':'Сан-Сальвадор','ماناغوا':'Манагуа','سان خوسيه':'Сан-Хосе','بنما':'Панама','بورت أوف سبين':'Порт-оф-Спейн','باراماريبو':'Парамарибо','أسونسيون':'Асунсьон','سانتوريني':'Санторини','مراكش':'Марракеш','كيوتو':'Киото','البندقية':'Венеция','ميونخ':'Мюнхен','فلورنسا':'Флоренция','سان بطرسبرغ':'Санкт-Петербург','كيب تاون':'Кейптаун','سيشل':'Сейшелы','جزر المالديف':'Мальдивы','أنطاليا':'Анталия','أدنبرة':'Эдинбург','كراكوف':'Краков','بورصة':'Бурса','إزمير':'Измир','تيانجين':'Тяньцзинь','تشنغدو':'Чэнду','هانغتشو':'Ханчжоу','هامبورغ':'Гамбург','كولونيا':'Кёльн','ميلانو':'Милан','تورينو':'Турин','ليون':'Лион','مرسيليا':'Марсель','مانشستر':'Манчестер','برمنغهام':'Бирмингем','غلاسكو':'Глазго','روتردام':'Роттердам','أنتويرب':'Антверпен','بورت هاركورت':'Порт-Харкорт','ديربان':'Дурбан','عنابة':'Аннаба','وهران':'Оран','صفاقس':'Сфакс','بنغازي':'Бенгази','كالياري':'Кальяри','مونبلييه':'Монпелье','باليرمو':'Палермо','نابولي':'Неаполь','فالنسيا':'Валенсия','حيدر آباد':'Хайдарабад','أحمد آباد':'Ахмадабад','فيصل آباد':'Фейсалабад','بونة':'Пуна','طشقند':'Ташкент','سمرقند':'Самарканд','الإسكندرية':'Александрия','أنديجان':'Андижан','ريسيفي':'Ресифи','باندونغ':'Бандунг','باتنا':'Патна','سيمارانغ':'Семаранг','تل أبيب':'Тель-Авив','كانو':'Кано','إيبادان':'Ибадан','غوادالاخارا':'Гвадалахара','نيويورك':'Нью-Йорк','ملبورن':'Мельбурн'};
+export const densitySpotUzbek = {'طوكيو':'Tokio','أوساكا':'Osaka','سيول':'Seul','بوسان':'Pusan','شنغهاي':'Shanxay','بكين':'Pekin','غوانزو':'Guanchjou','شنتشن':'Shenchen','تايبيه':'Taybey','هونغ كونغ':'Gonkong','نانجينغ':'Nanjing','تشينغداو':'Tsindao','تشانغشا':'Chansha','ووهان':'Uxan','سنغافورة':'Singapur','دلهي':'Dehli','مومباي':'Mumbai','كلكتا':'Kolkata','بنغالور':'Bengaluru','تشيناي':'Chennai','حيدر أباد':'Xaydarobod','أحمد أباد':'Ahmadobod','بونه':'Pune','كراتشي':'Karachi','لاهور':'Laxor','داكا':'Dakka','كاتماندو':'Katmandu','إسلام أباد':'Islamobod','فيصل أباد':'Faysalobod','جاكرتا':'Djokarta','مانيلا':'Manila','بانكوك':'Bangkok','هوشي منه':'Xoshimin','هانوي':'Xanoy','يانغون':'Yangon','القاهرة':'Qohira','طهران':'Tehron','بغداد':'Bag\'dad','الرياض':'Er-Riyod','إسطنبول':'Stambul','دبي':'Dubay','القدس':'Yerushalayim','جدة':'Jidda','أبو ظبي':'Abu-Dabi','لاغوس':'Lagos','كينشاسا':'Kinshasa','نيروبي':'Nairobi','جوهانسبرغ':'Yoxannesburg','أديس أبابا':'Addis-Abeba','دار السلام':'Dar-es-Salam','أبيدجان':'Abidjan','داكار':'Dakar','لواندا':'Luanda','الخرطوم':'Xartum','مقديشو':'Mogadishu','أكرا':'Akra','لندن':'London','باريس':'Parij','موسكو':'Moskva','مدريد':'Madrid','برلين':'Berlin','روما':'Rim','برشلونة':'Barselona','أثينا':'Afina','وارسو':'Varshava','فيينا':'Vena','نيويورك':'Nyuyork','لوس أنجلوس':'Los-Anjeles','مكسيكو':'Mexiko','شيكاغو':'Chicago','تورنتو':'Toronto','فانكوفر':'Vankuver','ميامي':'Miami','هيوستن':'Houston','ساو باولو':'San-Paulu','ريو دي جانيرو':'Rio-de-Janeiro','ليما':'Lima','بوغوتا':'Bogota','بوينس آيرس':'Buenos-Ayres','سانتياغو':'Santyago','سيدني':'Sydney','ملبورن':'Melburn','بريزبن':'Brisben','أوكلاند':'Aukland','كوالالمبور':'Kuala-Lumpur','عمان':'Amman','الكويت':'Kuveyt','الدوحة':'Doxa','مسقط':'Maskat','صنعاء':'Sana','دمشق':'Dimashq','بيروت':'Bayrut','الشارقة':'Sharja','سورات':'Surat','جايبور':'Jaypur','لكناو':'Lucknow','كانبور':'Kanpur','ناغبور':'Nagpur','إندور':'Indore','بوبال':'Bhopal','راولبندي':'Rawalpindi','غوجرانوالا':'Gudjranvala','بيشاور':'Peshavar','طشقند':'Toshkent','سمرقند':'Samarqand','الإسكندرية':'Aleksandriya','أنديجان':'Andijon','ريسيفي':'Resife','باندونغ':'Bandung','كمبالا':'Kampala','دوالا':'Duala','سورابايا':'Surabaya','تيانجين':'Tyanjin','تشنغدو':'Chendu','بورت أو برانس':'Port-o-Prens','ميديلين':'Medelin','تشيتاغونغ':'Chittagong','باتنا':'Patna','سيمارانغ':'Semarang','تل أبيب':'Tel-Aviv','ميدان':'Medan','كانو':'Kano','إيبادان':'Ibadan','بورت هاركورت':'Port Harcourt','غوادالاخارا':'Gvadalaxara','كيتو':'Kito','كاراكاس':'Karakas','كالي':'Kali','كويته':'Kvetta','ماندالاي':'Mandalay','بنوم بنه':'Pnompen','فيينتيان':'Vyentyan','جورج تاون':'Jorjtaun','ماكاسار':'Makassar','مانادو':'Manado','بالي':'Bali','كييف':'Kiyev','بودابست':'Budapesht','براغ':'Praga','صوفيا':'Sofiya','بلغراد':'Belgrad','زيورخ':'Syurix','أمستردام':'Amsterdam','بروكسل':'Bryussel','ستوكهولم':'Stokgolm','كوبنهاغن':'Kopengagen','أوسلو':'Oslo','هلسنكي':'Xelsinki','دبلن':'Dublin','لشبونة':'Lissabon','نيقوسيا':'Nikosiya','فاليتا':'Valletta','واشنطن':'Vashington','سان فرانسيسكو':'San-Fransisko','مونتريال':'Monreal','دالاس':'Dallas','أتلانتا':'Atlanta','بوسطن':'Boston','فينيكس':'Feniks','ريفرسايد':'Riversayd','ديترويت':'Detroyt','سياتل':'Sietl','مينيابوليس':'Minneapolis','دنفر':'Denver','سان دييغو':'San-Diyego','تامبا':'Tampa','أورلاندو':'Orlando','برازيليا':'Braziliya','بيلو هوريزونتي':'Belu-Orizonti','لاباز':'La-Pas','مونتفيدو':'Montevideo','الدار البيضاء':'Kasablanka','الجزائر':'Aljir','تونس':'Tunis','طرابلس':'Tripoli','هرجيسا':'Xargeysa','هراري':'Xarare','لوساكا':'Lusaka','كيغالي':'Kigali','بوجومبورا':'Bujumbura','باماكو':'Bamako','أبوجا':'Abuja','ياوندي':'Yaunde','بيرث':'Pert','ويلينغتون':'Vellington','سوفا':'Suva','بورت مورسبي':'Port-Morsbi','أبيا':'Apiya','نوك':'Nuuk','ريكيافيك':'Reykyavik','تيرانا':'Tirana','سراييفو':'Sarayevo','بريشتينا':'Prishtina','بودغوريتسا':'Podgoritsa','سكوبيه':'Skopye','بوخارست':'Buxarest','تشيسيناو':'Kishinyov','مينسك':'Minsk','فيلنيوس':'Vilnyus','ريغا':'Riga','تالين':'Tallin','أولان باتور':'Ulanbotor','بيونغ يانغ':'Pxenyan','بورت لويس':'Port-Lui','فيكتوريا':'Viktoriya','ناساو':'Nassau','كينغستون':'Kingston','سانتو دومينغو':'Santo-Domingo','سان خوان':'San-Xuan','بلموبان':'Belmopan','غواتيمالا':'Gvatemala','تيغوسيغالبا':'Tegusigalpa','سان سلفادور':'San-Salvador','ماناغوا':'Managua','سان خوسيه':'San-Xose','بنما':'Panama','بورت أوف سبين':'Port-of-Speyn','باراماريبو':'Paramaribo','أسونسيون':'Asunsyon','سانتوريني':'Santorini','مراكش':'Marrakesh','كيوتو':'Kioto','البندقية':'Venetsiya','ميونخ':'Myunxen','فلورنسا':'Florensiya','سان بطرسبرغ':'Sankt-Peterburg','كيب تاون':'Keyptaun','سيشل':'Seyshel orollari','جزر المالديف':'Maldiv orollari','أنطاليا':'Antaliya','أدنبرة':'Edinburg','كراكوف':'Krakov','بورصة':'Bursa','إزمير':'Izmir','هانغتشو':'Xanchjou','هامبورغ':'Gamburg','كولونيا':'Kyoln','ميلانو':'Milan','تورينو':'Turin','ليون':'Lion','مرسيليا':'Marsel','مانشستر':'Manchester','برمنغهام':'Birmingem','غلاسكو':'Glazgo','روتردام':'Rotterdam','أنتويرب':'Antverpen','ديربان':'Durban','عنابة':'Annaba','وهران':'Oran','صفاقس':'Sfaks','بنغازي':'Bengazi','كالياري':'Kalyari','مونبلييه':'Monpelye','باليرمو':'Palermo','نابولي':'Neapol','فالنسيا':'Valensiya','حيدر آباد':'Xaydarobod','أحمد آباد':'Ahmadobod','فيصل آباد':'Faysalobod','بونة':'Pune'};
+export const featureRussian = {
                 corridors: {
                     'Strait of Hormuz':'Ормузский пролив','Silk Road':'Шёлковый путь','Suez Canal':'Суэцкий канал','Panama Canal':'Панамский канал','Gibraltar':'Гибралтар','Malacca':'Малакка','Bab el-Mandeb':'Баб-эль-Мандеб','Bosphorus':'Босфор','Dardanelles':'Дарданеллы','Danish Straits':'Датские проливы','Torres Strait':'Торресов пролив','Mozambique Channel':'Мозамбикский пролив','Kiel Canal':'Кильский канал','English Channel':'Ла-Манш','Baltic Sea':'Балтийское море'
                 },
@@ -6653,13 +7173,13 @@
                     'European Union':'Европейский союз','NATO':'НАТО','Arab League':'Лига арабских государств','African Union':'Африканский союз','OPEC':'ОПЕК','BRICS':'БРИКС','ASEAN':'АСЕАН','MERCOSUR':'МЕРКОСУР','Organization of Turkic States':'Организация Тюркских государств','Organisation of Islamic Cooperation':'Организация Исламского сотрудничества','Shanghai Cooperation Organisation':'Шанхайская организация сотрудничества','Gulf Cooperation Council':'Совет сотрудничества стран Залива','G7':'Г7','G20':'Г20','Commonwealth of Independent States':'Содружество Независимых Государств','Eurasian Economic Union':'Евразийский экономический союз'
                 }
             };
-            const capitalsRussian = {
+export const capitalsRussian = {
                 'Kabul':'Кабул','Tirana':'Тирана','Algiers':'Алжир','Luanda':'Луанда','Buenos Aires':'Буэнос-Айрес','Yerevan':'Ереван','Canberra':'Канберра','Vienna':'Вена','Baku':'Баку','Manama':'Манама','Dhaka':'Дакка','Minsk':'Минск','Brussels':'Брюссель','Belmopan':'Бельмопан','Porto-Novo':'Порто-Ново','Thimphu':'Тхимпху','Sucre':'Сукре','Sarajevo':'Сараево','Gaborone':'Габороне','Brasília':'Бразилиа','Bandar Seri Begawan':'Бандар-Сери-Бегаван','Sofia':'София','Ouagadougou':'Уагадугу','Gitega':'Гитега','Phnom Penh':'Пномпень','Yaoundé':'Яунде','Ottawa':'Оттава','Praia':'Прая','Bangui':'Банги','N\'Djamena':'Нджамена','Santiago':'Сантьяго','Beijing':'Пекин','Bogotá':'Богота','Moroni':'Морони','Brazzaville':'Браззавиль','San José':'Сан-Хосе','Zagreb':'Загреб','Havana':'Гавана','Nicosia':'Никосия','Prague':'Прага','Copenhagen':'Копенгаген','Djibouti':'Джибути','Roseau':'Розо','Santo Domingo':'Санто-Доминго','Quito':'Кито','Cairo':'Каир','San Salvador':'Сан-Сальвадор','Malabo':'Малабо','Asmara':'Асмэра','Tallinn':'Таллин','Mbabane':'Мбабане','Addis Ababa':'Аддис-Абеба','Palikir':'Паликир','Suva':'Сува','Helsinki':'Хельсинки','Paris':'Париж','Libreville':'Либревиль','Banjul':'Банджул','Tbilisi':'Тбилиси','Berlin':'Берлин','Accra':'Аккра','Athens':'Афины','St. George\'s':'Сент-Джорджес','Guatemala City':'Гватемала','Conakry':'Конакри','Bissau':'Бисау','Georgetown':'Джорджтаун','Port-au-Prince':'Порт-о-Пренс','Tegucigalpa':'Тегусигальпа','Budapest':'Будапешт','Reykjavik':'Рейкьявик','New Delhi':'Нью-Дели','Jakarta':'Джакарта','Tehran':'Тегеран','Baghdad':'Багдад','Dublin':'Дублин','Jerusalem':'Иерусалим','Rome':'Рим','Abidjan':'Абиджан','Kingston':'Кингстон','Tokyo':'Токио','Amman':'Амман','Nur-Sultan':'Нур-Султан','Nairobi':'Найроби','Tarawa':'Тарава','Pristina':'Приштина','Kuwait City':'Эль-Кувейт','Bishkek':'Бишкек','Vientiane':'Вьентьян','Riga':'Рига','Beirut':'Бейрут','Maseru':'Масеру','Monrovia':'Монровия','Tripoli':'Триполи','Vaduz':'Вадуц','Vilnius':'Вильнюс','Luxembourg':'Люксембург','Antananarivo':'Антананариву','Lilongwe':'Лилонгве','Kuala Lumpur':'Куала-Лумпур','Malé':'Мале','Bamako':'Бамако','Valletta':'Валлетта','Majuro':'Маджуро','Nouakchott':'Нуакшот','Port Louis':'Порт-Луи','Mexico City':'Мехико','Chișinău':'Кишинёв','Ulaanbaatar':'Улан-Батор','Podgorica':'Подгорица','Rabat':'Рабат','Maputo':'Мапуту','Naypyidaw':'Нейпьидо','Windhoek':'Виндхук','Yaren':'Ярен','Kathmandu':'Катманду','Amsterdam':'Амстердам','Wellington':'Веллингтон','Managua':'Манагуа','Niamey':'Ниамей','Abuja':'Абуджа','Pyongyang':'Пхеньян','Skopje':'Скопье','Oslo':'Осло','Muscat':'Маскат','Islamabad':'Исламабад','Ngerulmud':'Нгерулмуд','Panama City':'Панама','Port Moresby':'Порт-Морсби','Asunción':'Асунсьон','Lima':'Лима','Manila':'Манила','Warsaw':'Варшава','Lisbon':'Лиссабон','Doha':'Доха','Bucharest':'Бухарест','Moscow':'Москва','Kigali':'Кигали','Basseterre':'Бастер','Castries':'Кастри','Kingstown':'Кингстаун','Apia':'Апиа','San Marino':'Сан-Марино','São Tomé':'Сан-Томе','Riyadh':'Эр-Рияд','Dakar':'Дакар','Belgrade':'Белград','Victoria':'Виктория','Freetown':'Фритаун','Singapore':'Сингапур','Bratislava':'Братислава','Ljubljana':'Любляна','Honiara':'Хониара','Mogadishu':'Могадишо','Pretoria':'Претория','Seoul':'Сеул','Juba':'Джуба','Madrid':'Мадрид','Colombo':'Коломбо','Khartoum':'Хартум','Paramaribo':'Парамарибо','Stockholm':'Стокгольм','Bern':'Берн','Damascus':'Дамаск','Taipei':'Тайбэй','Dushanbe':'Душанбе','Dodoma':'Додома','Bangkok':'Бангкок','Lomé':'Ломе','Nuku\'alofa':'Нукуалофа','Port of Spain':'Порт-оф-Спейн','Tunis':'Тунис','Ankara':'Анкара','Ashgabat':'Ашхабад','Funafuti':'Фунафути','Kampala':'Кампала','Kyiv':'Киев','Abu Dhabi':'Абу-Даби','London':'Лондон','Washington, D.C.':'Вашингтон','Montevideo':'Монтевидео','Tashkent':'Ташкент','Port Vila':'Порт-Вила','Vatican City':'Ватикан','Caracas':'Каракас','Hanoi':'Ханой','Sana\'a':'Сана','Lusaka':'Лусака','Harare':'Хараре'
             };
-            const langsRussian = {
+export const langsRussian = {
                 'Dari / Pashto':'Дари / Пушту','Albanian':'Албанский','Arabic / Berber':'Арабский / Берберский','Portuguese':'Португальский','Spanish':'Испанский','Armenian':'Армянский','English':'Английский','German':'Немецкий','Azerbaijani':'Азербайджанский','Arabic':'Арабский','Bengali':'Бенгальский','Belarusian / Russian':'Белорусский / Русский','Dutch / French / German':'Нидерландский / Французский / Немецкий','Indonesian':'Индонезийский','Italian':'Итальянский','Japanese':'Японский','Kazakh':'Казахский','Korean':'Корейский','Kurdish':'Курдский','Malay':'Малайский','Mongolian':'Монгольский','Nepali':'Непальский','Pashto':'Пушту','Persian':'Персидский','Polish':'Польский','Romanian':'Румынский','Russian':'Русский','Somali':'Сомалийский','Swahili':'Суахили','Tajik':'Таджикский','Thai':'Тайский','Turkish':'Турецкий','Turkmen':'Туркменский','Ukrainian':'Украинский','Urdu':'Урду','Uzbek':'Узбекский','French':'Французский','Dutch':'Нидерландский','Greek':'Греческий','Hungarian':'Венгерский','Czech':'Чешский','Swedish':'Шведский','Bulgarian':'Болгарский','Croatian':'Хорватский','Slovak':'Словацкий','Slovenian':'Словенский','Lithuanian':'Литовский','Latvian':'Латышский','Estonian':'Эстонский','Finnish':'Финский','Norwegian':'Норвежский','Danish':'Датский','Icelandic':'Исландский','Serbian':'Сербский','Bosnian':'Боснийский','Macedonian':'Македонский','Georgian':'Грузинский','Maltese':'Мальтийский','Irish':'Ирландский','Luxembourgish':'Люксембургский','Hebrew':'Иврит','Hindi':'Хинди','Tamil':'Тамильский','Telugu':'Телугу','Marathi':'Маратхи','Gujarati':'Гуджарати','Kannada':'Каннада','Malayalam':'Малаялам','Punjabi':'Панджаби','Sinhala':'Сингальский','Burmese':'Бирманский','Khmer':'Кхмерский','Lao':'Лаосский','Amharic':'Амхарский','Hausa':'Хауса','Yoruba':'Йоруба','Igbo':'Игбо','Zulu':'Зулу','Xhosa':'Коса','Afrikaans':'Африкаанс','Chewa':'Чева','Malagasy':'Малагасийский','Samoan':'Самоанский','Tongan':'Тонганский','Fijian':'Фиджийский','Maori':'Маори','Marshallese':'Маршалльский','Palauan':'Палау','Filipino':'Филиппинский','Vietnamese':'Вьетнамский','Mandarin':'Мандаринский','Cantonese':'Кантонский','Uyghur':'Уйгурский','Oromo':'Оромо','Tigrinya':'Тигринья','Berber':'Берберский','Catalan':'Каталанский','Galician':'Галисийский','Basque':'Баскский','Welsh':'Валлийский','Scottish Gaelic':'Шотландский гэльский','Romansh':'Романшский','Sardinian':'Сардинский','Frisian':'Фризский','Greenlandic':'Гренландский','Faroese':'Фарерский','Sámi':'Саамский'
             };
-            const continentUzbek = {
+export const continentUzbek = {
                 'Africa': 'Afrika',
                 'Asia': 'Osiyo',
                 'Europe': 'Yevropa',
@@ -6669,7 +7189,7 @@
                 'Antarctica': 'Antarktida',
                 'Unknown': 'Noma\'lum'
             };
-            const governmentUzbek = {
+export const governmentUzbek = {
                 'Absolute Monarchy': 'Absolyut monarxiya',
                 'Constitutional Monarchy': 'Konstitutsion monarxiya',
                 'Parliamentary Monarchy': 'Parlament monarxiyasi',
@@ -6692,7 +7212,7 @@
                 'Parliamentary Monarchy (Denmark)': 'Parlament monarxiyasi (Daniya)',
                 'Federal Absolute Monarchy': 'Federativ absolyut monarxiya'
             };
-            const religionUzbek = {
+export const religionUzbek = {
                 'muslim': 'Islom',
                 'christian': 'Xristianlik',
                 'hindu': 'Hinduizm',
@@ -6701,7 +7221,7 @@
                 'other': 'Boshqa',
                 'unknown': 'Noma\'lum'
             };
-            const denominationUzbek = {
+export const denominationUzbek = {
                 'sunni': 'Sunnit',
                 'shia': 'Shiya',
                 'ibadi': 'Ibodiy',
@@ -6719,7 +7239,7 @@
                 'christian': 'Xristian',
                 'unknown': 'Noma\'lum'
             };
-            const featureUzbek = {
+export const featureUzbek = {
                 corridors: {
                     'Strait of Hormuz':'Hormuz bo\'g\'ozi','Silk Road':'Ipak yo\'li','Suez Canal':'Suez kanali','Panama Canal':'Panama kanali','Gibraltar':'Gibraltar','Malacca':'Malakka','Bab el-Mandeb':'Bab al-Mandab','Bosphorus':'Bosfor','Dardanelles':'Dardanellar','Danish Straits':'Daniya bo\'g\'ozlari','Torres Strait':'Torres bo\'g\'ozi','Mozambique Channel':'Mozambik kanali','Kiel Canal':'Kil kanali','English Channel':'La-Mansh','Baltic Sea':'Baltika dengizi'
                 },
@@ -6836,14 +7356,14 @@
                     'Rarest precious metal, used in catalysts.':'Eng kam uchraydigan qimmatbaho metall, katalizatorlarda ishlatiladi.'
                 }
             };
-            const capitalsUzbek = {
+export const capitalsUzbek = {
                 'Kabul':'Kobul','Tirana':'Tirana','Algiers':'Aljir','Luanda':'Luanda','Buenos Aires':'Buenos-Ayres','Yerevan':'Yerevan','Canberra':'Kanberra','Vienna':'Vena','Baku':'Boku','Manama':'Manama','Dhaka':'Dakka','Minsk':'Minsk','Brussels':'Bryussel','Belmopan':'Belmopan','Porto-Novo':'Porto-Novo','Thimphu':'Thimphu','Sucre':'Sukre','Sarajevo':'Sarayevo','Gaborone':'Gaborone','Brasília':'Brasiliya','Bandar Seri Begawan':'Bandar-Seri-Begavan','Sofia':'Sofiya','Ouagadougou':'Uagadugu','Gitega':'Gitega','Phnom Penh':'Phnompen','Yaoundé':'Yaunde','Ottawa':'Ottava','Praia':'Praiya','Bangui':'Bangi','N\'Djamena':'N\'Djamena','Santiago':'Santyago','Beijing':'Pekin','Bogotá':'Bogota','Moroni':'Moroni','Brazzaville':'Brazzavil','San José':'San-Xose','Zagreb':'Zagreb','Havana':'Gavana','Nicosia':'Nikosiya','Prague':'Praga','Copenhagen':'Kopengagen','Djibouti':'Djibuti','Roseau':'Rozо','Santo Domingo':'Santo-Domingo','Quito':'Kito','Cairo':'Qohira','San Salvador':'San-Salvador','Malabo':'Malabo','Asmara':'Asmara','Tallinn':'Tallin','Mbabane':'Mbabane','Addis Ababa':'Addis-Abeba','Palikir':'Palikir','Suva':'Suva','Helsinki':'Xelsinki','Paris':'Parij','Libreville':'Librevil','Banjul':'Bandjul','Tbilisi':'Tbilisi','Berlin':'Berlin','Accra':'Akra','Athens':'Afina','St. George\'s':'Sent-Djordjes','Guatemala City':'Gvatemala','Conakry':'Konakri','Bissau':'Bisau','Georgetown':'Djordjtaun','Port-au-Prince':'Port-o-Prins','Tegucigalpa':'Tegusigalpa','Budapest':'Budapesht','Reykjavik':'Reykjavik','New Delhi':'Nyu-Dehli','Jakarta':'Djakarta','Tehran':'Tehron','Baghdad':'Bag\'dad','Dublin':'Dublin','Jerusalem':'Yerushalayim','Rome':'Rim','Abidjan':'Abidjan','Kingston':'Kingston','Tokyo':'Tokio','Amman':'Amman','Nur-Sultan':'Nur-Sulton','Nairobi':'Nayrobi','Tarawa':'Tarava','Pristina':'Prishina','Kuwait City':'Kuveyt','Bishkek':'Bishkek','Vientiane':'Ventyan','Riga':'Riga','Beirut':'Bayrut','Maseru':'Maseru','Monrovia':'Monrovia','Vaduz':'Vaduts','Vilnius':'Vilnyus','Lilongwe':'Lilongve','Lima':'Lima','Lisbon':'Lissabon','Ljubljana':'Lyublyana','Lomé':'Lome','London':'London','Luanda':'Luanda','Lusaka':'Lusaka','Luxembourg':'Lyuksemburg','Madrid':'Madrid','Malé':'Male','Managua':'Managua','Manama':'Manama','Manila':'Manila','Maputo':'Maputu','Maseru':'Maseru','Minsk':'Minsk','Mogadishu':'Mogadishu','Monaco':'Monako','Monrovia':'Monrovia','Montevideo':'Montevideo','Moroni':'Moroni','Moscow':'Moskva','Muscat':'Maskat','N\'Djamena':'N\'Djamena','Nairobi':'Nayrobi','Nassau':'Nassau','Ngerulmud':'Ngerulmud','Niamey':'Niamey','Nicosia':'Nikosiya','Nouakchott':'Nuakshott','Nuku\'alofa':'Nukualofa','Nur-Sultan':'Nur-Sulton','Oslo':'Oslo','Ottawa':'Ottava','Ouagadougou':'Uagadugu','Panama City':'Panama','Paramaribo':'Paramaribo','Paris':'Parij','Phnom Penh':'Phnompen','Podgorica':'Podgoritsa','Port Louis':'Port-Luis','Port Moresby':'Port-Morsbi','Port Vila':'Port-Vila','Port-au-Prince':'Port-o-Prins','Port-of-Spain':'Port-of-Speyn','Prague':'Praga','Praia':'Praiya','Pristina':'Prishina','Pyongyang':'Phenyan','Quito':'Kito','Rabat':'Rabat','Ramallah':'Ramalla','Reykjavik':'Reykjavik','Riga':'Riga','Rome':'Rim','Roseau':'Rozо','Saint Helier':'Sent-Xelier','Saint John\'s':'Sent-Djons','San José':'San-Xose','San Marino':'San-Marino','San Salvador':'San-Salvador','Sana\'a':'Sana','Santiago':'Santyago','Santo Domingo':'Santo-Domingo','São Paulo':'San-Paulu','Sarajevo':'Sarayevo','Seoul':'Seul','Shanghai':'Shanxay','Singapore':'Singapur','Skopje':'Skopye','Sofia':'Sofiya','Stockholm':'Stokgolm','Sucre':'Sukre','Suva':'Suva','Taipei':'Taybey','Tallinn':'Tallin','Tashkent':'Toshkent','Tbilisi':'Tbilisi','Tegucigalpa':'Tegusigalpa','Tehran':'Tehron','Thimphu':'Thimphu','Tirana':'Tirana','Tokyo':'Tokio','Tripoli':'Tripoli','Tunis':'Tunis','Ulan Bator':'Ulan-Bator','Vaduz':'Vaduts','Valletta':'Valletta','Vienna':'Vena','Vientiane':'Ventyan','Vilnius':'Vilnyus','Warsaw':'Varshava','Washington D.C.':'Vashington','Wellington':'Vellington','Windhoek':'Vindxuk','Yaoundé':'Yaunde','Yerevan':'Yerevan','Zagreb':'Zagreb'
             };
-            const langsUzbek = {
+export const langsUzbek = {
                 'Dari / Pashto':'Dari / Pashto','Albanian':'Alban tili','Arabic / Berber':'Arab / Berber tili','Portuguese':'Portugal tili','Spanish':'Ispan tili','Armenian':'Arman tili','English':'Ingliz tili','German':'Nemis tili','Azerbaijani':'Ozarbayjon tili','Arabic':'Arab tili','Bengali':'Bengal tili','Belarusian / Russian':'Belarus / Rus tili','Dutch / French / German':'Golland / Fransuz / Nemis tili','Indonesian':'Indonez tili','Italian':'Italyan tili','Japanese':'Yapon tili','Kazakh':'Qozog\' tili','Korean':'Koreya tili','Kurdish':'Kurd tili','Malay':'Malay tili','Mongolian':'Mongol tili','Nepali':'Nepal tili','Pashto':'Pashto','Persian':'Eron tili','Polish':'Polsha tili','Romanian':'Rumin tili','Russian':'Rus tili','Somali':'Somali tili','Swahili':'Suaxili tili','Tajik':'Tojik tili','Thai':'Tay tili','Turkish':'Turk tili','Turkmen':'Turkman tili','Ukrainian':'Ukrain tili','Urdu':'Urdu','Uzbek':'O\'zbek tili','French':'Fransuz tili','Dutch':'Golland tili','Greek':'Yunon tili','Hungarian':'Vengr tili','Czech':'Chex tili','Swedish':'Shved tili','Bulgarian':'Bolgar tili','Croatian':'Xorvat tili','Slovak':'Slovak tili','Slovenian':'Sloven tili','Lithuanian':'Litva tili','Latvian':'Latviya tili','Estonian':'Eston tili','Finnish':'Fin tili','Norwegian':'Norveg tili','Danish':'Daniya tili','Icelandic':'Island tili','Serbian':'Serb tili','Bosnian':'Bosna tili','Macedonian':'Makedon tili','Georgian':'Gruzin tili','Maltese':'Malta tili','Irish':'Irland tili','Luxembourgish':'Lyuksemburg tili','Hebrew':'Ivrit tili','Hindi':'Xindi tili','Tamil':'Tamil tili','Telugu':'Telugu tili','Marathi':'Marathi tili','Gujarati':'Gujarat tili','Kannada':'Kannada tili','Malayalam':'Malayalam tili','Punjabi':'Pencab tili','Sinhala':'Singal tili','Burmese':'Birma tili','Khmer':'Xmer tili','Lao':'Laos tili','Amharic':'Amxar tili','Hausa':'Xausa tili','Yoruba':'Yoruba tili','Igbo':'Igbo tili','Zulu':'Zulu tili','Xhosa':'Xosa tili','Afrikaans':'Afrikaans tili','Chewa':'Chewa tili','Malagasy':'Malagasi tili','Samoan':'Samoa tili','Tongan':'Tonga tili','Fijian':'Fiji tili','Maori':'Maori tili','Marshallese':'Marshall tili','Kiribati':'Kiribati tili','Turkmen':'Turkman tili','Uzbek':'O\'zbek tili','Kazakh':'Qozog\' tili','Kyrgyz':'Qirg\'iz tili','Tajik':'Tojik tili','Lao':'Laos tili','Somali':'Somali tili','Hausa':'Xausa tili','Igbo':'Igbo tili','Yoruba':'Yoruba tili','Tswana':'Tsvana tili','Sotho':'Lesotho tili','Tsonga':'Tsonga tili','Venda':'Venda tili','Swati':'Svazi tili','Bemba':'Bemba tili','Chichewa':'Chichewa tili','Shona':'Shona tili','Sundanese':'Sundan tili','Javanese':'Yavan tili','Malagasy':'Malagasi tili','Fijian':'Fiji tili','Haitian Creole':'Gaiti kreol tili','Bislama':'Bislama tili','Tok Pisin':'Tok Pisin tili','Quechua':'Kechua tili','Guarani':'Guarani tili','Aymara':'Aymara tili','Mapudungun':'Mapudungun tili','Nahuatl':'Naxuatl tili','Mayan':'Maya tili','Inuktitut':'Inuktitut tili','Cree':'Kri tili','Ojibwe':'Objive tili','Cherokee':'Cheroki tili','Navajo':'Navaxo tili','Tibetan':'Tibet tili','Uyghur':'Uygur tili','Mongolian':'Mongol tili','Dzongkha':'Djongxa tili','Burmese':'Birma tili','Khmer':'Xmer tili','Lao':'Laos tili','Tamil':'Tamil tili','Telugu':'Telugu tili','Kannada':'Kannada tili','Malayalam':'Malayalam tili','Sinhala':'Singal tili','Nepali':'Nepal tili','Bengali':'Bengal tili','Marathi':'Marathi tili','Gujarati':'Gujarat tili','Punjabi':'Pencab tili','Urdu':'Urdu','Kashmiri':'Kashmir tili','Sindhi':'Sindhi tili','Balochi':'Beluj tili','Pashto':'Pashto','Dari':'Dari','Persian':'Eron tili','Tajik':'Tojik tili','Kurdish':'Kurd tili','Sorani':'Sorani tili','Kurmanji':'Kurmanji tili','Hindi':'Xindi tili','Sanskrit':'Sanskrit tili','Pali':'Pali tili','Tibetan':'Tibet tili','Burmese':'Birma tili','Thai':'Tay tili','Lao':'Laos tili','Khmer':'Xmer tili','Vietnamese':'Vetnam tili','Malay':'Malay tili','Indonesian':'Indonez tili','Filipino':'Filippin tili','Javanese':'Yavan tili','Sundanese':'Sundan tili','Tagalog':'Tagalog tili','Cebuano':'Sebuan tili','Ilocano':'Ilokano tili','Waray':'Varay tili','Hiligaynon':'Hiligaynon tili','Bikol':'Bikol tili','Pampangan':'Pampangan tili','Pangasinan':'Pangasinan tili','Korean':'Koreya tili','Japanese':'Yapon tili','Ainu':'Ainu tili','Mongolian':'Mongol tili','Manchu':'Manjur tili','Tibetan':'Tibet tili','Uyghur':'Uygur tili','Kazakh':'Qozog\' tili','Kyrgyz':'Qirg\'iz tili','Turkmen':'Turkman tili','Azerbaijani':'Ozarbayjon tili','Turkish':'Turk tili','Uzbek':'O\'zbek tili','Bulgarian':'Bolgar tili','Macedonian':'Makedon tili','Serbian':'Serb tili','Croatian':'Xorvat tili','Bosnian':'Bosna tili','Montenegrin':'Chernogor tili','Slovenian':'Sloven tili','Slovak':'Slovak tili','Czech':'Chex tili','Polish':'Polsha tili','Sorbian':'Sorb tili','Kashubian':'Kashub tili','Romansh':'Romanş tili','Catalan':'Katalan tili','Basque':'Bask tili','Galician':'Galisiya tili','Asturian':'Astur tili','Aragonese':'Aragon tili','Occitan':'Okzitan tili','Corsican':'Korsika tili','Sardinian':'Sardin tili','Sicilian':'Sitsiliya tili','Friulian':'Friuli tili','Ladin':'Ladin tili','Romansh':'Romanş tili','Luxembourgish':'Lyuksemburg tili','Frisian':'Friz tili','Flemish':'Flemish tili','Scots':'Shotland tili','Welsh':'Uels tili','Breton':'Bret tili','Cornish':'Cornish tili','Manx':'Men tili','Irish':'Irland tili','Scottish Gaelic':'Shotlandiya gel tili'
             };
 
-            const denominationArabic = {
+export const denominationArabic = {
                 'sunni': 'سني',
                 'shia': 'شيعي',
                 'ibadi': 'إباضي',
@@ -6861,7 +7381,7 @@
                 'christian': 'مسيحي',
                 'unknown': 'غير معروف'
             };
-            const religionArabic = {
+export const religionArabic = {
                 'muslim': 'الإسلام',
                 'christian': 'المسيحية',
                 'hindu': 'الهندوسية',
@@ -6870,7 +7390,7 @@
                 'other': 'أخرى',
                 'unknown': 'غير معروف'
             };
-            const labelPositions = {
+export const labelPositions = {
                 'France': [2.5, 46.5],
                 'Spain': [-4.0, 40.0],
                 'Brazil': [-54.0, -15.0],
@@ -7036,7 +7556,7 @@
                 'Azores': [-27.0, 38.5],
                 'Canary Is.': [-15.5, 28.0]
             };
-const featureSpanish = {
+export const featureSpanish = {
     corridors: {
         'Strait of Hormuz': 'Estrecho de Ormuz',
         'Silk Road': 'Ruta de la Seda',
@@ -8143,7 +8663,7 @@ const featureSpanish = {
         'Dispute over Kurdish areas in Iraq between the central government and the Kurdistan Region, especially Kirkuk.': 'Disputa sobre las zonas kurdas en Irak entre el gobierno central y la Región Kurdistán, especialmente Kirkuk.'
     }
 };
-            const spanishNames = {
+export const spanishNames = {
                 'Afghanistan': 'Afganistán',
                 'Albania': 'Albania',
                 'Algeria': 'Argelia',
@@ -8369,7 +8889,7 @@ const featureSpanish = {
                 'Azores': 'Azores',
                 'Canary Is.': 'Islas Canarias'
             };
-            const densitySpotSpanish = {
+export const densitySpotSpanish = {
                 'طوكيو': 'Tokio',
                 'أوساكا': 'Osaka',
                 'سيول': 'Seúl',
@@ -8499,7 +9019,7 @@ const featureSpanish = {
                 'كاراكاس': 'Caracas',
                 'كالي': 'Cali'
             };
-            const continentSpanish = {
+export const continentSpanish = {
                 'Africa': 'África',
                 'Asia': 'Asia',
                 'Europe': 'Europa',
@@ -8509,7 +9029,7 @@ const featureSpanish = {
                 'Antarctica': 'Antártida',
                 'Unknown': 'Desconocido'
             };
-            const governmentSpanish = {
+export const governmentSpanish = {
                 'Absolute Monarchy': 'Monarquía absoluta',
                 'Constitutional Monarchy': 'Monarquía constitucional',
                 'Parliamentary Monarchy': 'Monarquía parlamentaria',
@@ -8532,7 +9052,7 @@ const featureSpanish = {
                 'Parliamentary Monarchy (Denmark)': 'Monarquía parlamentaria (Dinamarca)',
                 'Federal Absolute Monarchy': 'Monarquía absoluta federal'
             };
-            const religionSpanish = {
+export const religionSpanish = {
                 'muslim': 'Islam',
                 'christian': 'Cristianismo',
                 'hindu': 'Hinduismo',
@@ -8541,7 +9061,7 @@ const featureSpanish = {
                 'other': 'Otro',
                 'unknown': 'Desconocido'
             };
-            const denominationSpanish = {
+export const denominationSpanish = {
                 'sunni': 'Suní',
                 'shia': 'Chií',
                 'ibadi': 'Ibadí',
@@ -8559,7 +9079,7 @@ const featureSpanish = {
                 'christian': 'Cristiano',
                 'unknown': 'Desconocido'
             };
-            const capitalsSpanish = {
+export const capitalsSpanish = {
                 'Kabul': 'Kabul', 'Tirana': 'Tirana', 'Algiers': 'Argel', 'Luanda': 'Luanda',
                 'Buenos Aires': 'Buenos Aires', 'Yerevan': 'Ereván', 'Canberra': 'Canberra',
                 'Vienna': 'Viena', 'Baku': 'Bakú', 'Manama': 'Manama', 'Dhaka': 'Daca',
@@ -8620,7 +9140,7 @@ const featureSpanish = {
                 'Lusaka': 'Lusaka', 'Harare': 'Harare', 'Pristina': 'Pristina',
                 'Nicosia': 'Nicosia'
             };
-            const langsSpanish = {
+export const langsSpanish = {
                 'Dari / Pashto': 'Dari / Pastún',
                 'Albanian': 'Albanés',
                 'Arabic / Berber': 'Árabe / Bereber',
