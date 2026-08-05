@@ -454,6 +454,10 @@ if (menuToggle) {
 (function() {
                 var overlay = document.getElementById('langOverlay');
                 if (!overlay) { init(); maybeShowProjectionExplainer(); return; }
+                var overlayTitle = overlay.querySelector('.lang-overlay-title');
+                if (overlayTitle) overlayTitle.textContent = t('appName');
+                var overlaySubtitle = overlay.querySelector('.lang-overlay-subtitle');
+                if (overlaySubtitle) overlaySubtitle.textContent = t('langOverlaySubtitle');
                 var savedLang = null;
                 try { savedLang = localStorage.getItem('mapLang'); } catch(e) {}
                 if (savedLang && ['ar','en','ru','uz','es'].includes(savedLang)) {

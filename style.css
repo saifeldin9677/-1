@@ -61,7 +61,7 @@
     --z-header: 150; /* header is a flex item, so this z-index caps every child — including the search suggestions list — above the controls bar (--z-controls-important: 100) but below --z-toolbar (999) */
     --z-mobile-nav: 15;
     --z-controls-important: 100; /* keeps the controls bar above the base map but below --z-suggestions-list (150) so the search dropdown stays on top of it */
-    --z-country-panel: 30;
+    --z-country-panel: 200; /* above the header (150) so the panel + close button are never hidden under the menu bar */
     --z-suggestions-list: 150; /* inside the .header stacking context (--z-header: 150), so search results drop over the menu bar; kept below --z-modal (3000) */
     --z-popover: 100;
     --z-copy-notification: 1100; /* above --z-coordinates-display (1000) so the toast is never hidden under the coords pill */
@@ -224,7 +224,8 @@ body {
     white-space: nowrap;
 }
 #toolsRow {
-    grid-column: 2;
+    grid-column: 1 / -1;
+    grid-row: 2;
     justify-self: stretch;
     display: flex;
     align-items: center;
@@ -475,6 +476,8 @@ body {
     text-align: center;
     max-width: 320px;
     min-width: 220px;
+    max-height: calc(100% - 120px);
+    overflow-y: auto;
     opacity: 0;
     transition: opacity var(--dur-base) var(--ease), transform var(--dur-base) var(--ease);
     contain: layout style;
@@ -1129,7 +1132,8 @@ body {
         display: none;
     }
     #toolsRow {
-        grid-column: 2;
+        grid-column: 1 / -1;
+        grid-row: 2;
         justify-self: stretch;
         display: flex;
         align-items: center;
@@ -1139,14 +1143,12 @@ body {
     }
     .tools-row-start { flex-shrink: 0; }
     .tools-row-middle {
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
         justify-content: safe center;
-        overflow-x: auto;
-        scrollbar-width: none;
+        overflow: visible;
         flex: 1;
         min-width: 0;
     }
-    .tools-row-middle::-webkit-scrollbar { display: none; }
     .tools-row-end { flex-shrink: 0; }
     .header {
         padding: 3px 12px;
@@ -1308,6 +1310,9 @@ body {
 }
 @media (min-width: 1024px) and (max-width: 1279px) {
     .controls-bar .btn .btn-text {
+        display: none;
+    }
+    #toolsRow .btn .btn-text {
         display: none;
     }
     .controls-bar {
