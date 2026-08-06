@@ -1284,6 +1284,129 @@ export var _adminRingBoundsProj = null;
 
 export var _adminRingBoundsFeatures = null;
 
+export var _adminLandMask = null;
+
+export var _adminLandMaskProj = null;
+
+export var _adminLandMaskCell = 0;
+
+export var _adminLandMaskW = 0;
+
+export var _adminLandMaskH = 0;
+
+export function _adminBuildLandMask(proj, rect) {
+                if (_adminLandMask && _adminLandMaskProj === proj) {
+                    return { mask: _adminLandMask, w: _adminLandMaskW, h: _adminLandMaskH, cell: _adminLandMaskCell };
+                }
+                if (!allCountryFeatures || !allCountryFeatures.length) return null;
+                var cell = 2;
+                var mw = Math.max(1, Math.ceil(rect.width / cell) + 2);
+                var mh = Math.max(1, Math.ceil(rect.height / cell) + 2);
+                var cv = document.createElement('canvas');
+                cv.width = mw;
+                cv.height = mh;
+                var c = cv.getContext('2d');
+                c.setTransform(1 / cell, 0, 0, 1 / cell, cell, cell);
+                c.fillStyle = '#000';
+                c.fillRect(-cell, -cell, rect.width + cell * 2, rect.height + cell * 2);
+                var gen = d3.geoPath(proj, c);
+                c.fillStyle = '#fff';
+                for (var i = 0; i < allCountryFeatures.length; i++) {
+                    c.beginPath();
+                    gen(allCountryFeatures[i]);
+                    c.fill();
+                }
+                var img = c.getImageData(0, 0, mw, mh);
+                var px = img.data;
+                var mask = new Uint8Array(mw * mh);
+                for (var j = 0; j < mw * mh; j++) {
+                    mask[j] = px[j * 4] > 128 ? 1 : 0;
+                }
+                var R = 4;
+                if (R > 0) {
+                    var dil = new Uint8Array(mw * mh);
+                    for (var y = 0; y < mh; y++) {
+                        for (var x = 0; x < mw; x++) {
+                            if (!mask[y * mw + x]) continue;
+                            for (var dy = -R; dy <= R; dy++) {
+                                for (var dx = -R; dx <= R; dx++) {
+                                    if (dx * dx + dy * dy > R * R) continue;
+                                    var nx = x + dx, ny = y + dy;
+                                    if (nx < 0 || ny < 0 || nx >= mw || ny >= mh) continue;
+                                    dil[ny * mw + nx] = 1;
+                                }
+                            }
+                        }
+                    }
+                    mask = dil;
+                }
+                _adminLandMask = mask;
+                _adminLandMaskProj = proj;
+                _adminLandMaskCell = cell;
+                _adminLandMaskW = mw;
+                _adminLandMaskH = mh;
+                return { mask: mask, w: mw, h: mh, cell: cell };
+            }
+
+export function adminProjectGeometryToPathMasked(path, proj, geom, maskInfo) {
+                if (!geom || !maskInfo) return;
+                function isLand(x, y) {
+                    if (!isFinite(x) || !isFinite(y)) return false;
+                    var gx = Math.floor(x / maskInfo.cell) + 1;
+                    var gy = Math.floor(y / maskInfo.cell) + 1;
+                    if (gx < 0 || gy < 0 || gx >= maskInfo.w || gy >= maskInfo.h) return false;
+                    return maskInfo.mask[gy * maskInfo.w + gx] !== 0;
+                }
+                function drawLine(line) {
+                    if (!line || !line.length) return;
+                    var started = false;
+                    var prevP = null;
+                    var pending = null;
+                    for (var i = 0; i < line.length; i++) {
+                        var p = proj(line[i]);
+                        if (!isFinite(p[0]) || !isFinite(p[1])) { started = false; prevP = null; pending = null; continue; }
+                        if (!started) {
+                            if (isLand(p[0], p[1])) {
+                                path.moveTo(p[0], p[1]);
+                                started = true;
+                                pending = null;
+                            } else {
+                                pending = p;
+                            }
+                            prevP = p;
+                            continue;
+                        }
+                        var keep = isLand(prevP[0], prevP[1]) || isLand(p[0], p[1]) || isLand((prevP[0] + p[0]) / 2, (prevP[1] + p[1]) / 2);
+                        if (keep) {
+                            path.lineTo(p[0], p[1]);
+                        } else {
+                            started = false;
+                            pending = p;
+                        }
+                        prevP = p;
+                    }
+                }
+                function drawRings(rings) {
+                    for (var r = 0; r < rings.length; r++) {
+                        drawLine(rings[r]);
+                    }
+                }
+                var t = geom.type;
+                if (t === 'Polygon') {
+                    drawRings(geom.coordinates);
+                } else if (t === 'MultiPolygon') {
+                    for (var pi = 0; pi < geom.coordinates.length; pi++) {
+                        drawRings(geom.coordinates[pi]);
+                    }
+                } else if (t === 'LineString') {
+                    drawLine(geom.coordinates);
+                } else if (t === 'MultiLineString') {
+                    for (var li = 0; li < geom.coordinates.length; li++) {
+                        drawLine(geom.coordinates[li]);
+                    }
+                }
+            }
+
 export function _adminBakeInvalidate() { setState('_adminBakeDirty', true); }
 
 export function _adminRingBoundsFor(features) {
@@ -1468,6 +1591,7 @@ export function bakeAdminBoundariesCanvas(features) {
                 var proj = getActiveProjection();
                 var seamJumpPx = Math.min(rect.width, rect.height) * 0.55;
                 var mapDiag = Math.max(rect.width, rect.height);
+                var maskInfo = _adminBuildLandMask(proj, rect);
                 var visibleGeoms = [];
                 for (var bi = 0; bi < features.length; bi++) {
                     var bb = bounds[bi];
@@ -1487,15 +1611,23 @@ export function bakeAdminBoundariesCanvas(features) {
                         }
                     }
                 }
-                _adminBakedCtx.beginPath();
-                for (var vi = 0; vi < visibleGeoms.length; vi++) {
-                    adminProjectGeometryToPath(_adminBakedCtx, proj, visibleGeoms[vi]);
-                }
                 _adminBakedCtx.strokeStyle = MAP_COLORS.adminBoundaries.stroke;
                 _adminBakedCtx.lineWidth = (isMobile ? 0.4 : 0.6) / k;
                 _adminBakedCtx.globalAlpha = 0.5;
                 _adminBakedCtx.setLineDash([2 / k, 2 / k]);
-                _adminBakedCtx.stroke();
+                var BATCH = 90;
+                for (var bi2 = 0; bi2 < visibleGeoms.length; bi2 += BATCH) {
+                    _adminBakedCtx.beginPath();
+                    var end = Math.min(bi2 + BATCH, visibleGeoms.length);
+                    for (var vj = bi2; vj < end; vj++) {
+                        if (maskInfo) {
+                            adminProjectGeometryToPathMasked(_adminBakedCtx, proj, visibleGeoms[vj], maskInfo);
+                        } else {
+                            adminProjectGeometryToPath(_adminBakedCtx, proj, visibleGeoms[vj]);
+                        }
+                    }
+                    _adminBakedCtx.stroke();
+                }
                 _adminBakedTransform = { k: k, tx: tx, ty: ty };
                 setState('_adminBakeDirty', false);
             }
